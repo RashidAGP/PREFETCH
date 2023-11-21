@@ -1,0 +1,27 @@
+src/base/output.cc:92: panic: panic condition !_fstream->is_open() occurred: Failed to open "/home/rashid/warm_result/gapbs/bfs_5_raw_flags/trace.out"
+Memory Usage: 102720 KBytes
+Program aborted at tick 0
+--- BEGIN LIBC BACKTRACE ---
+../../build/X86/gem5.opt(+0xb851d0)[0x56218436a1d0]
+../../build/X86/gem5.opt(+0xbad05c)[0x56218439205c]
+/lib/x86_64-linux-gnu/libc.so.6(+0x3c4b0)[0x7fef0823c4b0]
+/lib/x86_64-linux-gnu/libc.so.6(pthread_kill+0x11b)[0x7fef08290ffb]
+/lib/x86_64-linux-gnu/libc.so.6(gsignal+0x16)[0x7fef0823c406]
+/lib/x86_64-linux-gnu/libc.so.6(abort+0xd7)[0x7fef0822287c]
+../../build/X86/gem5.opt(+0x467c85)[0x562183c4cc85]
+../../build/X86/gem5.opt(+0x4b2f77)[0x562183c97f77]
+../../build/X86/gem5.opt(+0x4b0e21)[0x562183c95e21]
+../../build/X86/gem5.opt(+0x1b25ff2)[0x56218530aff2]
+../../build/X86/gem5.opt(+0x1b28520)[0x56218530d520]
+../../build/X86/gem5.opt(+0x445044)[0x562183c2a044]
+/lib/x86_64-linux-gnu/libpython3.11.so.1.0(+0x1c70e3)[0x7fef08dc70e3]
+/lib/x86_64-linux-gnu/libpython3.11.so.1.0(_PyObject_MakeTpCall+0x81)[0x7fef08d786c1]
+/lib/x86_64-linux-gnu/libpython3.11.so.1.0(_PyEval_EvalFrameDefault+0x4be7)[0x7fef08d0bbb7]
+/lib/x86_64-linux-gnu/libpython3.11.so.1.0(+0x268d82)[0x7fef08e68d82]
+../../build/X86/gem5.opt(+0xbae648)[0x562184393648]
+../../build/X86/gem5.opt(+0x3ecf20)[0x562183bd1f20]
+/lib/x86_64-linux-gnu/libc.so.6(+0x23a90)[0x7fef08223a90]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x89)[0x7fef08223b49]
+../../build/X86/gem5.opt(+0x436045)[0x562183c1b045]
+--- END LIBC BACKTRACE ---
+For more info on how to address this issue, please visit https://www.gem5.org/documentation/general_docs/common-errors/

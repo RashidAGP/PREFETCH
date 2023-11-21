@@ -1,0 +1,20 @@
+./build/X86/gem5.fast --outdir=/home/rashid/test_l2/pr_fast --redirect-stdout --redirect-stderr ./configs/deprecated/example/fs.py \
+    --checkpoint-dir=/home/rashid/checkpoints/YUAN/pagerank -r 1\
+    --script=/home/rashid/all_scripts/SPEC17/mcf_s_0.rcS \
+    --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
+    --disk-image=/home/rashid/fs_img/x86-graphs.img \
+    --cpu-type=AtomicSimpleCPU \
+    --restore-with-cpu=AtomicSimpleCPU \
+    --mem-size=8GB \
+    --ruby \
+    --caches \
+    --l1d_size=64kB \
+    --l1i_size=32kB \
+    --l1d_assoc=8 \
+    --l1i_assoc=8 \
+    --num-l2caches=1 \
+    --l2_size=2MB \
+    --l2_assoc=16 \
+    --cpu-clock=1GHz \
+    --cacheline_size=64 \
+    -I 500000000

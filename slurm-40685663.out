@@ -1,0 +1,122 @@
+load PROJ/8.1.0
+load HDF5
+
+The following have been reloaded with a version change:
+  1) GCCcore/11.2.0 => GCCcore/8.3.0
+  2) XZ/5.2.5-GCCcore-11.2.0 => XZ/5.2.4-GCCcore-8.3.0
+  3) zlib/1.2.11-GCCcore-11.2.0 => zlib/1.2.11-GCCcore-8.3.0
+
+
+The following have been reloaded with a version change:
+  1) HDF5/1.10.5-gompi-2019b => HDF5/1.10.5-iimpi-2019b
+
+load pkg-config
+load Scons/3.1.1
+
+The following have been reloaded with a version change:
+  1) SQLite/3.36-GCCcore-11.2.0 => SQLite/3.29.0-GCCcore-8.3.0
+  2) Tcl/8.6.11-GCCcore-11.2.0 => Tcl/8.6.9-GCCcore-8.3.0
+  3) libreadline/8.1-GCCcore-11.2.0 => libreadline/8.0-GCCcore-8.3.0
+  4) ncurses/6.2-GCCcore-11.2.0 => ncurses/6.1-GCCcore-8.3.0
+
+/sw/EasyBuild/rackham/software/Python/3.7.4-GCCcore-8.3.0/bin/python3-config
+check hdf5 with pkg-config
+-L/sw/EasyBuild/rackham/software/HDF5/1.10.5-iimpi-2019b/lib
+Package hdf5-serial was not found in the pkg-config search path.
+Perhaps you should add the directory containing `hdf5-serial.pc'
+to the PKG_CONFIG_PATH environment variable
+No package 'hdf5-serial' found
+
+The following have been reloaded with a version change:
+  1) GCCcore/8.3.0 => GCCcore/10.3.0
+  2) binutils/2.32-GCCcore-8.3.0 => binutils/2.36.1-GCCcore-10.3.0
+  3) zlib/1.2.11-GCCcore-8.3.0 => zlib/1.2.11-GCCcore-10.3.0
+
+gcc version
+gcc (GCC) 10.3.0
+Copyright (C) 2020 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+python version
+Python 3.6.8
+scons: Reading SConscript files ...
+Mkdir("/crex/proj/snic2022-22-557/rashid/L2_TLB_v23/build/X86/gem5.build")
+Checking for linker -Wl,--as-needed support... (cached) yes
+Checking for compiler -gz support... (cached) yes
+Checking for linker -gz support... (cached) yes
+Info: Using Python config: python3-config
+Checking for C header file Python.h... (cached) yes
+Checking Python version... (cached) 3.6.8
+Checking for accept(0,0,0) in C++ library None... (cached) yes
+Checking for zlibVersion() in C++ library z... (cached) yes
+Checking for C library tcmalloc_minimal... (cached) no
+Checking for C library tcmalloc... (cached) no
+Warning: You can get a 12% performance improvement by installing tcmalloc
+         (libgoogle-perftools-dev package on Ubuntu or RedHat).
+Building in /crex/proj/snic2022-22-557/rashid/L2_TLB_v23/build/X86
+Using saved variables file(s) /crex/proj/snic2022-22-557/rashid/L2_TLB_v23/build/X86/gem5.build/variables
+Warning: While checking protoc version: [Errno 2] No such file or directory:
+         'protoc': 'protoc'
+Warning: Protocol buffer compiler (protoc) not found.
+         Please install protobuf-compiler for tracing support.
+Checking for shm_open("/test", 0, 0) in C library None... (cached) no
+Checking for shm_open("/test", 0, 0) in C library rt... (cached) yes
+Checking for backtrace_symbols_fd((void *)1, 0, 0) in C library None... (cached) yes
+Checking for C header file linux/kvm.h... (cached) yes
+Checking for timer_create(CLOCK_MONOTONIC, NULL, NULL) in C library None... (cached) yes
+Checking for member exclude_host in struct perf_event_attr...(cached) yes
+Checking size of struct kvm_xsave ... (cached) yes
+Checking for C header file fenv.h... (cached) yes
+Checking for C header file png.h... (cached) yes
+Checking for clock_nanosleep(0,0,NULL,NULL) in C library None... (cached) yes
+Checking for C header file valgrind/valgrind.h... (cached) no
+Checking for pkg-config package hdf5-serial... (cached) no
+Checking for pkg-config package hdf5... (cached) yes
+Checking for H5Fcreate("", 0, 0, 0) in C library hdf5... (cached) no
+Warning: Couldn't find HDF5 C++ libraries. Disabling HDF5 support.
+Checking for C header file linux/if_tun.h... (cached) yes
+Checking whether __i386__ is declared... (cached) no
+Checking whether __x86_64__ is declared... (cached) yes
+Checking for compiler -Wno-self-assign-overloaded support... (cached) yes
+Checking for linker -Wno-free-nonheap-object support... (cached) yes
+scons: done reading SConscript files.
+scons: Building targets ...
+ [VER TAGS]  -> X86/sim/tags.cc
+ [ISA DESC] src/arch/x86/isa/main.isa -> X86/arch/x86/generated/decoder-g.cc.inc, X86/arch/x86/generated/decoder-ns.cc.inc, X86/arch/x86/generated/decode-method.cc.inc, X86/arch/x86/generated/decoder.hh, X86/arch/x86/generated/decoder-g.hh.inc, X86/arch/x86/generated/decoder-ns.hh.inc, X86/arch/x86/generated/exec-g.cc.inc, X86/arch/x86/generated/exec-ns.cc.inc, X86/arch/x86/generated/decoder.cc, X86/arch/x86/generated/inst-constrs.cc, X86/arch/x86/generated/generic_cpu_exec.cc
+ [     CXX] src/arch/x86/tlb.cc -> X86/arch/x86/tlb.fo
+In file included from src/arch/x86/tlb.cc:38:
+src/arch/x86/tlb.hh: In constructor ‘gem5::X86ISA::TLB::TLB(const Params&)’:
+src/arch/x86/tlb.hh:106:18: warning: ‘gem5::X86ISA::TLB::l1_way’ will be initialized after [-Wreorder]
+  106 |         uint32_t l1_way;
+      |                  ^~~~~~
+src/arch/x86/tlb.hh:104:18: warning:   ‘uint32_t gem5::X86ISA::TLB::l2_tlb_assoc’ [-Wreorder]
+  104 |         uint32_t l2_tlb_assoc;
+      |                  ^~~~~~~~~~~~
+src/arch/x86/tlb.cc:65:1: warning:   when initialized here [-Wreorder]
+   65 | TLB::TLB(const Params &p)
+      | ^~~
+In file included from src/arch/x86/tlb.cc:38:
+src/arch/x86/tlb.hh: In constructor ‘gem5::X86ISA::TLB::TlbStats::TlbStats(gem5::statistics::Group*)’:
+src/arch/x86/tlb.hh:130:32: warning: ‘gem5::X86ISA::TLB::TlbStats::l2_tlb_Misses’ will be initialized after [-Wreorder]
+  130 |             statistics::Scalar l2_tlb_Misses;
+      |                                ^~~~~~~~~~~~~
+src/arch/x86/tlb.hh:129:32: warning:   ‘gem5::statistics::Scalar gem5::X86ISA::TLB::TlbStats::l2_tlb_Accesses’ [-Wreorder]
+  129 |             statistics::Scalar l2_tlb_Accesses;
+      |                                ^~~~~~~~~~~~~~~
+src/arch/x86/tlb.cc:704:1: warning:   when initialized here [-Wreorder]
+  704 | TLB::TlbStats::TlbStats(statistics::Group *parent)
+      | ^~~
+Generating LALR tables
+ [     CXX] src/base/date.cc -> X86/base/date.fo
+ [    LINK]  -> X86/gem5.fast
+scons: done building targets.
+*** Summary of Warnings ***
+Warning: You can get a 12% performance improvement by installing tcmalloc
+         (libgoogle-perftools-dev package on Ubuntu or RedHat).
+Warning: While checking protoc version: [Errno 2] No such file or directory:
+         'protoc': 'protoc'
+Warning: Protocol buffer compiler (protoc) not found.
+         Please install protobuf-compiler for tracing support.
+Warning: Couldn't find HDF5 C++ libraries. Disabling HDF5 support.
+FINISHED ! 

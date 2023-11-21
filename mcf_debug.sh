@@ -1,0 +1,20 @@
+gdb --args ./build/X86/gem5.debug --outdir=/home/rashid/mcf ./configs/deprecated/example/fs.py \
+    --checkpoint-dir=/home/rashid/checkpoints/YUAN/SPEC17/mcf -r 1\
+    --script=/home/rashid/all_scripts/SPEC17/mcf_s_0.rcS \
+    --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
+    --disk-image=/home/rashid/fs_img/linux-x86.img \
+    --cpu-type=DerivO3CPU \
+    --restore-with-cpu=DerivO3CPU \
+    --mem-size=8GB \
+    --ruby \
+    --caches \
+    --l1d_size=64kB \
+    --l1i_size=32kB \
+    --l1d_assoc=8 \
+    --l1i_assoc=8 \
+    --num-l2caches=1 \
+    --l2_size=2MB \
+    --l2_assoc=16 \
+    --cpu-clock=2GHz \
+    --cacheline_size=64 \
+    -I 500000000
