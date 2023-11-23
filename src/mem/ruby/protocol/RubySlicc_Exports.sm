@@ -187,6 +187,8 @@ enumeration(RubyRequestType, desc="...", default="RubyRequestType_NULL") {
   TLBI_SYNC,         desc="TLB Invalidation Sync operation - Potential initiation";
   TLBI_EXT_SYNC,      desc="TLB Invalidation Sync operation - External Sync has been requested";
   TLBI_EXT_SYNC_COMP, desc="TLB Invalidation Sync operation - External Sync has been completed";
+  BP_L1,              desc="Bypassing the L1";
+  BP_L2,              desc="Bypassing the L2";
 }
 
 bool isWriteRequest(RubyRequestType type);

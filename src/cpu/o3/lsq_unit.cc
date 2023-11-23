@@ -1389,7 +1389,17 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
 
         gem5::ThreadContext *thread = cpu->tcBase(lsqID);
         PacketPtr main_pkt = new Packet(request->mainReq(), MemCmd::ReadReq);
-
+	/*
+	if (request->mainReq()->get_miss_l2() == true){
+            //PacketPtr main_pkt = new Packet(request->mainReq(), MemCmd::ByPassL2);
+	    main_pkt->cmd = MemCmd::ByPassL2;
+	}else if (request->mainReq()->get_hit_l2() == true){
+            //PacketPtr main_pkt = new Packet(request->mainReq(), MemCmd::ByPassL1);
+	    main_pkt->cmd = MemCmd::ByPassL1;
+	}else {
+            //PacketPtr main_pkt = new Packet(request->mainReq(), MemCmd::ReadReq);
+	}
+	*/
         main_pkt->dataStatic(load_inst->memData);
 
         Cycles delay = request->mainReq()->localAccessor(thread, main_pkt);
@@ -1487,8 +1497,18 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
                         "addr %#x\n", store_it._idx,
                         request->mainReq()->getVaddr());
 
-                PacketPtr data_pkt = new Packet(request->mainReq(),
-                        MemCmd::ReadReq);
+                PacketPtr data_pkt = new Packet(request->mainReq(), MemCmd::ReadReq);
+		/*
+         	if (request->mainReq()->get_miss_l2() == true){
+                     //PacketPtr main_pkt = new Packet(request->mainReq(), MemCmd::ByPassL2);
+		     data_pkt->cmd = MemCmd::ByPassL2;
+         	}else if (request->mainReq()->get_hit_l2() == true){
+                     //PacketPtr main_pkt = new Packet(request->mainReq(), MemCmd::ByPassL1);
+		     data_pkt->cmd = MemCmd::ByPassL1;
+         	}
+		*/
+                //PacketPtr data_pkt = new Packet(request->mainReq(),
+                //        MemCmd::ReadReq);
                 data_pkt->dataStatic(load_inst->memData);
 
                 // hardware transactional memory

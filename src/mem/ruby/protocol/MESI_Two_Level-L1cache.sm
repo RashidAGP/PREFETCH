@@ -136,6 +136,9 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     PF_Load,    desc="load request from prefetcher";
     PF_Ifetch,  desc="instruction fetch request from prefetcher";
     PF_Store,   desc="exclusive load request from prefetcher";
+
+    BP_L1_Load,    desc="Bypass L1";
+    BP_L2_Load,    desc="Bypass L2";
   }
 
   // TYPES
@@ -277,6 +280,10 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
       return Event:Ifetch;
     } else if ((type == RubyRequestType:ST) || (type == RubyRequestType:ATOMIC)) {
       return Event:Store;
+    } else if (type == RubyRequestType:BP_L1){
+      return Event:BP_L1_Load;
+    } else if (type == RubyRequestType:BP_L2){
+      return Event:BP_L2_Load;
     } else {
       error("Invalid RubyRequestType");
     }
@@ -492,6 +499,11 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
                       TBEs[addr]);
             }
           }
+        }else if (in_msg.Type == RubyRequestType:BP_L1) {
+		trigger(Event:BP_L1_Load, in_msg.LineAddress, getL1DCacheEntry(in_msg.LineAddress),TBEs[in_msg.LineAddress]);
+        }else if (in_msg.Type == RubyRequestType:BP_L2) {
+		trigger(Event:BP_L2_Load, in_msg.LineAddress, getL1DCacheEntry(in_msg.LineAddress),TBEs[in_msg.LineAddress]);
+
         } else {
 
           // *** DATA ACCESS ***
@@ -611,7 +623,65 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
           }
       }
   }
+  // PREFETCH
 
+  action(a_bypass_l1_getx, "bp_l1_getx", desc="Bypass L1 GETX") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      enqueue(requestL1Network_out, RequestMsg,0) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceRequestType:GETX;
+        out_msg.Requestor := machineID;
+        DPRINTF(RubySlicc, "%s\n", machineID);
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
+        DPRINTF(RubySlicc, "address: %#x, destination: %s\n",
+                address, out_msg.Destination);
+        out_msg.MessageSize := MessageSizeType:Control;
+        out_msg.Prefetch := in_msg.Prefetch;
+        out_msg.AccessMode := in_msg.AccessMode;
+      }
+    }
+  }
+  action(a_bypass_l1_gets, "bp_l1_gets", desc="Bypass L1 GETS") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      enqueue(requestL1Network_out, RequestMsg,0) {
+
+        DPRINTF(RubySlicc, "%BYPASS L1.Address:%#x.\n", address);
+        out_msg.addr := address;
+        out_msg.Type := CoherenceRequestType:GETS;
+        out_msg.Requestor := machineID;
+        DPRINTF(RubySlicc, "%s\n", machineID);
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
+        DPRINTF(RubySlicc, "address: %#x, destination: %s\n",
+                address, out_msg.Destination);
+        out_msg.MessageSize := MessageSizeType:Control;
+        out_msg.Prefetch := in_msg.Prefetch;
+        out_msg.AccessMode := in_msg.AccessMode;
+      }
+    }
+  }
+
+  action(a_bypass_l2_gets, "bp_l2_gets", desc="Bypass L2 GETS") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      enqueue(requestL1Network_out, RequestMsg,0) {
+
+        DPRINTF(RubySlicc, "%BYPASS L2.Address:%#x.\n", address);
+        out_msg.addr := address;
+        out_msg.Type := CoherenceRequestType:GETS_BP;
+        out_msg.Requestor := machineID;
+        DPRINTF(RubySlicc, "%s\n", machineID);
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
+        DPRINTF(RubySlicc, "address: %#x, destination: %s\n",
+                address, out_msg.Destination);
+        out_msg.MessageSize := MessageSizeType:Control;
+        out_msg.Prefetch := in_msg.Prefetch;
+        out_msg.AccessMode := in_msg.AccessMode;
+      }
+    }
+  }
+  // END PREFETCH
   action(b_issueGETX, "b", desc="Issue GETX") {
     peek(mandatoryQueue_in, RubyRequest) {
       enqueue(requestL1Network_out, RequestMsg, l1_request_latency) {
@@ -1010,6 +1080,21 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   //*****************************************************
 
   // Transitions for Load/Store/Replacement/WriteBack from transient states
+
+
+  transition({NP, I, S, E, M, IS, IM, SM, IS_I, M_I, SINK_WB_ACK, PF_IS, PF_IM, PF_SM, PF_IS_I}, {BP_L1_Load}) {
+	// GETX for STORES
+	// GETS ONLY
+	a_bypass_l1_gets;
+        k_popMandatoryQueue;
+  }
+  transition({NP, I, S, E, M, IS, IM, SM, IS_I, M_I, SINK_WB_ACK, PF_IS, PF_IM, PF_SM, PF_IS_I}, {BP_L2_Load}) {
+	// GETX for STORES
+	// GETS ONLY
+	a_bypass_l2_gets;
+        k_popMandatoryQueue;
+  }
+
   transition({IS, IM, IS_I, M_I, SM, SINK_WB_ACK}, {Load, Ifetch, Store, L1_Replacement}) {
     z_stallAndWaitMandatoryQueue;
   }

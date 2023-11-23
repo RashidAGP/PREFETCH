@@ -903,9 +903,14 @@ void TLB::DelayedL2HitEvent:: process(){
    tlb->insert_l1(entry_l.vaddr, entry_l, pcid_l);
    fault = tlb->translate(req, tc, translation, mode, delayedResponse,timing);
    //assert(fault == NoFault && "Error in L2 Delayed Translation");
+   
+   req->set_hit_l2();
+   req->reset_miss_l2();
+   
    if (fault == NoFault){
        assert(req->hasPaddr() && "Req has no paddr.\n");
    }
+
    //tlb->insert_l1(vaddr_l, entry_l, pcid_l);
    //tlb->xxx();
    this->translation->finish(fault,req,tc,mode);

@@ -1233,7 +1233,9 @@ LSQ::SingleDataRequest::buildPackets()
                     :  Packet::createWrite(req()));
         _packets.back()->dataStatic(_inst->memData);
         _packets.back()->senderState = this;
-
+	//New
+	
+	//
         // hardware transactional memory
         // If request originates in a transaction (not necessarily a HtmCmd),
         // then the packet should be marked as such.

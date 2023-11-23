@@ -149,6 +149,9 @@ class MemCmd
         HTMAbort,
         // Tlb shootdown
         TlbiExtSync,
+	// BYPASS command
+	ByPassL1,
+	ByPassL2,
         NUM_MEM_CMDS
     };
 
@@ -1005,8 +1008,14 @@ class Packet : public Printable, public Extensible<Packet>
             return MemCmd::SoftPFReq;
         else if (req->isLockedRMW())
             return MemCmd::LockedRMWReadReq;
-        else
-            return MemCmd::ReadReq;
+        else{
+	    if (req->get_hit_l2())
+	        return MemCmd::ByPassL1;
+	    else if (req->get_miss_l2())
+	        return MemCmd::ByPassL2;
+	    else
+                return MemCmd::ReadReq;
+	}
     }
 
     /**

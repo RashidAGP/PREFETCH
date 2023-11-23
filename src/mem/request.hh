@@ -444,7 +444,10 @@ class Request : public Extensible<Request>
 
     /** The virtual address of the request. */
     Addr _vaddr = MaxAddr;
-
+    //Prefetch
+    bool _hit_l2 = false;
+    bool _miss_l2 = false;
+    //End Prefetch
     /**
      * Extra data for the request, such as the return value of
      * store conditional or the compare value for a CAS. */
@@ -510,7 +513,7 @@ class Request : public Extensible<Request>
           _cacheCoherenceFlags(other._cacheCoherenceFlags),
           privateFlags(other.privateFlags),
           _time(other._time),
-          _taskId(other._taskId), _vaddr(other._vaddr),
+          _taskId(other._taskId), _vaddr(other._vaddr),_hit_l2(other._hit_l2),_miss_l2(other._miss_l2),
           _extraData(other._extraData), _contextId(other._contextId),
           _pc(other._pc), _reqInstSeqNum(other._reqInstSeqNum),
           _localAccessor(other._localAccessor),
@@ -830,6 +833,36 @@ class Request : public Extensible<Request>
         return privateFlags.isSet(VALID_VADDR);
     }
 
+    bool
+    get_hit_l2() const
+    {
+        return _hit_l2;
+    }
+    bool
+    get_miss_l2() const
+    {
+        return _miss_l2;
+    }
+    void
+    set_hit_l2()
+    {
+         _hit_l2 = true;
+    }
+    void
+    set_miss_l2()
+    {
+         _miss_l2 = true;
+    }
+    void
+    reset_hit_l2()
+    {
+         _hit_l2 = false;
+    }
+    void
+    reset_miss_l2()
+    {
+         _miss_l2 = false;
+    }
     Addr
     getVaddr() const
     {
@@ -1015,6 +1048,8 @@ class Request : public Extensible<Request>
     bool isLLSC() const { return _flags.isSet(LLSC); }
     bool isPriv() const { return _flags.isSet(PRIVILEGED); }
     bool isLockedRMW() const { return _flags.isSet(LOCKED_RMW); }
+    //bool isBP_L1() const { return _flags.isSet(BP_L1); }
+    //bool isBP_L2() const { return _flags.isSet(BP_L2); }
     bool isSwap() const { return _flags.isSet(MEM_SWAP | MEM_SWAP_COND); }
     bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
     bool

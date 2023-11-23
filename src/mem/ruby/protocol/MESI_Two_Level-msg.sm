@@ -32,7 +32,8 @@
 enumeration(CoherenceRequestType, desc="...") {
   GETX,      desc="Get eXclusive";
   UPGRADE,   desc="UPGRADE to exclusive";
-  GETS,      desc="Get Shared";
+  GETS,      desc="Get Shared"; // skip just L1
+  GETS_BP,      desc="Get Shared BP"; // skip L2. Go directly Mem Controller
   GET_INSTR, desc="Get Instruction";
   INV,       desc="INValidate";
   PUTX,      desc="Replacement message";
@@ -47,8 +48,10 @@ enumeration(CoherenceRequestType, desc="...") {
 enumeration(CoherenceResponseType, desc="...") {
   MEMORY_ACK, desc="Ack from memory controller";
   DATA, desc="Data block for L1 cache in S state";
+  DATA_BP, desc="Data block for L1 cache in S state BP";
   DATA_EXCLUSIVE, desc="Data block for L1 cache in M/E state";
   MEMORY_DATA, desc="Data block from / to main memory";
+  MEMORY_DATA_BP, desc="Data block from / to main memory BP";
   ACK, desc="Generic invalidate ack";
   WB_ACK, desc="writeback ack";
   UNBLOCK, desc="unblock";
@@ -100,7 +103,10 @@ structure(ResponseMsg, desc="...", interface="Message") {
     // Valid data block is only present in message with following types
     if (Type == CoherenceResponseType:DATA ||
         Type == CoherenceResponseType:DATA_EXCLUSIVE ||
-        Type == CoherenceResponseType:MEMORY_DATA) {
+        Type == CoherenceResponseType:MEMORY_DATA ||
+        Type == CoherenceResponseType:MEMORY_DATA_BP) // PREFETCH BEGIN - END
+
+	{
 
         return testAndRead(addr, DataBlk, pkt);
     }
