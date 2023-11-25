@@ -103,6 +103,9 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     PF_IM, AccessPermission:Busy, desc="Issued GETX, have not seen response yet";
     PF_SM, AccessPermission:Busy, desc="Issued GETX, received data, waiting for acks";
     PF_IS_I, AccessPermission:Busy, desc="Issued GETs, saw inv before data";
+
+    // PREFETCH
+    BP_L1_M, AccessPermission:Read_Only, desc="Issued GETS, when the block is M";
   }
 
   // EVENTS
@@ -137,8 +140,11 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     PF_Ifetch,  desc="instruction fetch request from prefetcher";
     PF_Store,   desc="exclusive load request from prefetcher";
 
-    BP_L1_Load,    desc="Bypass L1";
-    BP_L2_Load,    desc="Bypass L2";
+    BP_L1_Load,    desc="Bypass L1 Request";
+    BP_L2_Load,    desc="Bypass L2 Request";
+
+    BP_L2_Resp,    desc="Bypass L2 Resp";
+    BP_RAM_Resp,    desc="Bypass RAM Resp";
   }
 
   // TYPES
@@ -424,6 +430,10 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
           }
         } else if (in_msg.Type == CoherenceResponseType:WB_ACK) {
           trigger(Event:WB_Ack, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceResponseType:DATA_BP) {
+          trigger(Event:BP_L2_Resp, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceResponseType:MEMORY_DATA_BP) {
+          trigger(Event:BP_RAM_Resp, in_msg.addr, cache_entry, tbe);
         } else {
           error("Invalid L1 response type");
         }
@@ -648,7 +658,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 
         DPRINTF(RubySlicc, "BYPASS L1.Address:%#x.\n", address);
         out_msg.addr := address;
-        out_msg.Type := CoherenceRequestType:GETS;
+        out_msg.Type := CoherenceRequestType:GETS_BP_L1;
         out_msg.Requestor := machineID;
         DPRINTF(RubySlicc, "%s\n", machineID);
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
@@ -668,7 +678,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 
         DPRINTF(RubySlicc, "BYPASS L2.Address:%#x.\n", address);
         out_msg.addr := address;
-        out_msg.Type := CoherenceRequestType:GETS_BP;
+        out_msg.Type := CoherenceRequestType:GETS_BP_L2;
         out_msg.Requestor := machineID;
         DPRINTF(RubySlicc, "%s\n", machineID);
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
@@ -881,7 +891,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                           l2_select_low_bit, l2_select_num_bits, intToID(0)));
       out_msg.MessageSize := MessageSizeType:Response_Control;
-      DPRINTF(RubySlicc, "%#x\n", address);
+      DPRINTF(RubySlicc, "Send Unblock to the L2 cache.%#x\n", address);
     }
   }
 
@@ -1082,7 +1092,13 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   // Transitions for Load/Store/Replacement/WriteBack from transient states
 
 
-  transition({NP, I, S, E, M, IS, IM, SM, IS_I, M_I, SINK_WB_ACK, PF_IS, PF_IM, PF_SM, PF_IS_I}, {BP_L1_Load}) {
+  transition(M, BP_L1_Load, BP_L1_M) {
+	// GETX for STORES
+	// GETS ONLY
+	a_bypass_l1_gets;
+        k_popMandatoryQueue;
+  }
+  transition({NP, I, S, E, IS, IM, SM, IS_I, M_I, SINK_WB_ACK, PF_IS, PF_IM, PF_SM, PF_IS_I}, {BP_L1_Load}) {
 	// GETX for STORES
 	// GETS ONLY
 	a_bypass_l1_gets;
@@ -1095,6 +1111,17 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
         k_popMandatoryQueue;
   }
 
+  // There is really big question:
+  // SHALL WE STORE IT OR JUST PYBASS IT?????????
+  // RIGHT NOW STORE/WRITE IT. THEN MOVING it
+  transition({NP, I, S, E, M, IS, IM, SM, IS_I, M_I, SINK_WB_ACK, PF_IS, PF_IM, PF_SM, PF_IS_I}, {BP_L2_Resp,BP_RAM_Resp}){
+    u_writeDataToL1Cache;
+    j_sendUnblock;
+    hx_load_hit;
+    //s_deallocateTBE;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
   transition({IS, IM, IS_I, M_I, SM, SINK_WB_ACK}, {Load, Ifetch, Store, L1_Replacement}) {
     z_stallAndWaitMandatoryQueue;
   }
@@ -1379,7 +1406,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
   }
-
+  // Only difference is just hx_load_hit.
   transition(PF_IS, DataS_fromL1, S) {
     u_writeDataToL1Cache;
     j_sendUnblock;

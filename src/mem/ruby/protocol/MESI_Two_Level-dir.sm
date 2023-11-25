@@ -201,7 +201,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         assert(in_msg.Destination.isElement(machineID));
         if (isGETRequest(in_msg.Type)) {
           trigger(Event:Fetch, in_msg.addr, TBEs[in_msg.addr]);
-        } else if (in_msg.Type == CoherenceRequestType:GETS_BP) {
+        } else if (in_msg.Type == CoherenceRequestType:GETS_BP_L2) {
           trigger(Event:Fetch_BP, makeLineAddress(in_msg.addr),
                   TBEs[makeLineAddress(in_msg.addr)]);
         } else if (in_msg.Type == CoherenceRequestType:DMA_READ) {

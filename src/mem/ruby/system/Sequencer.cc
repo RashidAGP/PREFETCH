@@ -564,13 +564,18 @@ Sequencer::readCallback(Addr address, DataBlock& data,
     while (!seq_req_list.empty()) {
         SequencerRequest &seq_req = seq_req_list.front();
         if (ruby_request) {
+	    // PREFETCH
             assert((seq_req.m_type == RubyRequestType_LD) ||
                    (seq_req.m_type == RubyRequestType_Load_Linked) ||
-                   (seq_req.m_type == RubyRequestType_IFETCH));
+                   (seq_req.m_type == RubyRequestType_IFETCH) ||
+		   (seq_req.m_type == RubyRequestType_BPL1) ||
+		   (seq_req.m_type == RubyRequestType_BPL2));
         }
         if ((seq_req.m_type != RubyRequestType_LD) &&
             (seq_req.m_type != RubyRequestType_Load_Linked) &&
-            (seq_req.m_type != RubyRequestType_IFETCH)) {
+            (seq_req.m_type != RubyRequestType_IFETCH) &&
+            (seq_req.m_type != RubyRequestType_BPL1) &&
+	    (seq_req.m_type != RubyRequestType_BPL2)) {
             // Write request: reissue request to the cache hierarchy
             issueRequest(seq_req.pkt, seq_req.m_second_type);
             break;
@@ -630,11 +635,14 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
                          printAddress(request_address));
 
     // update the data unless it is a non-data-carrying flush
+    // PREFETCH
     if (RubySystem::getWarmupEnabled()) {
         data.setData(pkt);
     } else if (!pkt->isFlush()) {
         if ((type == RubyRequestType_LD) ||
             (type == RubyRequestType_IFETCH) ||
+            (type == RubyRequestType_BPL1) ||
+            (type == RubyRequestType_BPL2) ||
             (type == RubyRequestType_RMW_Read) ||
             (type == RubyRequestType_Locked_RMW_Read) ||
             (type == RubyRequestType_Load_Linked)) {
@@ -830,13 +838,13 @@ Sequencer::makeRequest(PacketPtr pkt)
 		    secondary_type = RubyRequestType_ST;
 		    DPRINTF(RubySequencer, "RMW\n");
 		}else if (pkt->req->get_hit_l2() == true){
-	            DPRINTF(RubySequencer,"BYPASS_1.%s.\n",primary_type);
+	            DPRINTF(RubySequencer,"BYPASS_1.\n");
                     primary_type = secondary_type = RubyRequestType_BPL1;
 		}else if (pkt->req->get_miss_l2() == true){
-	            DPRINTF(RubySequencer,"BYPASS_2.%s.\n",primary_type);
+	            DPRINTF(RubySequencer,"BYPASS_2.\n");
                     primary_type = secondary_type = RubyRequestType_BPL2;
                 } else {
-	            DPRINTF(RubySequencer,"Normal Read Request.%s.\n",primary_type);
+	            DPRINTF(RubySequencer,"Normal Read Request.\n");
                     primary_type = secondary_type = RubyRequestType_LD;
                 }
             }

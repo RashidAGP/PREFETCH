@@ -126,7 +126,8 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     Exclusive_Unblock, desc="Unblock from L1 requestor";
 
     MEM_Inv, desc="Invalidation from directory";
-    BP_L2_Load,     desc="ByPass L2";
+    BP_L1_Load,     desc="ByPass L1"; // BYPASS L1. This Request must be different
+    BP_L2_Load,     desc="ByPass L2"; // BYPASS L2.
   }
 
   // TYPES
@@ -264,7 +265,9 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
                                       MachineID requestor, Entry cache_entry) {
     if(type == CoherenceRequestType:GETS) {
       return Event:L1_GETS;
-    }else if(type == CoherenceRequestType:GETS_BP) {
+    }else if(type == CoherenceRequestType:GETS_BP_L1) { 
+      return Event:BP_L1_Load;
+    }else if(type == CoherenceRequestType:GETS_BP_L2) {
       return Event:BP_L2_Load;
     } else if(type == CoherenceRequestType:GET_INSTR) {
       return Event:L1_GET_INSTR;
@@ -428,7 +431,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     peek(L1RequestL2Network_in, RequestMsg) {
       enqueue(DirRequestL2Network_out, RequestMsg,0) {
         out_msg.addr := address;
-        out_msg.Type := CoherenceRequestType:GETS_BP;
+        out_msg.Type := CoherenceRequestType:GETS_BP_L2;
         out_msg.Requestor := machineID;
         out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
         out_msg.MessageSize := MessageSizeType:Control;
@@ -540,6 +543,20 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     }
   }
 
+  action(ds_bp_sendSharedDataToRequestor, "ds_bp", desc="Send data from cache to reqeustor L1 Cache because of ByPass") {
+    peek(L1RequestL2Network_in, RequestMsg) {
+      enqueue(responseL2Network_out, ResponseMsg, l2_response_latency) {
+        assert(is_valid(cache_entry));
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:DATA_BP;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+        out_msg.AckCount := 0;
+      }
+    }
+  }
   action(e_sendDataToGetSRequestors, "e", desc="Send data from cache to all GetS IDs") {
     assert(is_valid(tbe));
     assert(tbe.L1_GetS_IDs.count() > 0);
@@ -936,6 +953,13 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     jj_popL1RequestQueue;
   }
 
+  transition({SS,MT}, BP_L1_Load) {
+    ds_bp_sendSharedDataToRequestor;
+    nn_addSharer;
+    set_setMRU;
+    uu_profileHit;
+    jj_popL1RequestQueue;
+  }
 
   transition(SS, L1_GETX, SS_MB) {
     d_sendDataToRequestor;
