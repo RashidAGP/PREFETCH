@@ -499,6 +499,10 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     j_popIncomingRequestQueue;
   }
   // END PREFETCH
+  transition(I, Fetch, IM){
+   qf_queueMemoryFetchRequest;
+   j_popIncomingRequestQueue;
+  }
 
   transition(M, Fetch) {
     inv_sendCacheInvalidate;

@@ -1,8 +1,5 @@
-./build/X86/gem5.opt \
+gdb --args ./build/X86/gem5.opt \
     --outdir=/home/rashid/warm_result/gapbs/kron/bfs_prefetch \
-    --debug-flags=TLB,LSQ,PageTableWalker,RubySlicc,RubyCache,RubyGenerated,PageTableWalker,RubySequencer \
-    --redirect-stdout \
-    --redirect-stderr \
     ./configs/deprecated/example/fs.py \
     --checkpoint-dir=/home/rashid/new_benchmarks/kron/bfs \
     -r 1\
@@ -19,6 +16,8 @@
     --l1i_assoc=8 \
     --num-l2caches=1 \
     --num-dirs=1 \
+    --topology=Mesh_XY \
+    --mesh-rows=1 \
     --l2_size=2MB \
     --l2_assoc=16 \
     --cpu-clock=2GHz \

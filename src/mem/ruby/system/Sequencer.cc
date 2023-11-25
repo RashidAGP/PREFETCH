@@ -826,9 +826,17 @@ Sequencer::makeRequest(PacketPtr pkt)
                 primary_type = secondary_type = RubyRequestType_IFETCH;
             } else {
                 if (pkt->req->isReadModifyWrite()) {
-                    primary_type = RubyRequestType_RMW_Read;
-                    secondary_type = RubyRequestType_ST;
+		    primary_type = RubyRequestType_RMW_Read;
+		    secondary_type = RubyRequestType_ST;
+		    DPRINTF(RubySequencer, "RMW\n");
+		}else if (pkt->req->get_hit_l2() == true){
+	            DPRINTF(RubySequencer,"BYPASS_1.%s.\n",primary_type);
+                    primary_type = secondary_type = RubyRequestType_BPL1;
+		}else if (pkt->req->get_miss_l2() == true){
+	            DPRINTF(RubySequencer,"BYPASS_2.%s.\n",primary_type);
+                    primary_type = secondary_type = RubyRequestType_BPL2;
                 } else {
+	            DPRINTF(RubySequencer,"Normal Read Request.%s.\n",primary_type);
                     primary_type = secondary_type = RubyRequestType_LD;
                 }
             }

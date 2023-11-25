@@ -280,9 +280,9 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
       return Event:Ifetch;
     } else if ((type == RubyRequestType:ST) || (type == RubyRequestType:ATOMIC)) {
       return Event:Store;
-    } else if (type == RubyRequestType:BP_L1){
+    } else if (type == RubyRequestType:BPL1){
       return Event:BP_L1_Load;
-    } else if (type == RubyRequestType:BP_L2){
+    } else if (type == RubyRequestType:BPL2){
       return Event:BP_L2_Load;
     } else {
       error("Invalid RubyRequestType");
@@ -499,9 +499,9 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
                       TBEs[addr]);
             }
           }
-        }else if (in_msg.Type == RubyRequestType:BP_L1) {
+        }else if (in_msg.Type == RubyRequestType:BPL1) {
 		trigger(Event:BP_L1_Load, in_msg.LineAddress, getL1DCacheEntry(in_msg.LineAddress),TBEs[in_msg.LineAddress]);
-        }else if (in_msg.Type == RubyRequestType:BP_L2) {
+        }else if (in_msg.Type == RubyRequestType:BPL2) {
 		trigger(Event:BP_L2_Load, in_msg.LineAddress, getL1DCacheEntry(in_msg.LineAddress),TBEs[in_msg.LineAddress]);
 
         } else {
@@ -646,7 +646,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     peek(mandatoryQueue_in, RubyRequest) {
       enqueue(requestL1Network_out, RequestMsg,0) {
 
-        DPRINTF(RubySlicc, "%BYPASS L1.Address:%#x.\n", address);
+        DPRINTF(RubySlicc, "BYPASS L1.Address:%#x.\n", address);
         out_msg.addr := address;
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.Requestor := machineID;
@@ -666,7 +666,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     peek(mandatoryQueue_in, RubyRequest) {
       enqueue(requestL1Network_out, RequestMsg,0) {
 
-        DPRINTF(RubySlicc, "%BYPASS L2.Address:%#x.\n", address);
+        DPRINTF(RubySlicc, "BYPASS L2.Address:%#x.\n", address);
         out_msg.addr := address;
         out_msg.Type := CoherenceRequestType:GETS_BP;
         out_msg.Requestor := machineID;

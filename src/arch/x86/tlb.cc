@@ -897,13 +897,12 @@ void TLB::DelayedL2HitEvent:: process(){
    //assert(fault == NoFault && "Error in delayed Translation");
 
    Fault fault = NoFault;
-   DPRINTF(TLB,"Insert in L1 miss of L2:Addr:%#x.\n",this->req->getVaddr());
+   DPRINTF(TLB,"Insert in L1 miss of L2:Addr:%#x.Enabel hit_l2 flags\n",this->req->getVaddr());
    //DPRINTF(TLB,"Insert in L1 miss of L2.vaddr_l:%#x.\n",vaddr_l);
    //DPRINTF(TLB,"Insert in L1 miss of L2.entry_l:%#x.\n",entry_l.vaddr);
    tlb->insert_l1(entry_l.vaddr, entry_l, pcid_l);
    fault = tlb->translate(req, tc, translation, mode, delayedResponse,timing);
    //assert(fault == NoFault && "Error in L2 Delayed Translation");
-   
    req->set_hit_l2();
    req->reset_miss_l2();
    

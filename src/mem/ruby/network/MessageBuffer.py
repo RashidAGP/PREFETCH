@@ -62,8 +62,9 @@ class MessageBuffer(SimObject):
     randomization = Param.MessageRandomization(
         "ruby_system", "Randomization parameter"
     )
+    # PREFETCH
     allow_zero_latency = Param.Bool(
-        False,
+        True,
         "Allows messages to be enqueued \
                                             with zero latency. This is useful \
                                             for internall trigger queues and \
