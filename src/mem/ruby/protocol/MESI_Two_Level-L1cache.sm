@@ -1098,15 +1098,22 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 	a_bypass_l1_gets;
         k_popMandatoryQueue;
   }
-  transition({NP, I, S, E, IS, IM, SM, IS_I, M_I, SINK_WB_ACK, PF_IS, PF_IM, PF_SM, PF_IS_I}, {BP_L1_Load}) {
+  // There is a really big question:
+  // SHALL WE STORE IT OR JUST PYBASS IT?????????
+  // RIGHT NOW STORE/WRITE IT. THEN MOVING it
+  transition({NP, I, S, E, IS, IM, SM, IS_I, M_I, SINK_WB_ACK, PF_IS, PF_IM, PF_SM, PF_IS_I}, {BP_L1_Load},IS) {
 	// GETX for STORES
 	// GETS ONLY
+        oo_allocateL1DCacheBlock;
+        i_allocateTBE;
 	a_bypass_l1_gets;
         k_popMandatoryQueue;
   }
-  transition({NP, I, S, E, M, IS, IM, SM, IS_I, M_I, SINK_WB_ACK, PF_IS, PF_IM, PF_SM, PF_IS_I}, {BP_L2_Load}) {
+  transition({NP, I, S, E, M, IS, IM, SM, IS_I, M_I, SINK_WB_ACK, PF_IS, PF_IM, PF_SM, PF_IS_I}, {BP_L2_Load},IS) {
 	// GETX for STORES
 	// GETS ONLY
+        oo_allocateL1DCacheBlock;
+        i_allocateTBE;
 	a_bypass_l2_gets;
         k_popMandatoryQueue;
   }
@@ -1114,9 +1121,9 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   // There is really big question:
   // SHALL WE STORE IT OR JUST PYBASS IT?????????
   // RIGHT NOW STORE/WRITE IT. THEN MOVING it
-  transition({NP, I, S, E, M, IS, IM, SM, IS_I, M_I, SINK_WB_ACK, PF_IS, PF_IM, PF_SM, PF_IS_I}, {BP_L2_Resp,BP_RAM_Resp}){
+  transition(IS, {BP_L2_Resp,BP_RAM_Resp},S){
     u_writeDataToL1Cache;
-    j_sendUnblock;
+    //j_sendUnblock;
     hx_load_hit;
     //s_deallocateTBE;
     o_popIncomingResponseQueue;

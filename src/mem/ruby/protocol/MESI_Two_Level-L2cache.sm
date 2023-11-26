@@ -870,8 +870,8 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     zz_stallAndWaitL1RequestQueue;
   }
 
-
-  transition(NP, L1_GETS,  ISS) {
+  // PREFETCH, when also it recieves the BP_L1_Load then it must the same as L1_GETS.
+  transition(NP, {L1_GETS,BP_L1_Load},  ISS) {
     qq_allocateL2CacheBlock;
     ll_clearSharers;
     nn_addSharer;
@@ -952,7 +952,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     uu_profileHit;
     jj_popL1RequestQueue;
   }
-
+  // When it hits the cache
   transition({SS,MT}, BP_L1_Load) {
     ds_bp_sendSharedDataToRequestor;
     nn_addSharer;
