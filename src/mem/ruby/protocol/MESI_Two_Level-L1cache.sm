@@ -105,7 +105,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     PF_IS_I, AccessPermission:Busy, desc="Issued GETs, saw inv before data";
 
     // PREFETCH
-    BP_L1_M, AccessPermission:Read_Only, desc="Issued GETS, when the block is M";
+    //BP_L1_M, AccessPermission:Read_Only, desc="Issued GETS, when the block is M";
   }
 
   // EVENTS
@@ -1092,16 +1092,10 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   // Transitions for Load/Store/Replacement/WriteBack from transient states
 
 
-  transition(M, BP_L1_Load, BP_L1_M) {
-	// GETX for STORES
-	// GETS ONLY
-	a_bypass_l1_gets;
-        k_popMandatoryQueue;
-  }
   // There is a really big question:
   // SHALL WE STORE IT OR JUST PYBASS IT?????????
   // RIGHT NOW STORE/WRITE IT. THEN MOVING it
-  transition({NP, I, S, E, IS, IM, SM, IS_I, M_I, SINK_WB_ACK, PF_IS, PF_IM, PF_SM, PF_IS_I}, {BP_L1_Load},IS) {
+  transition({NP, I}, {BP_L1_Load},IS) {
 	// GETX for STORES
 	// GETS ONLY
         oo_allocateL1DCacheBlock;
@@ -1109,11 +1103,23 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 	a_bypass_l1_gets;
         k_popMandatoryQueue;
   }
-  transition({NP, I, S, E, M, IS, IM, SM, IS_I, M_I, SINK_WB_ACK, PF_IS, PF_IM, PF_SM, PF_IS_I}, {BP_L2_Load},IS) {
+  transition({NP, I}, {BP_L2_Load},IS) {
 	// GETX for STORES
 	// GETS ONLY
         oo_allocateL1DCacheBlock;
         i_allocateTBE;
+	a_bypass_l2_gets;
+        k_popMandatoryQueue;
+  }
+  transition({M, E, S}, {BP_L1_Load}) {
+	// GETX for STORES
+	// GETS ONLY
+	a_bypass_l1_gets;
+        k_popMandatoryQueue;
+  }
+  transition({M, E, S}, {BP_L2_Load}) {
+	// GETX for STORES
+	// GETS ONLY
 	a_bypass_l2_gets;
         k_popMandatoryQueue;
   }
@@ -1123,6 +1129,14 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   // RIGHT NOW STORE/WRITE IT. THEN MOVING it
   transition(IS, {BP_L2_Resp,BP_RAM_Resp},S){
     u_writeDataToL1Cache;
+    //j_sendUnblock;
+    hx_load_hit;
+    //s_deallocateTBE;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+  transition({E,M,S}, {BP_L2_Resp,BP_RAM_Resp}){
+    //u_writeDataToL1Cache;
     //j_sendUnblock;
     hx_load_hit;
     //s_deallocateTBE;
