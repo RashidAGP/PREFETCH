@@ -20,7 +20,7 @@ gdb --args ./build/X86/gem5.opt \
     --mesh-rows=1 \
     --l2_size=2MB \
     --l2_assoc=16 \
-    --cpu-clock=2GHz \
+    --cpu-clock=1GHz \
     --cacheline_size=64 \
     -I 250000000
 # -I 500000000
