@@ -320,6 +320,8 @@ MessageBuffer::dequeue(Tick current_time, bool decrement_messages)
     ++m_dequeues_this_cy;
 
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(), std::greater<MsgPtr>());
+    MsgPtr maxElement = m_prio_heap.back();
+    DPRINTF(RubyQueue,"MaxmElement for poping is :%s \n",maxElement);
     m_prio_heap.pop_back();
     if (decrement_messages) {
         // Record how much time is passed since the message was enqueued
@@ -462,7 +464,8 @@ MessageBuffer::stallMessage(Addr addr, Tick current_time)
 
 bool
 MessageBuffer::hasStalledMsg(Addr addr) const
-{
+{  
+    DPRINTF(RubyQueue,"Chechking has any stalls. Addr:%#x\n",addr);
     return (m_stall_msg_map.count(addr) != 0);
 }
 

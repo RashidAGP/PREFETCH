@@ -212,6 +212,9 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     Entry L1Icache_entry := static_cast(Entry, "pointer", L1Icache[addr]);
     return L1Icache_entry;
   }
+  Entry makeL1DCacheEntry(Addr addr), return_by_pointer="yes" {
+
+  }
 
   State getState(TBE tbe, Entry cache_entry, Addr addr) {
     assert((L1Dcache.isTagPresent(addr) && L1Icache.isTagPresent(addr)) == false);
@@ -995,9 +998,8 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
       //assert(is_valid(cache_entry));
       // I don't know about external hit???? TODO
       //assert(is_valid(cache_entry));
-      cache_entry.DataBlk := in_msg.DataBlk;
       // I am not sure about the externalHit
-      sequencer.readCallback(in_msg.addr, cache_entry.DataBlk, true);
+      sequencer.readCallback_hxx(in_msg.addr, in_msg.DataBlk, true);
     }
   }
   action(hh_store_hit, "\h", desc="Notify sequencer that store completed.")
@@ -1557,7 +1559,14 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
   }
-
+  // PREFETCH
+  transition(S, Data_Exclusive, E) {
+    u_writeDataToL1Cache;
+    hx_load_hit;
+    jj_sendExclusiveUnblock;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
   transition(IS, Data_Exclusive, E) {
     u_writeDataToL1Cache;
     hx_load_hit;
@@ -1628,8 +1637,8 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     q_updateAckCount;
     o_popIncomingResponseQueue;
   }
-
-  transition(SM, Ack_all, M) {
+  // PREFETCH. I added Data_all_Acks
+  transition(SM, {Ack_all, Data_all_Acks}, M) {
     jj_sendExclusiveUnblock;
     hhx_store_hit;
     s_deallocateTBE;

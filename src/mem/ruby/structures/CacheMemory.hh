@@ -102,6 +102,9 @@ class CacheMemory : public SimObject
 
     // find an unused entry and sets the tag appropriate for the address
     AbstractCacheEntry* allocate(Addr address, AbstractCacheEntry* new_entry);
+    // PREFETCH
+    AbstractCacheEntry* allocate_BP(Addr address, AbstractCacheEntry* new_entry);
+    // END PREFETCH
     void allocateVoid(Addr address, AbstractCacheEntry* new_entry)
     {
         allocate(address, new_entry);
@@ -109,6 +112,7 @@ class CacheMemory : public SimObject
 
     // Explicitly free up this address
     void deallocate(Addr address);
+    void deallocate_BP(Addr address);
 
     // Returns with the physical address of the conflicting cache line
     Addr cacheProbe(Addr address) const;

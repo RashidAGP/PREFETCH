@@ -1,6 +1,7 @@
 ./build/X86/gem5.opt \
     --outdir=/home/rashid/warm_result/gapbs/kron/bfs_prefetch \
-    --debug-flags=TLB,LSQ,PageTableWalker,RubySlicc,RubyCache,RubyGenerated,PageTableWalker,RubySequencer \
+    --debug-start=58738020100000 \
+    --debug-flags=TLB,LSQ,PageTableWalker,RubySlicc,RubyCache,RubyGenerated,PageTableWalker,RubySequencer,RubyQueue,RubySystem \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
