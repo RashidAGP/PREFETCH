@@ -50,6 +50,8 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
 
     M, AccessPermission:Maybe_Stale, desc="memory copy may be stale, i.e. other modified copies may exist";
     IM, AccessPermission:Busy, desc="Intermediate State I>M";
+    // PREFETCH
+    IM_BP, AccessPermission:Busy, desc="Intermadiate State I>M BP";
     MI, AccessPermission:Busy, desc="Intermediate State M>I";
     M_DRD, AccessPermission:Busy, desc="Intermediate State when there is a dma read";
     M_DRDI, AccessPermission:Busy, desc="Intermediate State when there is a dma read";
@@ -493,10 +495,22 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     bp_sendData;
     k_popIncomingResponseQueue;
   }
-  transition({I, ID, ID_W, M, IM, MI, M_DRD, M_DRDI, M_DWR, M_DWRI}, Fetch_BP) {
+  transition(IM_BP, Memory_Data_BP, M){
+    bp_sendData;
+    l_popMemQueue;
+    kd_wakeUpDependents;
+  } 
+  transition(I, Fetch_BP, IM_BP) {
     // Do sth
     bp_qf_queueMemoryFetchRequest;
     j_popIncomingRequestQueue;
+  }
+  transition(M, Fetch_BP) {
+    //Remove the packet. The cache has the right data
+    j_popIncomingRequestQueue;
+  }
+  transition(IM_BP,Fetch_BP){
+    z_stallAndWaitRequest;
   }
   // END PREFETCH
   transition(I, Fetch, IM){

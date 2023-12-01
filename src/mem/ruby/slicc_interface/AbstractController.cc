@@ -41,6 +41,7 @@
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 
 #include "debug/RubyQueue.hh"
+#include "debug/RubyCache.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/protocol/MemoryMsg.hh"
 #include "mem/ruby/system/RubySystem.hh"
@@ -147,6 +148,7 @@ AbstractController::stallBuffer(MessageBuffer* buf, Addr addr)
         msgVec->resize(m_in_ports, NULL);
         m_waiting_buffers[addr] = msgVec;
     }
+    DPRINTF(RubyQueue,"The count of message for this address is:%d\n",m_waiting_buffers.count(addr));
     DPRINTF(RubyQueue, "stalling %s port %d addr %#x\n", buf, m_cur_in_port,
             addr);
     assert(m_in_ports > m_cur_in_port);
@@ -157,6 +159,7 @@ void
 AbstractController::wakeUpBuffer(MessageBuffer* buf, Addr addr)
 {
     auto iter = m_waiting_buffers.find(addr);
+    DPRINTF(RubyQueue, "Waking Up buffers. Addr:%#x\n",addr);
     if (iter != m_waiting_buffers.end()) {
         bool has_other_msgs = false;
         MsgVecType* msgVec = iter->second;
@@ -183,6 +186,7 @@ AbstractController::wakeUpBuffers(Addr addr)
         // Wake up all possible lower rank (i.e. lower priority) buffers that could
         // be waiting on this message.
         //
+	DPRINTF(RubyQueue,"The size is:%d\n",m_waiting_buffers.count(addr));
         for (int in_port_rank = m_cur_in_port - 1;
              in_port_rank >= 0;
              in_port_rank--) {
@@ -225,7 +229,7 @@ AbstractController::wakeUpAllBuffers()
 
     std::vector<MsgVecType*> wokeUpMsgVecs;
     MsgBufType wokeUpMsgBufs;
-
+    DPRINTF(RubyQueue, "Waking Up all buffers. Not just for a specific address\n");
     if (m_waiting_buffers.size() > 0) {
         for (WaitingBufType::iterator buf_iter = m_waiting_buffers.begin();
              buf_iter != m_waiting_buffers.end();
@@ -274,14 +278,22 @@ AbstractController::serviceMemoryQueue()
         = std::make_shared<Request>(mem_msg->m_addr, req_size, 0, m_id);
     PacketPtr pkt;
     if (mem_msg->getType() == MemoryRequestType_MEMORY_WB) {
+        DPRINTF(RubyCache,"RubyRequestType is MEMORY_WB\n");
         pkt = Packet::createWrite(req);
         pkt->allocate();
         pkt->setData(mem_msg->m_DataBlk.getData(getOffset(mem_msg->m_addr),
             req_size));
     } else if (mem_msg->getType() == MemoryRequestType_MEMORY_READ) {
+        DPRINTF(RubyCache,"RubyRequestType is MEMORY_READ\n");
+	pkt = Packet::createRead(req);
+        uint8_t *newData = new uint8_t[req_size];
+        pkt->dataDynamic(newData);
+    } else if (mem_msg->getType() == MemoryRequestType_MEMORY_READ_BP){
+        DPRINTF(RubyCache,"RubyRequestType is MEMORY_READ_BP\n");
         pkt = Packet::createRead(req);
         uint8_t *newData = new uint8_t[req_size];
         pkt->dataDynamic(newData);
+	pkt->set_BP_L2();
     } else {
         panic("Unknown memory request type (%s) for addr %p",
               MemoryRequestType_to_string(mem_msg->getType()),
@@ -300,6 +312,7 @@ AbstractController::serviceMemoryQueue()
         scheduleEvent(Cycles(1));
         recvTimingResp(pkt);
     } else if (memoryPort.sendTimingReq(pkt)) {
+	DPRINTF(RubyQueue, "Send Data Timing\n");
         mem_queue->dequeue(clockEdge());
         // Since the queue was popped the controller may be able
         // to make more progress. Make sure it wakes up
@@ -370,6 +383,7 @@ AbstractController::functionalMemoryWrite(PacketPtr pkt)
 void
 AbstractController::recvTimingResp(PacketPtr pkt)
 {
+    DPRINTF(RubyQueue, "recvTimingResp for address:%#x.\n",pkt->getAddr());
     assert(getMemRespQueue());
     assert(pkt->isResponse());
 
@@ -388,6 +402,9 @@ AbstractController::recvTimingResp(PacketPtr pkt)
         // Copy data from the packet
         (*msg).m_DataBlk.setData(pkt->getPtr<uint8_t>(), 0,
                                  RubySystem::getBlockSizeBytes());
+	if (pkt->get_BP_L2() == true){
+             (*msg).m_Type = MemoryRequestType_MEMORY_READ_BP;
+	}
     } else if (pkt->isWrite()) {
         (*msg).m_Type = MemoryRequestType_MEMORY_WB;
         (*msg).m_MessageSize = MessageSizeType_Writeback_Control;

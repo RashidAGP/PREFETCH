@@ -193,7 +193,7 @@ MessageBuffer::areNSlotsAvailable(unsigned int n, Tick current_time)
 const Message*
 MessageBuffer::peek() const
 {
-    DPRINTF(RubyQueue, "Peeking at head of queue.\n");
+    DPRINTF(RubyQueue, "Peeking at head of queue.");
     const Message* msg_ptr = m_prio_heap.front().get();
     assert(msg_ptr);
 
@@ -299,7 +299,7 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta)
 Tick
 MessageBuffer::dequeue(Tick current_time, bool decrement_messages)
 {
-    DPRINTF(RubyQueue, "Popping\n");
+    DPRINTF(RubyQueue, "Popping.");
     assert(isReady(current_time));
 
     // get MsgPtr of the message about to be dequeued
@@ -321,7 +321,7 @@ MessageBuffer::dequeue(Tick current_time, bool decrement_messages)
 
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(), std::greater<MsgPtr>());
     MsgPtr maxElement = m_prio_heap.back();
-    DPRINTF(RubyQueue,"MaxmElement for poping is :%s \n",maxElement);
+    DPRINTF(RubyQueue,"MaxmElement for poping is :%s \n",*maxElement);
     m_prio_heap.pop_back();
     if (decrement_messages) {
         // Record how much time is passed since the message was enqueued
@@ -387,8 +387,9 @@ MessageBuffer::reanalyzeList(std::list<MsgPtr> &lt, Tick schdTick)
 {
     while (!lt.empty()) {
         MsgPtr m = lt.front();
+	DPRINTF(RubyQueue,"Reanalzie List Message is :%s\n",*m);
         assert(m->getLastEnqueueTime() <= schdTick);
-
+        DPRINTF(RubyQueue,"Pushing in the m_prio_heap\n");
         m_prio_heap.push_back(m);
         push_heap(m_prio_heap.begin(), m_prio_heap.end(),
                   std::greater<MsgPtr>());
@@ -405,7 +406,7 @@ MessageBuffer::reanalyzeList(std::list<MsgPtr> &lt, Tick schdTick)
 void
 MessageBuffer::reanalyzeMessages(Addr addr, Tick current_time)
 {
-    DPRINTF(RubyQueue, "ReanalyzeMessages %#x\n", addr);
+    DPRINTF(RubyQueue, "ReanalyzeMessages. It moving for waiting_list to the m_prio_list %#x\n", addr);
     assert(m_stall_msg_map.count(addr) > 0);
 
     //
@@ -423,7 +424,7 @@ MessageBuffer::reanalyzeMessages(Addr addr, Tick current_time)
 void
 MessageBuffer::reanalyzeAllMessages(Tick current_time)
 {
-    DPRINTF(RubyQueue, "ReanalyzeAllMessages\n");
+    DPRINTF(RubyQueue, "Reanalyze All Messages\n");
 
     //
     // Put all stalled messages associated with this address back on the
@@ -483,7 +484,7 @@ MessageBuffer::enqueueDeferredMessages(Addr addr, Tick curTime, Tick delay)
     assert(!isDeferredMsgMapEmpty(addr));
     std::vector<MsgPtr>& msg_vec = m_deferred_msg_map[addr];
     assert(msg_vec.size() > 0);
-
+    DPRINTF(RubyQueue, "Enqueue this address from DeferredMesssageQueue. Addr:%#x\n",addr);
     // enqueue all deferred messages associated with this address
     for (MsgPtr m : msg_vec) {
         enqueue(m, curTime, delay);

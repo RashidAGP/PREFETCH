@@ -418,9 +418,18 @@ class Packet : public Printable, public Extensible<Packet>
      * This is used for correctness/debugging only.
      */
     uint64_t htmTransactionUid;
+    // PREFETCH
+    bool BP_L2 = false;
+    bool BP_L1 = false;
 
   public:
+    void set_BP_L2() {BP_L2 = true;}
+    void reset_BP_L2() {BP_L2 = false;}
+    bool get_BP_L2() {return BP_L2;}
 
+    void set_BP_L1() {BP_L1 = true;}
+    void reset_BP_L1() {BP_L1 = false;}
+    bool get_BP_L1() {return BP_L1 ;}
     /**
      * The extra delay from seeing the packet until the header is
      * transmitted. This delay is used to communicate the crossbar

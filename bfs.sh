@@ -1,7 +1,6 @@
 ./build/X86/gem5.opt \
     --outdir=/home/rashid/warm_result/gapbs/kron/bfs_prefetch \
-    --debug-start=58738020100000 \
-    --debug-flags=TLB,LSQ,PageTableWalker,RubySlicc,RubyCache,RubyGenerated,PageTableWalker,RubySequencer,RubyQueue,RubySystem \
+    --debug-flags=TLB,LSQ,PageTableWalker,RubySlicc,RubyCache,RubyGenerated,PageTableWalker,RubySequencer,DRAMsim3,MemoryAccess \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
@@ -12,6 +11,7 @@
     --cpu-type=DerivO3CPU \
     --restore-with-cpu=DerivO3CPU \
     --mem-size=16GB \
+    --mem-type=DRAMsim3 \
     --ruby \
     --caches \
     --l1d_size=64kB \
