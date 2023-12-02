@@ -567,11 +567,8 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     }
   }
   action(ds_bp_sendSharedDataToRequestor, "ds_bp", desc="Send data from cache to reqeustor L1 Cache because of ByPass") {
-    DPRINTF(RubySlicc,"x.\n");
     peek(responseL2Network_in , ResponseMsg) {
-      DPRINTF(RubySlicc,"y.\n");
       enqueue(responseL2Network_out, ResponseMsg, l2_response_latency) {
-        DPRINTF(RubySlicc,"z.\n");
         assert(is_valid(cache_entry));
         out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA_BP;
@@ -585,11 +582,8 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     }
   }
   action(dw_bp_sendSharedDataToRequestor, "dw_bp", desc="Send data from cache to reqeustor L1 Cache because of ByPass") {
-    DPRINTF(RubySlicc,"x.\n");
     peek(L1RequestL2Network_in , RequestMsg) {
-      DPRINTF(RubySlicc,"y.\n");
       enqueue(responseL2Network_out, ResponseMsg, l2_response_latency) {
-        DPRINTF(RubySlicc,"z.\n");
         assert(is_valid(cache_entry));
         out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA_BP;
@@ -878,6 +872,9 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
       cache_entry.Sharers.clear();
     }
   }
+  action(dw_ll_clearSharers, "\dw_l", desc="Remove all L1 shares without checking input") {
+      cache_entry.Sharers.clear();
+  }
 
   action(mm_markExclusive, "\m", desc="set the exclusive owner") {
     peek(L1RequestL2Network_in, RequestMsg) {
@@ -900,6 +897,9 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   action(zz_stallAndWaitL1RequestQueue, "zz", desc="recycle L1 request queue") {
     stall_and_wait(L1RequestL2Network_in, address);
   }
+  action(zb_stallAndWaitL1RequestQueue, "zb", desc="recycle L1 request queue") {
+    L1RequestL2Network_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
+  }
 
   action(zn_recycleResponseNetwork, "zn", desc="recycle memory request") {
     responseL2Network_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
@@ -915,19 +915,13 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   // PREFETCH
   // Send the request. At the same time check the cache
   // TODO 1
-  transition(NP,BP_L2_Load,ISS){
-      // JUST GETS. GETX for stores.
-      // Also check the cache.
-      a_bp_issueFetchToMemory;
-      jj_popL1RequestQueue;
-  }
   transition(M_I, {BP_L2_Load, BP_L1_Load}){
      zz_stallAndWaitL1RequestQueue;
   }
   // Wrong prediction. But send a request to the memory, At the same time check the L2 Cache
   transition(SS, BP_L2_Load){
     dw_bp_sendSharedDataToRequestor;
-    nn_addSharer;
+    ///nn_addSharer;
     set_setMRU;
     uu_profileHit;
     // Send data to the memory
@@ -964,10 +958,18 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   // PREFETCH, when also it recieves the BP_L1_Load then it must the same as L1_GETS.
+  transition(NP,BP_L2_Load,ISS){
+        qq_allocateL2CacheBlock;
+        ll_clearSharers;
+        i_allocateTBE;
+	// I DON'T KNOW WHAT IS THIS TODO
+        ss_recordGetSL1ID;
+        a_bp_issueFetchToMemory;
+        jj_popL1RequestQueue;
+  }
   transition(NP, {L1_GETS,BP_L1_Load},  ISS) {
     qq_allocateL2CacheBlock;
     ll_clearSharers;
-    nn_addSharer;
     i_allocateTBE;
     ss_recordGetSL1ID;
     a_issueFetchToMemory;
@@ -1010,6 +1012,8 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   transition(NP, Mem_Data, SS){
     qq_allocateL2CacheBlock;
     m_writeDataToCache;
+    dw_ll_clearSharers;
+    ds_nn_addSharer;
     e_bp_sendDataToGetSRequestors;
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
@@ -1057,16 +1061,16 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   // When it hits the cache
   transition({SS, M}, BP_L1_Load) {
     dw_bp_sendSharedDataToRequestor;
-    //nn_addSharer;
-    //set_setMRU;
+    nn_addSharer;
+    set_setMRU;
     uu_profileHit;
     jj_popL1RequestQueue;
   }
   // Send also to the memory
   transition(M, BP_L2_Load) {
     dw_bp_sendSharedDataToRequestor;
-    //nn_addSharer;
-    //set_setMRU;
+    nn_addSharer;
+    set_setMRU;
     // Send to the memory
     a_bp_issueFetchToMemory;
     uu_profileHit;
@@ -1190,7 +1194,12 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     set_setMRU;
     jj_popL1RequestQueue;
   }
-
+  // Send it directly to the memory
+  transition(I_I, {BP_L1_Load,BP_L2_Load}){
+      //a_bp_issueFetchToMemory;
+      //jj_popL1RequestQueue;
+      zz_stallAndWaitL1RequestQueue;
+  }
   transition(MT, {L2_Replacement, MEM_Inv}, MT_I) {
     i_allocateTBE;
     f_sendInvToSharers;
@@ -1265,6 +1274,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   transition(I_I, Ack_all, M_I) {
+    // This is clean Replacement
     c_exclusiveCleanReplacement;
     o_popIncomingResponseQueue;
   }

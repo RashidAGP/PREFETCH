@@ -52,6 +52,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     IM, AccessPermission:Busy, desc="Intermediate State I>M";
     // PREFETCH
     IM_BP, AccessPermission:Busy, desc="Intermadiate State I>M BP";
+
     MI, AccessPermission:Busy, desc="Intermediate State M>I";
     M_DRD, AccessPermission:Busy, desc="Intermediate State when there is a dma read";
     M_DRDI, AccessPermission:Busy, desc="Intermediate State when there is a dma read";
@@ -491,10 +492,10 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
 
 
   // PREFETCH
-  transition({I, ID, ID_W, M, IM, MI, M_DRD, M_DRDI, M_DWR, M_DWRI}, Memory_Data_BP) {
-    bp_sendData;
-    k_popIncomingResponseQueue;
-  }
+  //transition({I, M, IM, MI, M_DRD, M_DRDI, M_DWR, M_DWRI}, Memory_Data_BP) {
+  //  bp_sendData;
+  //  k_popIncomingResponseQueue;
+  //}
   transition(IM_BP, Memory_Data_BP, M){
     bp_sendData;
     l_popMemQueue;
@@ -505,6 +506,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     bp_qf_queueMemoryFetchRequest;
     j_popIncomingRequestQueue;
   }
+  // HERE
   transition(M, Fetch_BP) {
     //Remove the packet. The cache has the right data
     j_popIncomingRequestQueue;
