@@ -1,4 +1,4 @@
-./build/X86/gem5.opt \
+./build/X86/gem5.fast \
     --outdir=/home/rashid/warm_result/gapbs/kron/bfs_prefetch \
     --debug-flags=TLB,LSQ,PageTableWalker,RubySlicc,RubyCache,RubyGenerated,PageTableWalker,RubySequencer,DRAMsim3,MemoryAccess,LSQ,LSQUnit \
     --redirect-stdout \
@@ -11,7 +11,7 @@
     --cpu-type=DerivO3CPU \
     --restore-with-cpu=DerivO3CPU \
     --mem-size=16GB \
-    --mem-type=DRAMsim3 \
+    --mem-type=DRAMsim3\
     --ruby \
     --caches \
     --l1d_size=64kB \
@@ -24,5 +24,5 @@
     --l2_assoc=16 \
     --cpu-clock=1GHz \
     --cacheline_size=64 \
-    -I 250000000
+    -I 50000000
 # -I 500000000
