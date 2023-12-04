@@ -253,6 +253,8 @@ LSQUnit::name() const
 
 LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
     : statistics::Group(parent),
+      ADD_STAT(Load_Latency, statistics::units::Count::get(),
+               "Average Load Latency",del_loads/num_loads),
       ADD_STAT(forwLoads, statistics::units::Count::get(),
                "Number of loads that had data forwarded from stores"),
       ADD_STAT(squashedLoads, statistics::units::Count::get(),
@@ -1139,7 +1141,16 @@ LSQUnit::writeback(const DynInstPtr &inst, PacketPtr pkt)
                     "due to pending fault.\n", inst->seqNum);
         }
     }
-
+    if (inst->isLoad() == true && inst->getName() == "ld"){
+	inst->set_finish_cache_time(inst->tcBase()->getCpuPtr()->curCycle());
+	Cycles start,stop,delay = Cycles(0);
+	start = inst->get_start_cache_time();
+	stop  = inst->get_finish_cache_time();
+	delay = stop -start;
+	stats.num_loads++;
+	stats.del_loads += delay;
+	//printf("Delay:%ld.\n",delay);
+    }
     // Need to insert instruction into queue to commit
     iewStage->instToCommit(inst);
 

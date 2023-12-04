@@ -812,6 +812,7 @@ void Walker::DelayedInsertEvent:: process(){
    tlb_p->insert_l2(entry_p.vaddr, entry_p, 0x000);
    req_p->set_miss_l2();
    req_p->reset_hit_l2();
+   tlb_p->incr_ByPass_L2();
    //this->translation->finish(fault,req,tc,mode);
    bool delayedResponse;
    Fault fault = tlb_p->translate(req_p, tc_p, NULL, mode_p,

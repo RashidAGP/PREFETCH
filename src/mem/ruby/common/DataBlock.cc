@@ -94,7 +94,7 @@ DataBlock::atomicPartial(const DataBlock &dblk, const WriteMask &mask)
     }
     mask.performAtomic(m_data);
 }
-
+/*
 void
 DataBlock::print(std::ostream& out) const
 {
@@ -105,6 +105,11 @@ DataBlock::print(std::ostream& out) const
             << "0x" << (int)m_data[i] << " " << std::setfill(' ');
     }
     out << std::dec << "]" << std::flush;
+}
+*/
+void
+DataBlock::print(std::ostream& out) const
+{
 }
 
 const uint8_t*

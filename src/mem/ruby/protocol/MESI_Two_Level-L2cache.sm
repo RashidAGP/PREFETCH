@@ -566,6 +566,20 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
       }
     }
   }
+  action(ds_2_sendSharedDataToRequestor, "ds_2", desc="Send data from cache to reqeustor (BP)") {
+    peek(L1RequestL2Network_in, RequestMsg) {
+      enqueue(responseL2Network_out, ResponseMsg, l2_response_latency) {
+        assert(is_valid(cache_entry));
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:DATA_BP;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+        out_msg.AckCount := 0;
+      }
+    }
+  }
   action(ds_bp_sendSharedDataToRequestor, "ds_bp", desc="Send data from cache to reqeustor L1 Cache because of ByPass") {
     peek(responseL2Network_in , ResponseMsg) {
       enqueue(responseL2Network_out, ResponseMsg, l2_response_latency) {
@@ -1059,11 +1073,18 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   }
   // PREFETCH
   // When it hits the cache
-  transition({SS, M}, BP_L1_Load) {
+  transition(SS, BP_L1_Load) {
     dw_bp_sendSharedDataToRequestor;
     nn_addSharer;
     set_setMRU;
     uu_profileHit;
+    jj_popL1RequestQueue;
+  }
+  transition(M, BP_L1_Load, SS) {
+    // This is mine
+    ds_2_sendSharedDataToRequestor;
+    nn_addSharer;
+    set_setMRU;
     jj_popL1RequestQueue;
   }
   // Send also to the memory
@@ -1172,9 +1193,9 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   transition(MT_TEST, L1_PUTX, M){
     ll_clearSharers;
     mr_writeDataToCacheFromRequest;
-    kd_wakeUpDependents;
     t_sendWBAck;
     jj_popL1RequestQueue;
+    kd_wakeUpDependents;
   }
   // RECV
   transition(MT_TEST, {WB_Data_Bad, WB_Data_clean_Bad}, SS) {

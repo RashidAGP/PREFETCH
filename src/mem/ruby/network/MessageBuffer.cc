@@ -196,7 +196,6 @@ MessageBuffer::peek() const
     DPRINTF(RubyQueue, "Peeking at head of queue.");
     const Message* msg_ptr = m_prio_heap.front().get();
     assert(msg_ptr);
-
     DPRINTF(RubyQueue, "Message: %s\n", (*msg_ptr));
     return msg_ptr;
 }

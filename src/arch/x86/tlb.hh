@@ -150,6 +150,9 @@ namespace X86ISA
 	    statistics::Scalar L1TLB_l2_miss;
 	    statistics::Scalar L1TLB_l2_hit;
 	    statistics::Scalar L1TLB_l2_access;
+
+	    statistics::Scalar ByPass_L1;
+	    statistics::Scalar ByPass_L2;
         } stats;
 
         Fault translateInt(bool read, RequestPtr req, ThreadContext *tc);
@@ -159,6 +162,8 @@ namespace X86ISA
                 bool &delayedResponse, bool timing);
 
       public:
+	void incr_ByPass_L1() { stats.ByPass_L1++;}
+	void incr_ByPass_L2() { stats.ByPass_L2++;}
 	uint64_t added_cycles = 0;
 	void incr_pw_latency(uint64_t delay_pw) {
 		added_cycles += delay_pw;

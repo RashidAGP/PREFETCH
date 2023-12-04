@@ -704,7 +704,7 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
             (type == RubyRequestType_Load_Linked)) {
             pkt->setData(
                 data.getData(getOffset(request_address), pkt->getSize()));
-            DPRINTF(RubySequencer, "read data %s\n", data);
+            DPRINTF(RubySequencer, "read data.\n");
         } else if (pkt->req->isSwap()) {
             assert(!pkt->isMaskedWrite());
             std::vector<uint8_t> overwrite_val(pkt->getSize());

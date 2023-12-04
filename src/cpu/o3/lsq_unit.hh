@@ -538,6 +538,10 @@ class LSQUnit
         /** Distribution of cycle latency between the first time a load
          * is issued and its completion */
         statistics::Distribution loadToUse;
+        // PREFETCH
+	statistics::Formula Load_Latency;
+	statistics::Scalar num_loads = 0;
+	statistics::Scalar del_loads = 0;
     } stats;
 
   public:

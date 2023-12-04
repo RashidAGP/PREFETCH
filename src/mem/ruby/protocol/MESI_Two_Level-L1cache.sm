@@ -973,7 +973,6 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
          desc="Notify sequencer the load completed.")
   {
     assert(is_valid(cache_entry));
-    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     L1Dcache.setMRU(cache_entry);
     sequencer.readCallback(address, cache_entry.DataBlk);
   }
@@ -989,7 +988,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   action(hx_load_hit, "hx", desc="Notify sequencer the load completed.")
   {
     assert(is_valid(cache_entry));
-    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    //DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     // Request misses and new replacement policy info is set for new entry.
     // No need to setMRU on external hit.
     sequencer.readCallback(address, cache_entry.DataBlk, true);

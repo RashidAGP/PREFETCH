@@ -259,7 +259,7 @@ NetDest::resize()
         m_bits[i].setSize(MachineType_base_count((MachineType)i));
     }
 }
-
+/*
 void
 NetDest::print(std::ostream& out) const
 {
@@ -272,6 +272,11 @@ NetDest::print(std::ostream& out) const
         out << " - ";
     }
     out << "]";
+}
+*/
+void
+NetDest::print(std::ostream& out) const
+{
 }
 
 bool

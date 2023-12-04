@@ -804,7 +804,10 @@ TLB::TlbStats::TlbStats(statistics::Group *parent)
 
     ADD_STAT(L2TLB_l2_access, statistics::units::Count::get(), "L2Cache Access (L2 TLB Miss)"),
     ADD_STAT(L2TLB_l2_miss, statistics::units::Count::get(), "L2Cache Misses (L2 TLB Miss)"),
-    ADD_STAT(L2TLB_l2_hit, statistics::units::Count::get(), "L2Cache Hitts (L2 TLB Misses )")
+    ADD_STAT(L2TLB_l2_hit, statistics::units::Count::get(), "L2Cache Hitts (L2 TLB Misses )"),
+
+    ADD_STAT(ByPass_L1, statistics::units::Count::get(), "# of ByPass L1 Cache Request"),
+    ADD_STAT(ByPass_L2, statistics::units::Count::get(), "# of ByPass L2 Cache Request")
 
 {
 }
@@ -905,7 +908,7 @@ void TLB::DelayedL2HitEvent:: process(){
    //assert(fault == NoFault && "Error in L2 Delayed Translation");
    req->set_hit_l2();
    req->reset_miss_l2();
-   
+   tlb->incr_ByPass_L1();   
    if (fault == NoFault){
        assert(req->hasPaddr() && "Req has no paddr.\n");
    }

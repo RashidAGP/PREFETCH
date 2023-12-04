@@ -186,10 +186,13 @@ AbstractController::wakeUpBuffers(Addr addr)
         // Wake up all possible lower rank (i.e. lower priority) buffers that could
         // be waiting on this message.
         //
-	DPRINTF(RubyQueue,"The size is:%d\n",m_waiting_buffers.count(addr));
-        for (int in_port_rank = m_cur_in_port - 1;
+	DPRINTF(RubyQueue,"Before.in_port_rank:%d.\n",m_cur_in_port);
+	DPRINTF(RubyQueue,"The size of waiting buffers is:%d.Address:%#x\n",m_waiting_buffers.count(addr),addr);
+        //for (int in_port_rank = m_cur_in_port - 1;
+        for (int in_port_rank = m_cur_in_port ;
              in_port_rank >= 0;
              in_port_rank--) {
+	    DPRINTF(RubyQueue,"in_port_rank:%d.\n",in_port_rank);
             if ((*(m_waiting_buffers[addr]))[in_port_rank] != NULL) {
                 (*(m_waiting_buffers[addr]))[in_port_rank]->
                     reanalyzeMessages(addr, clockEdge());

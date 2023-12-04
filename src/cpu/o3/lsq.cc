@@ -1237,6 +1237,9 @@ LSQ::SingleDataRequest::buildPackets()
         // hardware transactional memory
         // If request originates in a transaction (not necessarily a HtmCmd),
         // then the packet should be marked as such.
+	if (isLoad()){
+		_inst->set_start_cache_time(_inst->tcBase()->getCpuPtr()->curCycle());
+	}
         if (_inst->inHtmTransactionalState()) {
             _packets.back()->setHtmTransactional(
                 _inst->getHtmTransactionUid());
