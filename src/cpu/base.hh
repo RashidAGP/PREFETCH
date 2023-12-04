@@ -155,6 +155,7 @@ class BaseCPU : public ClockedObject
 
         statistics::Formula hostInstRate;
         statistics::Formula hostOpRate;
+
     };
 
     /**
@@ -166,7 +167,6 @@ class BaseCPU : public ClockedObject
     SignalSinkPort<bool> modelResetPort;
 
   public:
-
     /**
      * Purely virtual method that returns a reference to the data
      * port. All subclasses must implement this method.

@@ -139,15 +139,15 @@ class DynInst : public ExecContext, public RefCounted
 
     /** InstRecord that tracks this instructions. */
     trace::InstRecord *traceData = nullptr;
-    void set_start_cache_time(Cycles _start) { start_cache_time = _start;}
-    void set_finish_cache_time(Cycles _finish) { finish_cache_time = _finish;}
+    void set_start_cache_time(uint64_t _start) { start_cache_time = _start;}
+    void set_finish_cache_time(uint64_t _finish) { finish_cache_time = _finish;}
 
-    Cycles get_start_cache_time() { return start_cache_time;}
-    Cycles get_finish_cache_time() { return finish_cache_time;}
+    uint64_t get_start_cache_time() { return start_cache_time;}
+    uint64_t get_finish_cache_time() { return finish_cache_time;}
 
   protected:
-    Cycles start_cache_time = Cycles(0);
-    Cycles finish_cache_time = Cycles(0);
+    uint64_t start_cache_time = 0;
+    uint64_t finish_cache_time = 0;
     enum Status
     {
         IqEntry,                 /// Instruction is in the IQ

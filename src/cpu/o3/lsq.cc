@@ -1238,7 +1238,8 @@ LSQ::SingleDataRequest::buildPackets()
         // If request originates in a transaction (not necessarily a HtmCmd),
         // then the packet should be marked as such.
 	if (isLoad()){
-		_inst->set_start_cache_time(_inst->tcBase()->getCpuPtr()->curCycle());
+		uint64_t start = static_cast<uint64_t>(_inst->tcBase()->getCpuPtr()->curCycle());
+		_inst->set_start_cache_time(start);
 	}
         if (_inst->inHtmTransactionalState()) {
             _packets.back()->setHtmTransactional(

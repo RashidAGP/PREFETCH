@@ -253,8 +253,6 @@ LSQUnit::name() const
 
 LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
     : statistics::Group(parent),
-      ADD_STAT(Load_Latency, statistics::units::Count::get(),
-               "Average Load Latency",del_loads/num_loads),
       ADD_STAT(forwLoads, statistics::units::Count::get(),
                "Number of loads that had data forwarded from stores"),
       ADD_STAT(squashedLoads, statistics::units::Count::get(),
@@ -272,7 +270,12 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
                "Number of times an access to memory failed due to the cache "
                "being blocked"),
       ADD_STAT(loadToUse, "Distribution of cycle latency between the "
-                "first time a load is issued and its completion")
+                "first time a load is issued and its completion"),
+      ADD_STAT(num_loads, "# of loads"),
+      ADD_STAT(del_loads, "Total Load Delay"),
+      ADD_STAT(ave_load_lat, "Average Load Latency", del_loads/num_loads)
+
+
 {
     loadToUse
         .init(0, 299, 10)
@@ -1143,12 +1146,16 @@ LSQUnit::writeback(const DynInstPtr &inst, PacketPtr pkt)
     }
     if (inst->isLoad() == true && inst->getName() == "ld"){
 	inst->set_finish_cache_time(inst->tcBase()->getCpuPtr()->curCycle());
-	Cycles start,stop,delay = Cycles(0);
+	uint64_t start,stop,delay = 0;
 	start = inst->get_start_cache_time();
-	stop  = inst->get_finish_cache_time();
+	stop  = inst->tcBase()->getCpuPtr()->curCycle();
 	delay = stop -start;
-	stats.num_loads++;
-	stats.del_loads += delay;
+	incr_num_loads();
+	total_delay += delay;
+	if ((inst->get_start_cache_time() != Cycles(0)) && (delay < 10)){
+        //	incr_num_loads();
+        	incr_load_delay(total_delay);
+	}
 	//printf("Delay:%ld.\n",delay);
     }
     // Need to insert instruction into queue to commit
