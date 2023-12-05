@@ -139,8 +139,15 @@ class DynInst : public ExecContext, public RefCounted
 
     /** InstRecord that tracks this instructions. */
     trace::InstRecord *traceData = nullptr;
+    void set_start_cache_time(uint64_t _start) { start_cache_time = _start;}
+    void set_finish_cache_time(uint64_t _finish) { finish_cache_time = _finish;}
+
+    uint64_t get_start_cache_time() { return start_cache_time;}
+    uint64_t get_finish_cache_time() { return finish_cache_time;}
 
   protected:
+    uint64_t start_cache_time = 0;
+    uint64_t finish_cache_time = 0;
     enum Status
     {
         IqEntry,                 /// Instruction is in the IQ
@@ -330,6 +337,7 @@ class DynInst : public ExecContext, public RefCounted
     uint8_t readyRegs = 0;
 
   public:
+    std::string getName() { return staticInst->getName();}
     /////////////////////// Load Store Data //////////////////////
     /** The effective virtual address (lds & stores only). */
     Addr effAddr = 0;

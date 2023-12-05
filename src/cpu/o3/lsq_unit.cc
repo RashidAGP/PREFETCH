@@ -270,7 +270,12 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
                "Number of times an access to memory failed due to the cache "
                "being blocked"),
       ADD_STAT(loadToUse, "Distribution of cycle latency between the "
-                "first time a load is issued and its completion")
+                "first time a load is issued and its completion"),
+      ADD_STAT(num_loads, "# of loads"),
+      ADD_STAT(del_loads, "Total Load Delay"),
+      ADD_STAT(ave_load_lat, "Average Load Latency", del_loads/num_loads)
+
+
 {
     loadToUse
         .init(0, 299, 10)
@@ -1139,7 +1144,19 @@ LSQUnit::writeback(const DynInstPtr &inst, PacketPtr pkt)
                     "due to pending fault.\n", inst->seqNum);
         }
     }
-
+    if (inst->isLoad() == true && inst->getName() == "ld"){
+	inst->set_finish_cache_time(inst->tcBase()->getCpuPtr()->curCycle());
+	uint64_t start,stop,delay = 0;
+	start = inst->get_start_cache_time();
+	stop  = inst->tcBase()->getCpuPtr()->curCycle();
+	delay = stop -start;
+	if ((inst->get_start_cache_time() != Cycles(0)) ){
+        	total_delay += delay;
+        	incr_num_loads();
+        	incr_load_delay(total_delay);
+	}
+	//printf("Delay:%ld.\n",delay);
+    }
     // Need to insert instruction into queue to commit
     iewStage->instToCommit(inst);
 
@@ -1389,7 +1406,17 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
 
         gem5::ThreadContext *thread = cpu->tcBase(lsqID);
         PacketPtr main_pkt = new Packet(request->mainReq(), MemCmd::ReadReq);
-
+	/*
+	if (request->mainReq()->get_miss_l2() == true){
+            //PacketPtr main_pkt = new Packet(request->mainReq(), MemCmd::ByPassL2);
+	    main_pkt->cmd = MemCmd::ByPassL2;
+	}else if (request->mainReq()->get_hit_l2() == true){
+            //PacketPtr main_pkt = new Packet(request->mainReq(), MemCmd::ByPassL1);
+	    main_pkt->cmd = MemCmd::ByPassL1;
+	}else {
+            //PacketPtr main_pkt = new Packet(request->mainReq(), MemCmd::ReadReq);
+	}
+	*/
         main_pkt->dataStatic(load_inst->memData);
 
         Cycles delay = request->mainReq()->localAccessor(thread, main_pkt);
@@ -1487,8 +1514,18 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
                         "addr %#x\n", store_it._idx,
                         request->mainReq()->getVaddr());
 
-                PacketPtr data_pkt = new Packet(request->mainReq(),
-                        MemCmd::ReadReq);
+                PacketPtr data_pkt = new Packet(request->mainReq(), MemCmd::ReadReq);
+		/*
+         	if (request->mainReq()->get_miss_l2() == true){
+                     //PacketPtr main_pkt = new Packet(request->mainReq(), MemCmd::ByPassL2);
+		     data_pkt->cmd = MemCmd::ByPassL2;
+         	}else if (request->mainReq()->get_hit_l2() == true){
+                     //PacketPtr main_pkt = new Packet(request->mainReq(), MemCmd::ByPassL1);
+		     data_pkt->cmd = MemCmd::ByPassL1;
+         	}
+		*/
+                //PacketPtr data_pkt = new Packet(request->mainReq(),
+                //        MemCmd::ReadReq);
                 data_pkt->dataStatic(load_inst->memData);
 
                 // hardware transactional memory

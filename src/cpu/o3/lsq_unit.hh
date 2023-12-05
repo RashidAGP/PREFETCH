@@ -452,6 +452,7 @@ class LSQUnit
     LoadQueue loadQueue;
 
   private:
+    uint64_t total_delay = 0;
     /** The number of places to shift addresses in the LSQ before checking
      * for dependency violations
      */
@@ -538,9 +539,16 @@ class LSQUnit
         /** Distribution of cycle latency between the first time a load
          * is issued and its completion */
         statistics::Distribution loadToUse;
+        // PREFETCH
+	//statistics::Formula Load_Latency;
+	statistics::Scalar num_loads ;
+	statistics::Scalar del_loads  ;
+	statistics::Formula ave_load_lat ;
     } stats;
 
   public:
+    void incr_num_loads() {stats.num_loads++;}
+    void incr_load_delay(uint64_t value) {stats.del_loads = value;}
     /** Executes the load at the given index. */
     Fault read(LSQRequest *request, ssize_t load_idx);
 
