@@ -520,34 +520,8 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                     walker->tlb->insert_l2(entry.vaddr, entry, cr3.pcid);
                 }
                 else{
-                    // The current PCID is always 000H if PCIDE
-                    // is not set [sec 4.10.1 of Intel's Software
-                    // Developer Manual]
-                    /*
   		    walker->tlb->incr_pw_number();
-		    Cycles stop = tc->getCpuPtr()->curCycle();
-		    uint64_t delay_PW = static_cast<uint64_t>(stop - start_time);
-		    printf("Delay is :%ld.\n",delay_PW);
-		    walker->tlb->incr_pw_latency(delay_PW);
-                    walker->tlb->insert_l1(entry.vaddr, entry, 0x000);
-                    walker->tlb->insert_l2(entry.vaddr, entry, 0x000);
-                    */
-                                        // The current PCID is always 000H if PCIDE
-                    // is not set [sec 4.10.1 of Intel's Software
-                    // Developer Manual]
-  		    walker->tlb->incr_pw_number();
-		    //Cycles stop = tc->getCpuPtr()->curCycle();
-		    //uint64_t delay_PW = static_cast<uint64_t>(stop - start_time);
-		    //DPRINTF(PageTableWalker,"PW Latency is :%ld.\n",delay_PW);
-		    //walker->tlb->incr_pw_latency(delay_PW);
-                    //walker->tlb->insert_l1(entry.vaddr, entry, 0x000);
-                    //walker->tlb->insert_l2(entry.vaddr, entry, 0x000);
-		    /*
-		    DPRINTF(PageTableWalker,"Insert in the TLB was postponed.Address:%#x.\n",entry.vaddr);
-		    auto event = new DelayedInsertEvent(walker->tlb,entry,tc,translation,req,mode,start_time);
-		    const Cycles insert_delay = Cycles(300);
-		    walker->schedule(event,walker->clockEdge(insert_delay));
-		    */
+		    timing = true;
 		    if(timing == true){
         		    DPRINTF(PageTableWalker,"Insert in the TLB was postponed.Address:%#x.\n",entry.vaddr);
         		    auto event = new DelayedInsertEvent(walker->tlb,entry,tc,translation,req,mode,start_time);
@@ -555,9 +529,11 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         		    std::mt19937 gen(rd());
         		    std::uniform_int_distribution<int> distribution(100, 800);
         		    int random_number = distribution(gen);
-        		    const Cycles insert_delay = Cycles(random_number);
+        		    //const Cycles insert_delay = Cycles(random_number);
+        		    const Cycles insert_delay = Cycles(0);
         		    walker->schedule(event,walker->clockEdge(insert_delay));
 		    }else{
+			    DPRINTF(PageTableWalker,"PW finished. Enable the miss_l2.\n");
                             walker->tlb->insert_l1(entry.vaddr, entry, 0x000);
                             walker->tlb->insert_l2(entry.vaddr, entry, 0x000);
 		    }
