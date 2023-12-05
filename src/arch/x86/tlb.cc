@@ -234,7 +234,7 @@ vaddr = vpn << 21;
     freeList_l2.pop_front();
 
     *newEntry = entry;
-    newEntry->lruSeq = nextSeq();
+    newEntry->lruSeq = nextSeq_l2();
     newEntry->vaddr = vaddr;
     if (FullSystem) {
         newEntry->trieHandle =
