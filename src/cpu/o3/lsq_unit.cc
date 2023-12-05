@@ -1150,10 +1150,9 @@ LSQUnit::writeback(const DynInstPtr &inst, PacketPtr pkt)
 	start = inst->get_start_cache_time();
 	stop  = inst->tcBase()->getCpuPtr()->curCycle();
 	delay = stop -start;
-	incr_num_loads();
-	total_delay += delay;
-	if ((inst->get_start_cache_time() != Cycles(0)) && (delay < 10)){
-        //	incr_num_loads();
+	if ((inst->get_start_cache_time() != Cycles(0)) ){
+        	total_delay += delay;
+        	incr_num_loads();
         	incr_load_delay(total_delay);
 	}
 	//printf("Delay:%ld.\n",delay);
