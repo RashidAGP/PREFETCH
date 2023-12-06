@@ -1088,7 +1088,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     jj_popL1RequestQueue;
   }
   // Send also to the memory
-  transition(M, BP_L2_Load) {
+  transition(M, BP_L2_Load, SS) {
     dw_bp_sendSharedDataToRequestor;
     nn_addSharer;
     set_setMRU;
