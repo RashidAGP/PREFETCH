@@ -1,23 +1,28 @@
-./build/X86/gem5.fast --outdir=/home/rashid/testt/4cores/raw_tc --redirect-stdout --redirect-stderr ./configs/deprecated/example/fs.py \
-    --checkpoint-dir=/home/rashid/checkpoints_rackham/v23/4cores/tc/ -r 1\
+./build/X86/gem5.debug \
+    --outdir=/home/rashid/warm_result/gapbs/kron/tc_raw \
+    --debug-flags=RubySlicc,RubyGenerated,RubyCache,LSQ,LSQUnit \
+    --redirect-stdout \
+    --redirect-stderr \
+    ./configs/deprecated/example/fs.py \
+    --checkpoint-dir=/home/rashid/new_benchmarks/kron/tc \
+    -r 1\
     --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
-    --disk-image=/home/rashid/fs_img/x86-graphs.img \
+    --disk-image=/home/rashid/fs_img/gapbs_kron.img \
     --cpu-type=DerivO3CPU \
     --restore-with-cpu=DerivO3CPU \
-    --mem-size=8GB \
-    --num-cpus=4 \
+    --mem-size=16GB \
+    --mem-type=DRAMsim3\
     --ruby \
     --caches \
     --l1d_size=64kB \
-    --l1i_size=32kB \
+    --l1i_size=64kB \
     --l1d_assoc=8 \
     --l1i_assoc=8 \
-    --num-l2caches=4 \
-    --num-dirs=4 \
-    --topology=Mesh_XY \
-    --mesh-rows=2 \
+    --num-l2caches=1 \
+    --num-dirs=1 \
     --l2_size=2MB \
     --l2_assoc=16 \
-    --cpu-clock=2GHz \
+    --cpu-clock=1GHz \
     --cacheline_size=64 \
-    -I 200000000
+    -I 1500000
+# -I 500000000
