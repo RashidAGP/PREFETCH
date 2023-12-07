@@ -1198,6 +1198,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     kd_wakeUpDependents;
   }
   // RECV
+  // It is a bug. When it is dirty it must not be go to SS state TODO.
   transition(MT_TEST, {WB_Data_Bad, WB_Data_clean_Bad}, SS) {
     ds_bp_sendSharedDataToRequestor;
     m_writeDataToCache;

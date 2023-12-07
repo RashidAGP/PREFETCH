@@ -1158,6 +1158,13 @@ LSQUnit::writeback(const DynInstPtr &inst, PacketPtr pkt)
 	//printf("Delay:%ld.\n",delay);
     }
     // Need to insert instruction into queue to commit
+    if(inst->isLoad() == true && inst->getName() == "ld"){
+	PhysRegIdPtr reg_d_r = inst->renamedDestIdx(0);
+	if (pkt->getSize() == 8){
+		Addr data = (uint64_t) pkt->getLE_r();
+		DPRINTF(LSQUnit,"Read Data.Addr:%#x. The data is :%#x.\n", pkt->getAddr(),data);
+	}
+    }
     iewStage->instToCommit(inst);
 
     iewStage->activityThisCycle();
@@ -1662,6 +1669,8 @@ LSQUnit::write(LSQRequest *request, uint8_t *data, ssize_t store_idx)
             store_idx - 1, request->req()->getPaddr(), storeQueue.head() - 1,
             storeQueue[store_idx].instruction()->seqNum);
 
+
+    DPRINTF(LSQUnit,"Write. Address is:%#x.\n",request->mainReq()->getPaddr());
     storeQueue[store_idx].setRequest(request);
     unsigned size = request->_size;
     storeQueue[store_idx].size() = size;

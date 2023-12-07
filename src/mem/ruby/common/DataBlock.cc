@@ -94,7 +94,6 @@ DataBlock::atomicPartial(const DataBlock &dblk, const WriteMask &mask)
     }
     mask.performAtomic(m_data);
 }
-/*
 void
 DataBlock::print(std::ostream& out) const
 {
@@ -106,12 +105,12 @@ DataBlock::print(std::ostream& out) const
     }
     out << std::dec << "]" << std::flush;
 }
-*/
+/*
 void
 DataBlock::print(std::ostream& out) const
 {
 }
-
+*/
 const uint8_t*
 DataBlock::getData(int offset, int len) const
 {

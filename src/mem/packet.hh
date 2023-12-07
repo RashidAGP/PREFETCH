@@ -1260,7 +1260,7 @@ class Packet : public Printable, public Extensible<Packet>
      */
     template <typename T>
     T getLE() const;
-
+    int64_t getLE_r() { return letoh(*(uint64_t*)data);}
     /**
      * Get the data in the packet byte swapped from the specified
      * endianness.

@@ -1,6 +1,5 @@
-./build/X86/gem5.opt \
+./build/X86/gem5.debug \
     --outdir=/home/rashid/warm_result/gapbs/kron/bfs_prefetch \
-    --debug-flags=TLB,LSQ,RubySlicc,RubyCache,RubyGenerated,RubySequencer,DRAMsim3,MemoryAccess,LSQ,LSQUnit \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
