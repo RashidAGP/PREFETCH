@@ -1394,9 +1394,10 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     l_popRequestQueue;
   }
   // PREFETCH. Is that a good idea to do that??!! TODO 3
-  transition(E,  Fwd_GETS_BP, S) {
+  transition(E,  Fwd_GETS_BP) {
     //df_sendDataToRequestor;
-    df2_sendDataToL2;
+    //df2_sendDataToL2;
+    h_load_hit;
     l_popRequestQueue;
   }
   transition(E, {Fwd_GETS, Fwd_GET_INSTR}, S) {
@@ -1439,9 +1440,11 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 
   // PREFETCH
   // This causese downgrade. TODO 1.
-  transition(M, Fwd_GETS_BP, S) {
-    df_sendDataToRequestor;
+  transition(M, Fwd_GETS_BP) {
+    //df_sendDataToRequestor;
     //d2_sendDataToL2;
+    //j_sendUnblock;
+    h_load_hit;
     l_popRequestQueue;
   }
   transition(M_I, Fwd_GETS_BP) {

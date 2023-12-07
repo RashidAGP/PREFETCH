@@ -93,7 +93,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     MT_IB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, got unblock, waiting for data";
     MT_SB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, got data,  waiting for unblock";
     // TEST
-    MT_TEST, AccessPermission:Busy, desc="Just for test";
+    //MT_TEST, AccessPermission:Busy, desc="Just for test";
   }
 
   // EVENTS
@@ -967,7 +967,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   }
 
 
-  transition({SS_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, {L1_GETS, L1_GET_INSTR, L1_GETX, L1_UPGRADE}) {
+  transition({SS_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, {L1_GETS, L1_GET_INSTR, L1_GETX, L1_UPGRADE, BP_L1_Load}) {
     zz_stallAndWaitL1RequestQueue;
   }
 
@@ -1088,12 +1088,17 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     jj_popL1RequestQueue;
   }
   // Send also to the memory
-  transition(M, BP_L2_Load) {
+  transition(M, BP_L2_Load, SS) {
+    // Old version
     dw_bp_sendSharedDataToRequestor;
-    nn_addSharer;
+    //nn_addSharer;
+    //set_setMRU;
+    //a_bp_issueFetchToMemory;
+    //uu_profileHit;
+    //jj_popL1RequestQueue;
+    // New Version
+    //dd_sendExclusiveDataToRequestor;
     set_setMRU;
-    // Send to the memory
-    a_bp_issueFetchToMemory;
     uu_profileHit;
     jj_popL1RequestQueue;
   }
@@ -1173,13 +1178,13 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   }
   // PREFETCH
   // SEND
-  transition(MT, BP_L1_Load , MT_TEST) {
+  transition(MT, BP_L1_Load) {
     // This is mine
     bb_forwardRequestToExclusive;
     set_setMRU;
     jj_popL1RequestQueue;
   }
-  transition(MT, BP_L2_Load , MT_TEST) {
+  transition(MT, BP_L2_Load) {
     // This is mine
     bb_forwardRequestToExclusive;
     set_setMRU;
@@ -1187,28 +1192,29 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     a_bp_issueFetchToMemory;
     jj_popL1RequestQueue;
   }
-  transition(MT_TEST, BP_L1_Load ) {
-    zz_stallAndWaitL1RequestQueue;
-  }
-  transition(MT_TEST, L1_PUTX, M){
-    ll_clearSharers;
-    mr_writeDataToCacheFromRequest;
-    t_sendWBAck;
-    jj_popL1RequestQueue;
-    kd_wakeUpDependents;
-  }
+
+  //transition(MT_TEST, BP_L1_Load ) {
+  //  zz_stallAndWaitL1RequestQueue;
+  //}
+  //transition(MT_TEST, L1_PUTX, M){
+  //  ll_clearSharers;
+  //  mr_writeDataToCacheFromRequest;
+  //  t_sendWBAck;
+  //  jj_popL1RequestQueue;
+  //  kd_wakeUpDependents;
+  //}
   // RECV
   // It is a bug. When it is dirty it must not be go to SS state TODO.
-  transition(MT_TEST, {WB_Data_Bad, WB_Data_clean_Bad}, SS) {
-    ds_bp_sendSharedDataToRequestor;
-    m_writeDataToCache;
+  //transition(MT_TEST, {WB_Data_Bad, WB_Data_clean_Bad}, SS) {
+   // ds_bp_sendSharedDataToRequestor;
+   // m_writeDataToCache;
     //ds_nn_addSharer;
     //set_setMRU;
     //uu_profileHit;
     // We have to send this data to processor.
-    o_popIncomingResponseQueue;
-    kd_wakeUpDependents;
-  }
+   // o_popIncomingResponseQueue;
+   // kd_wakeUpDependents;
+  //}
   // END PREFETCH
   transition(MT, {L1_GETS, L1_GET_INSTR}, MT_IIB) {
     b_forwardRequestToExclusive;
@@ -1257,12 +1263,13 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     k_popUnblockQueue;
   }
 
-  transition(MT_IIB, {WB_Data, WB_Data_clean}, MT_SB) {
+  transition(MT_IB, {WB_Data, WB_Data_clean}, MT_SB) {
     m_writeDataToCache;
     o_popIncomingResponseQueue;
   }
   // PREFETCH
-  transition(MT_IIB, {WB_Data_Bad, WB_Data_clean_Bad}, MT_SB) {
+  transition(MT_IB, {WB_Data_Bad, WB_Data_clean_Bad}, SS) {
+    // We should remove this. It can be done by L1 Cache. TODO
     ds_bp_sendSharedDataToRequestor;
     //ds_nn_addSharer;
     //set_setMRU;
@@ -1273,11 +1280,11 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     //kd_wakeUpDependents;
   }
 
-  transition(MT_IB, {WB_Data, WB_Data_clean}, SS) {
-    m_writeDataToCache;
-    o_popIncomingResponseQueue;
-    kd_wakeUpDependents;
-  }
+  //transition(MT_IB, {WB_Data, WB_Data_clean}, SS) {
+  //  m_writeDataToCache;
+  //  o_popIncomingResponseQueue;
+  //  kd_wakeUpDependents;
+  //}
 
   transition(MT_SB, Unblock, SS) {
     nnu_addSharerFromUnblock;
