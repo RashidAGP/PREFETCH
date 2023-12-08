@@ -894,13 +894,13 @@ Sequencer::makeRequest(PacketPtr pkt)
 		    secondary_type = RubyRequestType_ST;
 		    DPRINTF(RubySequencer, "RMW\n");
 		}else if (pkt->req->get_hit_l2() == true){
-	            DPRINTF(RubySequencer,"BYPASS_1.\n");
+	            DPRINTF(RubySequencer,"BYPASS_1.Addr:%#x\n",pkt->getAddr());
                     primary_type = secondary_type = RubyRequestType_BPL1;
 		}else if (pkt->req->get_miss_l2() == true){
-	            DPRINTF(RubySequencer,"BYPASS_2.\n");
+	            DPRINTF(RubySequencer,"BYPASS_2.Addr:%#x\n",pkt->getAddr());
                     primary_type = secondary_type = RubyRequestType_BPL2;
                 } else {
-	            DPRINTF(RubySequencer,"Normal Read Request.\n");
+	            DPRINTF(RubySequencer,"Normal Read Request.Addr:%#x\n",pkt->getAddr());
                     primary_type = secondary_type = RubyRequestType_LD;
                 }
             }
