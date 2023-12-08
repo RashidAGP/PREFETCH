@@ -1,5 +1,5 @@
 ./build/X86/gem5.fast \
-    --outdir=/home/rashid/warm_result/gapbs/kron/bfs_prefetch \
+    --outdir=/home/rashid/warm_result/gapbs/kron/bfs_prefetch_fast \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
@@ -21,7 +21,7 @@
     --num-dirs=1 \
     --l2_size=2MB \
     --l2_assoc=16 \
-    --cpu-clock=1GHz \
+    --cpu-clock=2GHz \
     --cacheline_size=64 \
-    -I 10000000
+    -I 30000000
 # -I 500000000

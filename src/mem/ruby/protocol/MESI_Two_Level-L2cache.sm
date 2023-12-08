@@ -935,7 +935,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   // Wrong prediction. But send a request to the memory, At the same time check the L2 Cache
   transition(SS, BP_L2_Load){
     dw_bp_sendSharedDataToRequestor;
-    ///nn_addSharer;
+    nn_addSharer;
     set_setMRU;
     uu_profileHit;
     // Send data to the memory
@@ -1091,7 +1091,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   transition(M, BP_L2_Load, SS) {
     // Old version
     dw_bp_sendSharedDataToRequestor;
-    //nn_addSharer;
+    nn_addSharer;
     //set_setMRU;
     //a_bp_issueFetchToMemory;
     //uu_profileHit;

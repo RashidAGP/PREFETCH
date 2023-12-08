@@ -1,4 +1,6 @@
-./build/X86/gem5.debug \
+./build/X86/gem5.opt \
+    --debug-flags=RubyGenerated,RubySlicc,RubyCache \
+    --debug-start=86540500138000 \
     --outdir=/home/rashid/warm_result/gapbs/kron/tc_prefetch \
     --redirect-stdout \
     --redirect-stderr \
