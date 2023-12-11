@@ -25,5 +25,5 @@
     --l2_assoc=16 \
     --cpu-clock=1GHz \
     --cacheline_size=64 \
-    -I 100000
+    -I 1000000
 # -I 500000000

@@ -50,6 +50,10 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
 
     M, AccessPermission:Maybe_Stale, desc="memory copy may be stale, i.e. other modified copies may exist";
     IM, AccessPermission:Busy, desc="Intermediate State I>M";
+    // PREFETCH
+    IM_BP_L2, AccessPermission:Busy, desc="busy because of Bypass L2";
+    IM_BP_L1, AccessPermission:Busy, desc="busy because of Bypass L1";
+    // END PREFETCH
     MI, AccessPermission:Busy, desc="Intermediate State M>I";
     M_DRD, AccessPermission:Busy, desc="Intermediate State when there is a dma read";
     M_DRDI, AccessPermission:Busy, desc="Intermediate State when there is a dma read";
@@ -293,13 +297,9 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.Type := CoherenceResponseType:MEMORY_DATA_BP;
         out_msg.Sender := machineID;
         out_msg.Destination.add(mapAddressToMachine(address, MachineType:L1Cache));
-
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Dirty := false;
         out_msg.MessageSize := MessageSizeType:Response_Data;
-
-        Entry e := getDirectoryEntry(in_msg.addr);
-        e.Owner := in_msg.OriginalRequestorMachId;
       }
     }
   }
@@ -353,6 +353,19 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.Sender := in_msg.Requestor;
         out_msg.MessageSize := MessageSizeType:Request_Control;
         out_msg.Len := 0;
+      }
+    }
+  }
+  action(d_bp_sendData_l2, "d_bp_l2", desc="Send data to L2 cache") {
+    peek(requestNetwork_in, RequestMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, to_mem_ctrl_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:MEMORY_DATA_BP;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:L2Cache));
+        out_msg.DataBlk := in_msg.DataBlk; 
+        out_msg.Dirty := false;
+        out_msg.MessageSize := MessageSizeType:Response_Data; 
       }
     }
   }
@@ -492,15 +505,22 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
 
   // TRANSITIONS
   // PREFETCH
-  transition(I, Fetch_BP, IM) {
+  transition(I, Fetch_BP, IM_BP_L2) {
     qf_bp_queueMemoryFetchRequest;
     j_popIncomingRequestQueue;
   }
-
-  transition(IM, Memory_Data_BP, M) {
+  // WRONG PREDICTION. Must got to L2.
+  transition(M, Fetch_BP) {
+    d_bp_sendData_l2;
+    j_popIncomingRequestQueue;
+  }
+  transition(IM_BP_L2, Memory_Data_BP, I) {
     d_bp_sendData;
     l_popMemQueue;
     kd_wakeUpDependents;
+  }
+  transition(IM_BP_L2, Fetch, IM){
+    j_popIncomingRequestQueue;
   }
   // END PREFETCH
   transition(I, Fetch, IM) {

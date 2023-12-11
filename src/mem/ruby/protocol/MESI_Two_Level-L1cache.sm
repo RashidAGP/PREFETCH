@@ -142,6 +142,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     // PREFETCH - RECV
     BP_L1_RECV, desc="Recv Data form L2";
     BP_L2_RECV, desc="Recv Data form DIR";
+    Fwd_GETS_FROM_L2,   desc="GETS from L2 Cache. Bad prediction";
     // END PREFETCH
   }
 
@@ -466,6 +467,8 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
           trigger(Event:Fwd_GETX, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
           trigger(Event:Fwd_GETS, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceRequestType:GETS_FROM_L2) {
+          trigger(Event:Fwd_GETS_FROM_L2, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:GET_INSTR) {
           trigger(Event:Fwd_GET_INSTR, in_msg.addr, cache_entry, tbe);
         } else {
@@ -830,7 +833,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
    // PREFETCH
 
   action(bp_l1_sendToL2, "bp_l1", desc="send data to the L2 cache (BP)") {
-    enqueue(requestL1Network_out, RequestMsg, l1_response_latency) {
+    enqueue(requestL1Network_out, RequestMsg, 0) {
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:GETS_L2;
       out_msg.Requestor:= machineID;
@@ -1066,11 +1069,12 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   // TRANSITIONS
   //*****************************************************
   // PREFETCH
-  transition(NP, BP_L1){
+  ////////  SENDING ///////////////
+  transition({NP,E,S}, BP_L1){
 	bp_l1_sendToL2;
         k_popMandatoryQueue;
   }
-  transition(NP, BP_L2){
+  transition({NP,E,S,M}, BP_L2){
 	bp_l2_sendToDir;
         k_popMandatoryQueue;
   }
@@ -1078,7 +1082,18 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     h_w_load_hit;
     o_popIncomingResponseQueue;
   }
+  /////////// RECV //////////////
 
+  transition({E,M},Fwd_GETS_FROM_L2){
+    h_load_hit;
+    l_popRequestQueue;
+  }
+  transition(S, BP_L2_RECV){
+    h_load_hit;
+    o_popIncomingResponseQueue;
+  }
+
+  // END PREFETCH
   // Transitions for Load/Store/Replacement/WriteBack from transient states
   transition({IS, IM, IS_I, M_I, SM, SINK_WB_ACK}, {Load, Ifetch, Store, L1_Replacement}) {
     z_stallAndWaitMandatoryQueue;

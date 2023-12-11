@@ -39,6 +39,7 @@ enumeration(CoherenceRequestType, desc="...") {
   // PREFETCH
   GETS_L2,   desc="Get data from L2";
   GETS_DIR,   desc="Get data from DIR";
+  GETS_FROM_L2, desc="Get data from L1. Because of bad prediction. It must forward to L1 cache";
   // END PREFETCH
   WB_ACK,    desc="Writeback ack";
 

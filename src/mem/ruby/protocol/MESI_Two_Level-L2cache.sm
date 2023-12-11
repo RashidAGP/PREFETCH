@@ -92,7 +92,9 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     MT_IIB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, waiting for unblock and data";
     MT_IB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, got unblock, waiting for data";
     MT_SB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, got data,  waiting for unblock";
-
+    // PREFETCH
+    ISS_BPL1, AccessPermission:Busy, desc="Send just to CPU. Bypass sending exclusive to L1";
+    // END PREFETCH
   }
 
   // EVENTS
@@ -126,6 +128,10 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     Exclusive_Unblock, desc="Unblock from L1 requestor";
 
     MEM_Inv, desc="Invalidation from directory";
+
+    // PREFETCH
+    L1_BP,   desc="GETS from L1. BYPASS L1";
+    // END PREFETCH
   }
 
   // TYPES
@@ -279,6 +285,8 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
       } else {
         return Event:L1_PUTX_old;
       }
+    } else if (type == CoherenceRequestType:GETS_L2) {
+	return Event:L1_BP;
     } else {
       DPRINTF(RubySlicc, "address: %#x, Request Type: %s\n", addr, type);
       error("Invalid L1 forwarded request type");
@@ -421,6 +429,18 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     }
   }
 
+  action(b_bp_forwardRequestToExclusive, "b_bp", desc="Forward request to the exclusive L1. Because of miss prediction") {
+    peek(L1RequestL2Network_in, RequestMsg) {
+      enqueue(L1RequestL2Network_out, RequestMsg, to_l1_latency) {
+        assert(is_valid(cache_entry));
+        out_msg.addr := address;
+        out_msg.Type := CoherenceRequestType:GETS_FROM_L2;
+        out_msg.Requestor := in_msg.Requestor;
+        out_msg.Destination.add(cache_entry.Exclusive);
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+      }
+    }
+  }
   action(b_forwardRequestToExclusive, "b", desc="Forward request to the exclusive L1") {
     peek(L1RequestL2Network_in, RequestMsg) {
       enqueue(L1RequestL2Network_out, RequestMsg, to_l1_latency) {
@@ -797,14 +817,77 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   action(kd_wakeUpDependents, "kd", desc="wake-up dependents") {
     wakeUpBuffers(address);
   }
+  // PREFETCH
+  action(d_bp_sendData, "d_bp", desc="Send data to requestor (L1)") {
+    peek(L1RequestL2Network_in, RequestMsg) {
+      enqueue(responseL2Network_out, ResponseMsg, to_l1_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:MEMORY_DATA_BP;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:L1Cache));
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Dirty := false;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+      }
+    }
+  }
+
+  action(d_bp_sendData_2, "d_bp_2", desc="Send data to requestor (L1) without peeking") {
+      enqueue(responseL2Network_out, ResponseMsg, to_l1_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:MEMORY_DATA_BP;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:L1Cache));
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.Dirty := false;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+  }
+  // END PREFETCH
 
   //*****************************************************
   // TRANSITIONS
   //*****************************************************
 
 
+  // PREFETCH
+  // Right Pred
+  transition({SS,M},L1_BP){
+	// just send it to the CPU as dir.
+	d_bp_sendData;
+        jj_popL1RequestQueue;
+  }
+  // Wrong Pred
+  transition(MT,L1_BP){
+	// forward to L1 cache.
+        b_bp_forwardRequestToExclusive;
+        //uu_profileMiss;
+        set_setMRU;
+        jj_popL1RequestQueue;
+  }
+  //So so Pred
+  transition(NP, L1_BP, ISS_BPL1){
+	// Send it to dir.
+        qq_allocateL2CacheBlock;
+        ll_clearSharers;
+        //nn_addSharer;
+        i_allocateTBE;
+        ss_recordGetSL1ID;
+        a_issueFetchToMemory;
+        //uu_profileMiss;
+        jj_popL1RequestQueue;
+  }
+  transition(ISS_BPL1, Mem_Data, SS) {
+        m_writeDataToCache;
+	d_bp_sendData_2;
+        //ex_sendExclusiveDataToGetSRequestors;
+        s_deallocateTBE;
+        o_popIncomingResponseQueue;
+  }
+  // END PREFETCH
   //===============================================
   // BASE STATE - I
+
 
   // Transitions from I (Idle)
   transition({NP, IS, ISS, IM, SS, M, M_I, I_I, S_I, MT_IB, MT_SB}, L1_PUTX) {
