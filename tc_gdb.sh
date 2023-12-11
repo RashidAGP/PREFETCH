@@ -1,4 +1,4 @@
-gdb --args ./build/X86/gem5.debug \
+gdb --args ./build/X86/gem5.opt \
     --outdir=/home/rashid/warm_result/gapbs/kron/tc_prefetch \
     --redirect-stdout \
     --redirect-stderr \
@@ -12,6 +12,7 @@ gdb --args ./build/X86/gem5.debug \
     --mem-size=16GB \
     --mem-type=DRAMsim3\
     --ruby \
+    --network=garnet \
     --caches \
     --l1d_size=64kB \
     --l1i_size=64kB \

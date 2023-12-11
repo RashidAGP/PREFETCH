@@ -95,7 +95,7 @@ class CacheMemory : public SimObject
 
     // Returns a NULL entry that acts as a placeholder for invalid lines
     AbstractCacheEntry*
-    getNullEntry() const
+    getNullEntry()
     {
         return nullptr;
     }
@@ -167,10 +167,13 @@ class CacheMemory : public SimObject
     int getNumBlocks() const { return m_cache_num_sets * m_cache_assoc; }
     Addr getAddressAtIdx(int idx) const;
 
+    // PREFETCH
+    DataBlock* BP;
+    // END PREFETCH
+    DataBlock* getBP(){ return BP;}
   private:
     // convert a Address to its location in the cache
     int64_t addressToCacheSet(Addr address) const;
-
     // Given a cache tag: returns the index of the tag in a set.
     // returns -1 if the tag is not found.
     int findTagInSet(int64_t line, Addr tag) const;

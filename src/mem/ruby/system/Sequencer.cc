@@ -307,6 +307,7 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType primary_type,
                          RubyRequestType secondary_type)
 {
     // See if we should schedule a deadlock check
+    DPRINTF(RubySequencer,"Insert in the insertReqest\n");
     if (!deadlockCheckEvent.scheduled() &&
         drainState() != DrainState::Draining) {
         schedule(deadlockCheckEvent, clockEdge(m_deadlock_threshold));
@@ -542,6 +543,62 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
     }
 }
 
+void
+Sequencer::readCallback_hxx_2(Addr address, DataBlock data,
+                        bool externalHit, const MachineType mach,
+                        Cycles initialRequestTime,
+                        Cycles forwardRequestTime,
+                        Cycles firstResponseTime)
+{
+    //
+    // Free up read requests until we hit the first Write request
+    // or end of the corresponding list.
+    //
+    assert(address == makeLineAddress(address));
+    assert(m_RequestTable.find(address) != m_RequestTable.end());
+    auto &seq_req_list = m_RequestTable[address];
+
+    // Perform hitCallback on every cpu request made to this cache block while
+    // ruby request was outstanding. Since only 1 ruby request was made,
+    // profile the ruby latency once.
+    bool ruby_request = true;
+    while (!seq_req_list.empty()) {
+        SequencerRequest &seq_req = seq_req_list.front();
+        if (ruby_request) {
+	    // PREFETCH
+            assert((seq_req.m_type == RubyRequestType_LD) ||
+                   (seq_req.m_type == RubyRequestType_Load_Linked) ||
+                   (seq_req.m_type == RubyRequestType_IFETCH) ||
+		   (seq_req.m_type == RubyRequestType_BPL1) ||
+		   (seq_req.m_type == RubyRequestType_BPL2));
+        }
+        if ((seq_req.m_type != RubyRequestType_LD) &&
+            (seq_req.m_type != RubyRequestType_Load_Linked) &&
+            (seq_req.m_type != RubyRequestType_IFETCH) &&
+            (seq_req.m_type != RubyRequestType_BPL1) &&
+	    (seq_req.m_type != RubyRequestType_BPL2)) {
+            // Write request: reissue request to the cache hierarchy
+            issueRequest(seq_req.pkt, seq_req.m_second_type);
+            break;
+        }
+        if (ruby_request) {
+            recordMissLatency(&seq_req, true, mach, externalHit,
+                              initialRequestTime, forwardRequestTime,
+                              firstResponseTime);
+        }
+        markRemoved();
+        hitCallback(&seq_req, data, true, mach, externalHit,
+                    initialRequestTime, forwardRequestTime,
+                    firstResponseTime, !ruby_request);
+        ruby_request = false;
+        seq_req_list.pop_front();
+    }
+
+    // free all outstanding requests corresponding to this address
+    if (seq_req_list.empty()) {
+        m_RequestTable.erase(address);
+    }
+}
 void
 Sequencer::readCallback_hxx(Addr address, DataBlock data,
                         bool externalHit, const MachineType mach,

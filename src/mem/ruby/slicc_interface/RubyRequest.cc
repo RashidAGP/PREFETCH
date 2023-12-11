@@ -49,7 +49,6 @@ namespace gem5
 
 namespace ruby
 {
-/*
 void
 RubyRequest::print(std::ostream& out) const
 {
@@ -64,7 +63,7 @@ RubyRequest::print(std::ostream& out) const
 //  out << "Time = " << getTime() << " ";
   out << "]";
 }
-*/
+/*
 void
 RubyRequest::print(std::ostream& out) const
 {
@@ -75,6 +74,7 @@ RubyRequest::print(std::ostream& out) const
 //  out << "Time = " << getTime() << " ";
   out << "]";
 }
+*/
 bool
 RubyRequest::functionalRead(Packet *pkt)
 {

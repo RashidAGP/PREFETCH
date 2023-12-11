@@ -50,9 +50,6 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
 
     M, AccessPermission:Maybe_Stale, desc="memory copy may be stale, i.e. other modified copies may exist";
     IM, AccessPermission:Busy, desc="Intermediate State I>M";
-    // PREFETCH
-    IM_BP, AccessPermission:Busy, desc="Intermadiate State I>M BP";
-
     MI, AccessPermission:Busy, desc="Intermediate State M>I";
     M_DRD, AccessPermission:Busy, desc="Intermediate State when there is a dma read";
     M_DRDI, AccessPermission:Busy, desc="Intermediate State when there is a dma read";
@@ -63,16 +60,17 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
   // Events
   enumeration(Event, desc="Directory events") {
     Fetch, desc="A memory fetch arrives";
-    Fetch_BP, desc="A memory fetch arrives BP";
     Data, desc="writeback data arrives";
     Memory_Data, desc="Fetched data from memory arrives";
-    Memory_Data_BP, desc="Fetched data from memory arrives BP";
     Memory_Ack, desc="Writeback Ack from memory arrives";
 //added by SS for dma
     DMA_READ, desc="A DMA Read memory request";
     DMA_WRITE, desc="A DMA Write memory request";
     CleanReplacement, desc="Clean Replacement in L2 cache";
-
+    // PREFETCH
+    Fetch_BP, desc="A memory fetch arrives from CPU/L1";
+    Memory_Data_BP, desc="Writeback Ack from memory arrives (BP)";
+    // END PREFETCH
   }
 
   // TYPES
@@ -105,12 +103,14 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
   // ** OBJECTS **
   TBETable TBEs, template="<Directory_TBE>", constructor="m_number_of_TBEs";
 
+  // PREFETCH
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
+  // END PREFETCH
   Tick clockEdge();
   Tick cyclesToTicks(Cycles c);
   void set_tbe(TBE tbe);
   void unset_tbe();
   void wakeUpBuffers(Addr a);
-
   Entry getDirectoryEntry(Addr addr), return_by_pointer="yes" {
     Entry dir_entry := static_cast(Entry, "pointer", directory[addr]);
 
@@ -190,7 +190,8 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
   bool isGETRequest(CoherenceRequestType type) {
     return (type == CoherenceRequestType:GETS) ||
       (type == CoherenceRequestType:GET_INSTR) ||
-      (type == CoherenceRequestType:GETX);  }
+      (type == CoherenceRequestType:GETX);
+  }
 
   // ** OUT_PORTS **
   out_port(responseNetwork_out, ResponseMsg, responseFromDir);
@@ -204,7 +205,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         assert(in_msg.Destination.isElement(machineID));
         if (isGETRequest(in_msg.Type)) {
           trigger(Event:Fetch, in_msg.addr, TBEs[in_msg.addr]);
-        } else if (in_msg.Type == CoherenceRequestType:GETS_BP_L2) {
+        } else if (in_msg.Type == CoherenceRequestType:GETS_DIR) {
           trigger(Event:Fetch_BP, makeLineAddress(in_msg.addr),
                   TBEs[makeLineAddress(in_msg.addr)]);
         } else if (in_msg.Type == CoherenceRequestType:DMA_READ) {
@@ -227,8 +228,6 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         assert(in_msg.Destination.isElement(machineID));
         if (in_msg.Type == CoherenceResponseType:MEMORY_DATA) {
           trigger(Event:Data, in_msg.addr, TBEs[in_msg.addr]);
-        }else if (in_msg.Type == CoherenceResponseType:MEMORY_DATA_BP) {
-          trigger(Event:Memory_Data_BP, in_msg.addr, TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceResponseType:ACK) {
           trigger(Event:CleanReplacement, in_msg.addr, TBEs[in_msg.addr]);
         } else {
@@ -245,7 +244,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
       peek(memQueue_in, MemoryMsg) {
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
           trigger(Event:Memory_Data, in_msg.addr, TBEs[in_msg.addr]);
-        }else if (in_msg.Type == MemoryRequestType:MEMORY_READ_BP) {
+        } else if (in_msg.Type == MemoryRequestType:MEMORY_READ_BP) {
           trigger(Event:Memory_Data_BP, in_msg.addr, TBEs[in_msg.addr]);
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
           trigger(Event:Memory_Ack, in_msg.addr, TBEs[in_msg.addr]);
@@ -287,13 +286,14 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
       }
     }
   }
-  action(bp_sendData, "bp", desc="Send data to requestor ByPass") {
+  action(d_bp_sendData, "d_bp", desc="Send data to requestor (L1)") {
     peek(memQueue_in, MemoryMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, 0) {
+      enqueue(responseNetwork_out, ResponseMsg, to_mem_ctrl_latency) {
         out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:MEMORY_DATA_BP;
         out_msg.Sender := machineID;
-        out_msg.Destination.add(in_msg.OriginalRequestorMachId);
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:L1Cache));
+
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Dirty := false;
         out_msg.MessageSize := MessageSizeType:Response_Data;
@@ -333,17 +333,6 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     wakeUpBuffers(address);
   }
 
-  action(bp_qf_queueMemoryFetchRequest, "bp_qf", desc="Queue off-chip fetch request") {
-    peek(requestNetwork_in, RequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
-        out_msg.addr := address;
-        out_msg.Type := MemoryRequestType:MEMORY_READ_BP;
-        out_msg.Sender := in_msg.Requestor;
-        out_msg.MessageSize := MessageSizeType:Request_Control;
-        out_msg.Len := 0;
-      }
-    }
-  }
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
     peek(requestNetwork_in, RequestMsg) {
       enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
@@ -355,7 +344,20 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
       }
     }
   }
+   // PREFETCH
+  action(qf_bp_queueMemoryFetchRequest, "qf_bp", desc="Queue off-chip fetch request (BP)") {
+    peek(requestNetwork_in, RequestMsg) {
+      enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_READ_BP;
+        out_msg.Sender := in_msg.Requestor;
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+        out_msg.Len := 0;
+      }
+    }
+  }
 
+   // END PREFETCH
   action(qw_queueMemoryWBRequest, "qw", desc="Queue off-chip writeback request") {
     peek(responseNetwork_in, ResponseMsg) {
       enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
@@ -489,35 +491,21 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
 
 
   // TRANSITIONS
-
-
   // PREFETCH
-  //transition({I, M, IM, MI, M_DRD, M_DRDI, M_DWR, M_DWRI}, Memory_Data_BP) {
-  //  bp_sendData;
-  //  k_popIncomingResponseQueue;
-  //}
-  transition(IM_BP, Memory_Data_BP, M){
-    bp_sendData;
+  transition(I, Fetch_BP, IM) {
+    qf_bp_queueMemoryFetchRequest;
+    j_popIncomingRequestQueue;
+  }
+
+  transition(IM, Memory_Data_BP, M) {
+    d_bp_sendData;
     l_popMemQueue;
     kd_wakeUpDependents;
-  } 
-  transition(I, Fetch_BP, IM_BP) {
-    // Do sth
-    bp_qf_queueMemoryFetchRequest;
-    j_popIncomingRequestQueue;
-  }
-  // HERE
-  transition(M, Fetch_BP) {
-    //Remove the packet. The cache has the right data
-    j_popIncomingRequestQueue;
-  }
-  transition(IM_BP,Fetch_BP){
-    z_stallAndWaitRequest;
   }
   // END PREFETCH
-  transition(I, Fetch, IM){
-   qf_queueMemoryFetchRequest;
-   j_popIncomingRequestQueue;
+  transition(I, Fetch, IM) {
+    qf_queueMemoryFetchRequest;
+    j_popIncomingRequestQueue;
   }
 
   transition(M, Fetch) {

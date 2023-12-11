@@ -165,6 +165,10 @@ enumeration(RubyRequestType, desc="...", default="RubyRequestType_NULL") {
   ATOMIC_RETURN,     desc="Atomic Load/Store, return data";
   ATOMIC_NO_RETURN,  desc="Atomic Load/Store, do not return data";
   IFETCH,            desc="Instruction fetch";
+  // PREFETCH
+  BPL1,              desc="Bypass L1 Cache. Go to the L2";
+  BPL2,              desc="Bypass L2 Cache. Go to the DIR";
+  // END PREFETCH
   IO,                desc="I/O";
   REPLACEMENT,       desc="Replacement";
   Load_Linked,       desc="";
@@ -187,8 +191,6 @@ enumeration(RubyRequestType, desc="...", default="RubyRequestType_NULL") {
   TLBI_SYNC,         desc="TLB Invalidation Sync operation - Potential initiation";
   TLBI_EXT_SYNC,      desc="TLB Invalidation Sync operation - External Sync has been requested";
   TLBI_EXT_SYNC_COMP, desc="TLB Invalidation Sync operation - External Sync has been completed";
-  BPL1,              desc="Bypassing the L1";
-  BPL2,              desc="Bypassing the L2";
 }
 
 bool isWriteRequest(RubyRequestType type);
@@ -220,6 +222,10 @@ enumeration(SequencerRequestType, desc="...", default="SequencerRequestType_NULL
   LD,          desc="Load";
   ST,          desc="Store";
   ATOMIC,      desc="Atomic Load/Store";
+  // PREFETHC
+  LD_BP_L1,    desc="ByPass L1. Go to L2";
+  LD_BP_L2,    desc="ByPass L2. Go to Dir";
+  // END PREFETCH
   REPLACEMENT, desc="Replacement";
   FLUSH,       desc="Flush request type";
   NULL,        desc="Invalid request type";

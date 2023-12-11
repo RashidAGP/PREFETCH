@@ -291,9 +291,9 @@ AbstractController::serviceMemoryQueue()
 	pkt = Packet::createRead(req);
         uint8_t *newData = new uint8_t[req_size];
         pkt->dataDynamic(newData);
-    } else if (mem_msg->getType() == MemoryRequestType_MEMORY_READ_BP){
+    } else if (mem_msg->getType() == MemoryRequestType_MEMORY_READ_BP) {
         DPRINTF(RubyCache,"RubyRequestType is MEMORY_READ_BP\n");
-        pkt = Packet::createRead(req);
+	pkt = Packet::createRead(req);
         uint8_t *newData = new uint8_t[req_size];
         pkt->dataDynamic(newData);
 	pkt->set_BP_L2();

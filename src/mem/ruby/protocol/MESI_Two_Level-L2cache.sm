@@ -92,8 +92,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     MT_IIB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, waiting for unblock and data";
     MT_IB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, got unblock, waiting for data";
     MT_SB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, got data,  waiting for unblock";
-    // TEST
-    //MT_TEST, AccessPermission:Busy, desc="Just for test";
+
   }
 
   // EVENTS
@@ -120,9 +119,6 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     // M->S data writeback
     WB_Data,  desc="data from L1";
     WB_Data_clean,  desc="clean data from L1";
-    // PREFETCH
-    WB_Data_Bad, desc="data from L1 because of bad prediction. Dirty";
-    WB_Data_clean_Bad, desc="data from L1 because of bad prediction. Clean";
     Ack,      desc="writeback ack";
     Ack_all,      desc="writeback ack";
 
@@ -130,8 +126,6 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     Exclusive_Unblock, desc="Unblock from L1 requestor";
 
     MEM_Inv, desc="Invalidation from directory";
-    BP_L1_Load,     desc="ByPass L1"; // BYPASS L1. This Request must be different
-    BP_L2_Load,     desc="ByPass L2"; // BYPASS L2.
   }
 
   // TYPES
@@ -269,10 +263,6 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
                                       MachineID requestor, Entry cache_entry) {
     if(type == CoherenceRequestType:GETS) {
       return Event:L1_GETS;
-    }else if(type == CoherenceRequestType:GETS_BP_L1) { 
-      return Event:BP_L1_Load;
-    }else if(type == CoherenceRequestType:GETS_BP_L2) {
-      return Event:BP_L2_Load;
     } else if(type == CoherenceRequestType:GET_INSTR) {
       return Event:L1_GET_INSTR;
     } else if (type == CoherenceRequestType:GETX) {
@@ -354,19 +344,12 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
             } else {
               trigger(Event:Ack, in_msg.addr, cache_entry, tbe);
             }
-	  } else if (in_msg.Type == CoherenceResponseType:DATA_BAD){
-            if (in_msg.Dirty) {
-              trigger(Event:WB_Data_Bad, in_msg.addr, cache_entry, tbe);
-            } else {
-              trigger(Event:WB_Data_clean_Bad, in_msg.addr, cache_entry, tbe);
-            }
           } else {
             error("unknown message type");
           }
 
         } else { // external message
-          if(in_msg.Type == CoherenceResponseType:MEMORY_DATA ||
-		in_msg.Type == CoherenceResponseType:MEMORY_DATA_BP) {
+          if(in_msg.Type == CoherenceResponseType:MEMORY_DATA) {
               trigger(Event:Mem_Data, in_msg.addr, cache_entry, tbe);
           } else if(in_msg.Type == CoherenceResponseType:MEMORY_ACK) {
               trigger(Event:Mem_Ack, in_msg.addr, cache_entry, tbe);
@@ -437,21 +420,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
       }
     }
   }
-  // PREFETCH
-  action(a_bp_issueFetchToMemory, "a_bp", desc="fetch data from memory") {
-    peek(L1RequestL2Network_in, RequestMsg) {
-      enqueue(DirRequestL2Network_out, RequestMsg,0) {
-        out_msg.addr := address;
-        out_msg.Type := CoherenceRequestType:GETS_BP_L2;
-        out_msg.Requestor := machineID;
-        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
-        out_msg.MessageSize := MessageSizeType:Control;
-        out_msg.AccessMode := in_msg.AccessMode;
-        out_msg.Prefetch := in_msg.Prefetch;
-      }
-    }
-  }
-  // END PREFETCH
+
   action(b_forwardRequestToExclusive, "b", desc="Forward request to the exclusive L1") {
     peek(L1RequestL2Network_in, RequestMsg) {
       enqueue(L1RequestL2Network_out, RequestMsg, to_l1_latency) {
@@ -464,20 +433,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
       }
     }
   }
-  // PREFETCH
-  action(bb_forwardRequestToExclusive, "bb", desc="Forward request to the exclusive L1") {
-    peek(L1RequestL2Network_in, RequestMsg) {
-      enqueue(L1RequestL2Network_out, RequestMsg, to_l1_latency) {
-        assert(is_valid(cache_entry));
-        out_msg.addr := address;
-        out_msg.Type := CoherenceRequestType:FW_BP_L1;
-        out_msg.Requestor := in_msg.Requestor;
-        out_msg.Destination.add(cache_entry.Exclusive);
-        out_msg.MessageSize := MessageSizeType:Request_Control;
-      }
-    }
-  }
-  // END PREFETCH
+
   action(c_exclusiveReplacement, "c", desc="Send data to memory") {
     enqueue(responseL2Network_out, ResponseMsg, l2_response_latency) {
       assert(is_valid(cache_entry));
@@ -566,50 +522,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
       }
     }
   }
-  action(ds_2_sendSharedDataToRequestor, "ds_2", desc="Send data from cache to reqeustor (BP)") {
-    peek(L1RequestL2Network_in, RequestMsg) {
-      enqueue(responseL2Network_out, ResponseMsg, l2_response_latency) {
-        assert(is_valid(cache_entry));
-        out_msg.addr := address;
-        out_msg.Type := CoherenceResponseType:DATA_BP;
-        out_msg.Sender := machineID;
-        out_msg.Destination.add(in_msg.Requestor);
-        out_msg.DataBlk := cache_entry.DataBlk;
-        out_msg.MessageSize := MessageSizeType:Response_Data;
-        out_msg.AckCount := 0;
-      }
-    }
-  }
-  action(ds_bp_sendSharedDataToRequestor, "ds_bp", desc="Send data from cache to reqeustor L1 Cache because of ByPass") {
-    peek(responseL2Network_in , ResponseMsg) {
-      enqueue(responseL2Network_out, ResponseMsg, l2_response_latency) {
-        assert(is_valid(cache_entry));
-        out_msg.addr := address;
-        out_msg.Type := CoherenceResponseType:DATA_BP;
-        out_msg.Sender := machineID;
-        out_msg.Destination.add(mapAddressToMachine(address, MachineType:L1Cache));
-        //out_msg.Destination.add(in_msg.Requestor);
-        out_msg.DataBlk := cache_entry.DataBlk;
-        out_msg.MessageSize := MessageSizeType:Response_Data;
-        out_msg.AckCount := 0;
-      }
-    }
-  }
-  action(dw_bp_sendSharedDataToRequestor, "dw_bp", desc="Send data from cache to reqeustor L1 Cache because of ByPass") {
-    peek(L1RequestL2Network_in , RequestMsg) {
-      enqueue(responseL2Network_out, ResponseMsg, l2_response_latency) {
-        assert(is_valid(cache_entry));
-        out_msg.addr := address;
-        out_msg.Type := CoherenceResponseType:DATA_BP;
-        out_msg.Sender := machineID;
-        out_msg.Destination.add(mapAddressToMachine(address, MachineType:L1Cache));
-        //out_msg.Destination.add(in_msg.Requestor);
-        out_msg.DataBlk := cache_entry.DataBlk;
-        out_msg.MessageSize := MessageSizeType:Response_Data;
-        out_msg.AckCount := 0;
-      }
-    }
-  }
+
   action(e_sendDataToGetSRequestors, "e", desc="Send data from cache to all GetS IDs") {
     assert(is_valid(tbe));
     assert(tbe.L1_GetS_IDs.count() > 0);
@@ -619,20 +532,6 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.Sender := machineID;
       out_msg.Destination := tbe.L1_GetS_IDs;  // internal nodes
-      out_msg.DataBlk := cache_entry.DataBlk;
-      out_msg.MessageSize := MessageSizeType:Response_Data;
-    }
-  }
-  // PREFETCH
-  action(e_bp_sendDataToGetSRequestors, "e_bp", desc="Send data from cache to all GetS IDs") {
-    enqueue(responseL2Network_out, ResponseMsg, to_l1_latency) {
-      // TODO. If we don't write it in the cache remove it.
-      assert(is_valid(cache_entry));
-      out_msg.addr := address;
-      out_msg.Type := CoherenceResponseType:DATA;
-      out_msg.Sender := machineID;
-      out_msg.Destination.add(mapAddressToMachine(address, MachineType:L1Cache));
-      //out_msg.Destination := tbe.L1_GetS_IDs;  // internal nodes
       out_msg.DataBlk := cache_entry.DataBlk;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
@@ -747,15 +646,6 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
       }
     }
   }
-  action(ds_m_writeDataToCache, "ds_m", desc="Write data to the cache because of bad prediction") {
-    peek(responseL2Network_in, ResponseMsg) {
-      assert(is_valid(cache_entry));
-      cache_entry.DataBlk := in_msg.DataBlk;
-      if (in_msg.Dirty) {
-        cache_entry.Dirty := in_msg.Dirty;
-      }
-    }
-  }
 
   action(mr_writeDataToCacheFromRequest, "mr", desc="Write data from response queue to cache") {
     peek(L1RequestL2Network_in, RequestMsg) {
@@ -849,15 +739,6 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     L2cache.profileDemandHit();
   }
 
-
-
-  action(ds_nn_addSharer, "\ds_n", desc="Add L1 sharer to list") {
-    peek(responseL2Network_in, ResponseMsg) {
-      assert(is_valid(cache_entry));
-      addSharer(address, (mapAddressToMachine(address, MachineType:L1Cache)), cache_entry);
-      APPEND_TRANSITION_COMMENT( cache_entry.Sharers );
-    }
-  }
   action(nn_addSharer, "\n", desc="Add L1 sharer to list") {
     peek(L1RequestL2Network_in, RequestMsg) {
       assert(is_valid(cache_entry));
@@ -886,9 +767,6 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
       cache_entry.Sharers.clear();
     }
   }
-  action(dw_ll_clearSharers, "\dw_l", desc="Remove all L1 shares without checking input") {
-      cache_entry.Sharers.clear();
-  }
 
   action(mm_markExclusive, "\m", desc="set the exclusive owner") {
     peek(L1RequestL2Network_in, RequestMsg) {
@@ -911,38 +789,23 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   action(zz_stallAndWaitL1RequestQueue, "zz", desc="recycle L1 request queue") {
     stall_and_wait(L1RequestL2Network_in, address);
   }
-  action(zb_stallAndWaitL1RequestQueue, "zb", desc="recycle L1 request queue") {
-    L1RequestL2Network_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
-  }
 
   action(zn_recycleResponseNetwork, "zn", desc="recycle memory request") {
     responseL2Network_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
   }
 
   action(kd_wakeUpDependents, "kd", desc="wake-up dependents") {
-    DPRINTF(RubySlicc,"Waking up Addr:%#x\n",address);
     wakeUpBuffers(address);
   }
+
   //*****************************************************
   // TRANSITIONS
   //*****************************************************
-  // PREFETCH
-  // Send the request. At the same time check the cache
-  // TODO 1
-  transition(M_I, {BP_L2_Load, BP_L1_Load}){
-     zz_stallAndWaitL1RequestQueue;
-  }
-  // Wrong prediction. But send a request to the memory, At the same time check the L2 Cache
-  transition(SS, BP_L2_Load){
-    dw_bp_sendSharedDataToRequestor;
-    nn_addSharer;
-    set_setMRU;
-    uu_profileHit;
-    // Send data to the memory
-    a_bp_issueFetchToMemory;
-    jj_popL1RequestQueue;
-  }
-  // END PREFETCH
+
+
+  //===============================================
+  // BASE STATE - I
+
   // Transitions from I (Idle)
   transition({NP, IS, ISS, IM, SS, M, M_I, I_I, S_I, MT_IB, MT_SB}, L1_PUTX) {
     t_sendWBAck;
@@ -967,23 +830,15 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   }
 
 
-  transition({SS_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, {L1_GETS, L1_GET_INSTR, L1_GETX, L1_UPGRADE, BP_L1_Load}) {
+  transition({SS_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, {L1_GETS, L1_GET_INSTR, L1_GETX, L1_UPGRADE}) {
     zz_stallAndWaitL1RequestQueue;
   }
 
-  // PREFETCH, when also it recieves the BP_L1_Load then it must the same as L1_GETS.
-  transition(NP,BP_L2_Load,ISS){
-        qq_allocateL2CacheBlock;
-        ll_clearSharers;
-        i_allocateTBE;
-	// I DON'T KNOW WHAT IS THIS TODO
-        ss_recordGetSL1ID;
-        a_bp_issueFetchToMemory;
-        jj_popL1RequestQueue;
-  }
-  transition(NP, {L1_GETS,BP_L1_Load},  ISS) {
+
+  transition(NP, L1_GETS,  ISS) {
     qq_allocateL2CacheBlock;
     ll_clearSharers;
+    nn_addSharer;
     i_allocateTBE;
     ss_recordGetSL1ID;
     a_issueFetchToMemory;
@@ -1015,24 +870,14 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
 
 
   // transitions from IS/IM
-  // TODO X. SHALL WE RIGHT IT IN THE CACHE?!
-  // WRITE NOW I CONSIDER THE BOTH AS SAME.
+
   transition(ISS, Mem_Data, MT_MB) {
     m_writeDataToCache;
     ex_sendExclusiveDataToGetSRequestors;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
   }
-  transition(NP, Mem_Data, SS){
-    qq_allocateL2CacheBlock;
-    m_writeDataToCache;
-    dw_ll_clearSharers;
-    ds_nn_addSharer;
-    e_bp_sendDataToGetSRequestors;
-    o_popIncomingResponseQueue;
-    kd_wakeUpDependents;
-  }
-  // END PREFETCH
+
   transition(IS, Mem_Data, SS) {
     m_writeDataToCache;
     e_sendDataToGetSRequestors;
@@ -1071,37 +916,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     uu_profileHit;
     jj_popL1RequestQueue;
   }
-  // PREFETCH
-  // When it hits the cache
-  transition(SS, BP_L1_Load) {
-    dw_bp_sendSharedDataToRequestor;
-    nn_addSharer;
-    set_setMRU;
-    uu_profileHit;
-    jj_popL1RequestQueue;
-  }
-  transition(M, BP_L1_Load, SS) {
-    // This is mine
-    ds_2_sendSharedDataToRequestor;
-    nn_addSharer;
-    set_setMRU;
-    jj_popL1RequestQueue;
-  }
-  // Send also to the memory
-  transition(M, BP_L2_Load, SS) {
-    // Old version
-    dw_bp_sendSharedDataToRequestor;
-    nn_addSharer;
-    //set_setMRU;
-    //a_bp_issueFetchToMemory;
-    //uu_profileHit;
-    //jj_popL1RequestQueue;
-    // New Version
-    //dd_sendExclusiveDataToRequestor;
-    set_setMRU;
-    uu_profileHit;
-    jj_popL1RequestQueue;
-  }
+
 
   transition(SS, L1_GETX, SS_MB) {
     d_sendDataToRequestor;
@@ -1176,58 +991,15 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     set_setMRU;
     jj_popL1RequestQueue;
   }
-  // PREFETCH
-  // SEND
-  transition(MT, BP_L1_Load) {
-    // This is mine
-    bb_forwardRequestToExclusive;
-    set_setMRU;
-    jj_popL1RequestQueue;
-  }
-  transition(MT, BP_L2_Load) {
-    // This is mine
-    bb_forwardRequestToExclusive;
-    set_setMRU;
-    // Send data to the memory
-    a_bp_issueFetchToMemory;
-    jj_popL1RequestQueue;
-  }
 
-  //transition(MT_TEST, BP_L1_Load ) {
-  //  zz_stallAndWaitL1RequestQueue;
-  //}
-  //transition(MT_TEST, L1_PUTX, M){
-  //  ll_clearSharers;
-  //  mr_writeDataToCacheFromRequest;
-  //  t_sendWBAck;
-  //  jj_popL1RequestQueue;
-  //  kd_wakeUpDependents;
-  //}
-  // RECV
-  // It is a bug. When it is dirty it must not be go to SS state TODO.
-  //transition(MT_TEST, {WB_Data_Bad, WB_Data_clean_Bad}, SS) {
-   // ds_bp_sendSharedDataToRequestor;
-   // m_writeDataToCache;
-    //ds_nn_addSharer;
-    //set_setMRU;
-    //uu_profileHit;
-    // We have to send this data to processor.
-   // o_popIncomingResponseQueue;
-   // kd_wakeUpDependents;
-  //}
-  // END PREFETCH
+
   transition(MT, {L1_GETS, L1_GET_INSTR}, MT_IIB) {
     b_forwardRequestToExclusive;
     uu_profileMiss;
     set_setMRU;
     jj_popL1RequestQueue;
   }
-  // Send it directly to the memory
-  transition(I_I, {BP_L1_Load,BP_L2_Load}){
-      //a_bp_issueFetchToMemory;
-      //jj_popL1RequestQueue;
-      zz_stallAndWaitL1RequestQueue;
-  }
+
   transition(MT, {L2_Replacement, MEM_Inv}, MT_I) {
     i_allocateTBE;
     f_sendInvToSharers;
@@ -1263,28 +1035,16 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     k_popUnblockQueue;
   }
 
-  transition(MT_IB, {WB_Data, WB_Data_clean}, MT_SB) {
+  transition(MT_IIB, {WB_Data, WB_Data_clean}, MT_SB) {
     m_writeDataToCache;
     o_popIncomingResponseQueue;
-  }
-  // PREFETCH
-  transition(MT_IB, {WB_Data_Bad, WB_Data_clean_Bad}, SS) {
-    // We should remove this. It can be done by L1 Cache. TODO
-    ds_bp_sendSharedDataToRequestor;
-    //ds_nn_addSharer;
-    //set_setMRU;
-    //uu_profileHit;
-    // We have to send this data to processor.
-    m_writeDataToCache;
-    o_popIncomingResponseQueue;
-    //kd_wakeUpDependents;
   }
 
-  //transition(MT_IB, {WB_Data, WB_Data_clean}, SS) {
-  //  m_writeDataToCache;
-  //  o_popIncomingResponseQueue;
-  //  kd_wakeUpDependents;
-  //}
+  transition(MT_IB, {WB_Data, WB_Data_clean}, SS) {
+    m_writeDataToCache;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
 
   transition(MT_SB, Unblock, SS) {
     nnu_addSharerFromUnblock;
@@ -1303,7 +1063,6 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   transition(I_I, Ack_all, M_I) {
-    // This is clean Replacement
     c_exclusiveCleanReplacement;
     o_popIncomingResponseQueue;
   }

@@ -1,5 +1,5 @@
 ./build/X86/gem5.opt \
-    --debug-flags=RubyGenerated,RubySlicc,RubyCache,LSQ,LSQUnit,RubySequencer,RubyNetwork \
+    --debug-flags=RubyGenerated,RubySlicc,RubyCache,LSQ,LSQUnit,RubySequencer,DRAMsim3 \
     --outdir=/home/rashid/warm_result/gapbs/kron/tc_prefetch \
     --redirect-stdout \
     --redirect-stderr \

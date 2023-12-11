@@ -127,14 +127,12 @@ structure (NetDest, external = "yes", non_obj="yes") {
 
 structure (Sequencer, external = "yes") {
   void readCallback(Addr, DataBlock);
+  // PREFETCH
+  void readCallback_hxx_2(Addr, DataBlock);
+  // END PREFETCH
   void readCallback(Addr, DataBlock, bool);
   void readCallback(Addr, DataBlock, bool, MachineType);
   void readCallback(Addr, DataBlock, bool, MachineType,
-                    Cycles, Cycles, Cycles);
-  void readCallback_hxx(Addr, DataBlock);
-  void readCallback_hxx(Addr, DataBlock, bool);
-  void readCallback_hxx(Addr, DataBlock, bool, MachineType);
-  void readCallback_hxx(Addr, DataBlock, bool, MachineType,
                     Cycles, Cycles, Cycles);
 
   void writeCallback(Addr, DataBlock);

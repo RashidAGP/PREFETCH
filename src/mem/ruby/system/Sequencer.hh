@@ -133,6 +133,13 @@ class Sequencer : public RubyPort
                       const Cycles initialRequestTime = Cycles(0),
                       const Cycles forwardRequestTime = Cycles(0),
                       const Cycles firstResponseTime = Cycles(0));
+    void readCallback_hxx_2(Addr address,
+                      DataBlock data,
+                      const bool externalHit = false,
+                      const MachineType mach = MachineType_NUM,
+                      const Cycles initialRequestTime = Cycles(0),
+                      const Cycles forwardRequestTime = Cycles(0),
+                      const Cycles firstResponseTime = Cycles(0));
     void unaddressedCallback(Addr unaddressedReqId,
                              RubyRequestType requestType,
                              const MachineType mach = MachineType_NUM,

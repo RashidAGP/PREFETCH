@@ -53,12 +53,12 @@ enumeration(MemoryRequestType, desc="...") {
   MEMORY_READ,     desc="Read request to memory";
   MEMORY_WB,       desc="Write back data to memory";
   // PREFETCH
-  MEMORY_READ_BP,  desc="Read memory by BYPASS";
+  MEMORY_READ_BP,  desc="All caches bypassed";
+  MEMORY_DATA_BP,  desc="Data read from memory BP";
   // END PREFETCH
   // response from memory to directory
   // (These are currently unused!)
   MEMORY_DATA, desc="Data read from memory";
-  MEMORY_DATA_BP, desc="Data read from memory BP";
   MEMORY_ACK,  desc="Write to memory acknowledgement";
 }
 
@@ -67,7 +67,7 @@ enumeration(MemoryRequestType, desc="...") {
 
 structure(MemoryMsg, desc="...", interface="Message") {
   Addr addr,              desc="Physical address for this request";
-  MemoryRequestType Type,       desc="Type of memory request (MEMORY_READ or MEMORY_WB or MEMORY_READ_BP)";
+  MemoryRequestType Type,       desc="Type of memory request (MEMORY_READ or MEMORY_WB)";
   MachineID Sender,             desc="What component sent the data";
   MachineID OriginalRequestorMachId, desc="What component originally requested";
   DataBlock DataBlk,            desc="Data to writeback";

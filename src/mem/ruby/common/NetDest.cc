@@ -259,7 +259,6 @@ NetDest::resize()
         m_bits[i].setSize(MachineType_base_count((MachineType)i));
     }
 }
-/*
 void
 NetDest::print(std::ostream& out) const
 {
@@ -273,12 +272,12 @@ NetDest::print(std::ostream& out) const
     }
     out << "]";
 }
-*/
+/*
 void
 NetDest::print(std::ostream& out) const
 {
 }
-
+*/
 bool
 NetDest::isEqual(const NetDest& n) const
 {
