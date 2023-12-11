@@ -63,7 +63,7 @@ void
 Router::init()
 {
     BasicRouter::init();
-
+    DPRINTF(RubyNetwork,"Router:%s\n",this->print());
     switchAllocator.init();
     crossbarSwitch.init();
 }

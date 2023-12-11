@@ -72,6 +72,7 @@ Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
     // one for each direction.
     //
     // External Links
+    DPRINTF(RubyNetwork,"External Links\n");
     for (std::vector<BasicExtLink*>::const_iterator i = ext_links.begin();
          i != ext_links.end(); ++i) {
         BasicExtLink *ext_link = (*i);
@@ -85,11 +86,13 @@ Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
 
         // create the internal uni-directional links in both directions
         // ext to int
+	DPRINTF(RubyNetwork,"Controller Name:%s.Router Id:%d.ext_1:%d,ext_2:%d,int:%d\n",abs_cntrl->getType(),router->params().router_id,ext_idx1,ext_idx2,int_idx);
         addLink(ext_idx1, int_idx, ext_link);
         // int to ext
         addLink(int_idx, ext_idx2, ext_link);
     }
 
+    DPRINTF(RubyNetwork,"Internal Links\n");
     // Internal Links
     for (std::vector<BasicIntLink*>::const_iterator i = int_links.begin();
          i != int_links.end(); ++i) {
@@ -106,6 +109,7 @@ Topology::Topology(uint32_t num_nodes, uint32_t num_routers,
         int src = router_src->params().router_id + 2*m_nodes;
         int dst = router_dst->params().router_id + 2*m_nodes;
 
+	DPRINTF(RubyNetwork,"SourceRouterId:%d.DstRouterID:%d.src:%d,dst:%d.\n",router_src->params().router_id,router_dst->params().router_id,src,dst);
         // create the internal uni-directional link from src to dst
         addLink(src, dst, int_link, src_outport, dst_inport);
     }

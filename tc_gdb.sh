@@ -1,5 +1,4 @@
-./build/X86/gem5.opt \
-    --debug-flags=RubyGenerated,RubySlicc,RubyCache,LSQ,LSQUnit,RubySequencer,RubyNetwork \
+gdb --args ./build/X86/gem5.debug \
     --outdir=/home/rashid/warm_result/gapbs/kron/tc_prefetch \
     --redirect-stdout \
     --redirect-stderr \
@@ -13,7 +12,6 @@
     --mem-size=16GB \
     --mem-type=DRAMsim3\
     --ruby \
-    --network=garnet \
     --caches \
     --l1d_size=64kB \
     --l1i_size=64kB \
