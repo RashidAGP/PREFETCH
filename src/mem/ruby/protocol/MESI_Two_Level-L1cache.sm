@@ -1070,7 +1070,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   //*****************************************************
   // PREFETCH
   ////////  SENDING ///////////////
-  transition({NP,E,S}, BP_L1){
+  transition({NP,E,S,M}, BP_L1){
 	bp_l1_sendToL2;
         k_popMandatoryQueue;
   }

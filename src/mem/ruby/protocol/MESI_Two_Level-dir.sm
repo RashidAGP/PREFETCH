@@ -363,9 +363,8 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
         out_msg.Type := CoherenceResponseType:MEMORY_DATA_BP;
         out_msg.Sender := machineID;
         out_msg.Destination.add(mapAddressToMachine(address, MachineType:L2Cache));
-        out_msg.DataBlk := in_msg.DataBlk; 
         out_msg.Dirty := false;
-        out_msg.MessageSize := MessageSizeType:Response_Data; 
+        out_msg.MessageSize := MessageSizeType:Response_Control; 
       }
     }
   }

@@ -1,4 +1,4 @@
-gdb --args ./build/X86/gem5.opt \
+./build/X86/gem5.debug \
     --outdir=/home/rashid/warm_result/gapbs/kron/tc_prefetch \
     --redirect-stdout \
     --redirect-stderr \
@@ -24,5 +24,5 @@ gdb --args ./build/X86/gem5.opt \
     --l2_assoc=16 \
     --cpu-clock=1GHz \
     --cacheline_size=64 \
-    -I 100000
+    -I 10000000
 # -I 500000000
