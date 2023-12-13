@@ -142,6 +142,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     // PREFETCH - RECV
     BP_L1_RECV, desc="Recv Data form L2";
     BP_L2_RECV, desc="Recv Data form DIR";
+    BP_L2_RECV_M, desc="Recv Data form M of L2";
     Fwd_GETS_FROM_L2,   desc="GETS from L2 Cache. Bad prediction";
     // END PREFETCH
   }
@@ -442,6 +443,8 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
         // PREFETCH
         } else if (in_msg.Type == CoherenceResponseType:MEMORY_DATA_BP) {
           trigger(Event:BP_L2_RECV, in_msg.addr,cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceResponseType:MEMORY_DATA_BP_M) {
+          trigger(Event:BP_L2_RECV_M, in_msg.addr,cache_entry, tbe);
         // END PREFETCH
         } else {
           error("Invalid L1 response type");
@@ -1070,7 +1073,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   //*****************************************************
   // PREFETCH
   ////////  SENDING ///////////////
-  transition({NP,E,S,M}, BP_L1){
+  transition({NP,E,S,M,M_I}, BP_L1){
 	bp_l1_sendToL2;
         k_popMandatoryQueue;
   }
@@ -1078,8 +1081,12 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 	bp_l2_sendToDir;
         k_popMandatoryQueue;
   }
-  transition(NP, BP_L2_RECV){
+  transition(NP, {BP_L2_RECV,BP_L2_RECV_M}){
     h_w_load_hit;
+    o_popIncomingResponseQueue;
+  }
+  transition(S, BP_L2_RECV){
+    h_load_hit;
     o_popIncomingResponseQueue;
   }
   /////////// RECV //////////////
@@ -1088,10 +1095,10 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     h_load_hit;
     l_popRequestQueue;
   }
-  transition(S, BP_L2_RECV){
-    h_load_hit;
-    o_popIncomingResponseQueue;
-  }
+  //transition(S, BP_L2_RECV){
+  //  h_load_hit;
+  //  o_popIncomingResponseQueue;
+  //}
 
   // END PREFETCH
   // Transitions for Load/Store/Replacement/WriteBack from transient states
@@ -1126,7 +1133,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     i_allocateTBE;
     a_issueGETS;
     uu_profileDataMiss;
-    po_observeMiss;
+    po_observeMiss
     k_popMandatoryQueue;
   }
 

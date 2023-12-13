@@ -54,7 +54,8 @@ enumeration(CoherenceResponseType, desc="...") {
   DATA_EXCLUSIVE, desc="Data block for L1 cache in M/E state";
   MEMORY_DATA, desc="Data block from / to main memory";
   // PREFETCH
-  MEMORY_DATA_BP, desc="Data block from /to main memory (BP)";
+  MEMORY_DATA_BP, desc="Data block from main memory to Cache (BP)";
+  MEMORY_DATA_BP_M, desc="Data block from L2 to Cache (BP)";
   // END PREFECH
   ACK, desc="Generic invalidate ack";
   WB_ACK, desc="writeback ack";

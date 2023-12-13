@@ -95,6 +95,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     // PREFETCH
     ISS_BPL1, AccessPermission:Busy, desc="Send just to CPU. Bypass sending exclusive to L1";
     OO, AccessPermission:Busy, desc="Owner. Just this L2 has the data and it is clean"; 
+    OO_I, AccessPermission:Busy, desc="Owner. But waiting ACK from memroy."; 
     // END PREFETCH
   }
 
@@ -869,6 +870,17 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.MessageSize := MessageSizeType:Response_Data;
     }
   }
+  action(d_bp_sendData_3, "d_bp_3", desc="Send data to requestor (L1). Data in L2 cache data is correct.") {
+      enqueue(responseL2Network_out, ResponseMsg, to_l1_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:MEMORY_DATA_BP_M;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:L1Cache));
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.Dirty := false;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+  }
   // END PREFETCH
 
   //*****************************************************
@@ -917,9 +929,14 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         //ex_sendExclusiveDataToGetSRequestors;
         s_deallocateTBE;
         o_popIncomingResponseQueue;
+        kd_wakeUpDependents;
   }
   transition({SS,OO},Mem_Data_BP){
 	d_bp_sendData_2;
+        o_popIncomingResponseQueue;
+  }
+  transition({M},Mem_Data_BP){
+	d_bp_sendData_3;
         o_popIncomingResponseQueue;
   }
   transition(MT,Mem_Data_BP){
@@ -930,16 +947,16 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         o_popIncomingResponseQueue;
   }
 
-  transition(OO, L2_Replacement_clean, NP) {
+  transition(OO, L2_Replacement_clean, M_I) {
+    i_allocateTBE;
     rr_deallocateL2CacheBlock;
     c_exclusiveCleanReplacement;
-    kd_wakeUpDependents;
     //jj_popL1RequestQueue;
-
   }
-  transition(NP, Mem_Ack) {
-        o_popIncomingResponseQueue;
-  }
+  //transition(M_I, Mem_Ack ,NP) {
+  //      o_popIncomingResponseQueue;
+  //      kd_wakeUpDependents;
+  //}
   transition(OO, L1_GETX, SS_MB) {
     d_sendDataToRequestor;
     // fw_sendFwdInvToSharers;
@@ -948,7 +965,6 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     uu_profileHit;
     jj_popL1RequestQueue;
   }
-
   // END PREFETCH
   //===============================================
   // BASE STATE - I
