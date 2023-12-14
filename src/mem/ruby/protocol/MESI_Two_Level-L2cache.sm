@@ -94,8 +94,8 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     MT_SB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, got data,  waiting for unblock";
     // PREFETCH
     ISS_BPL1, AccessPermission:Busy, desc="Send just to CPU. Bypass sending exclusive to L1";
-    OO, AccessPermission:Busy, desc="Owner. Just this L2 has the data and it is clean"; 
-    OO_I, AccessPermission:Busy, desc="Owner. But waiting ACK from memroy."; 
+    //OO, AccessPermission:Busy, desc="Owner. Just this L2 has the data and it is clean"; 
+    //OO_I, AccessPermission:Busy, desc="Owner. But waiting ACK from memroy."; 
     // END PREFETCH
   }
 
@@ -134,6 +134,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     // PREFETCH
     L1_BP,   desc="GETS from L1. BYPASS L1";
     Mem_Data_BP, desc="data from memory (BP)";
+    Fwd_dir_BP, desc="Forwarded Request to L2 cache from dir";
     // END PREFETCH
   }
 
@@ -364,6 +365,8 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
               trigger(Event:Mem_Data, in_msg.addr, cache_entry, tbe);
           } else if(in_msg.Type == CoherenceResponseType:MEMORY_DATA_BP) {
               trigger(Event:Mem_Data_BP, in_msg.addr, cache_entry, tbe);
+          } else if(in_msg.Type == CoherenceResponseType:FWD_DIR_BP) {
+              trigger(Event:Fwd_dir_BP, in_msg.addr, cache_entry, tbe);
           } else if(in_msg.Type == CoherenceResponseType:MEMORY_ACK) {
               trigger(Event:Mem_Ack, in_msg.addr, cache_entry, tbe);
           } else if(in_msg.Type == CoherenceResponseType:INV) {
@@ -872,7 +875,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.DataBlk := cache_entry.DataBlk;
         out_msg.Dirty := true;
         //out_msg.Dirty := cache_entry.Dirty;
-        out_msg.MessageSize := MessageSizeType:Response_Data;
+        out_msg.MessageSize := MessageSizeType:Response_Control;
     }
   }
   // END PREFETCH
@@ -884,14 +887,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
 
   // PREFETCH ///////////////////// FROM CPU /////////////////////
   // Right Pred
-  transition(OO, {L1_GETS, L1_GET_INSTR},SS) {
-    ds_sendSharedDataToRequestor;
-    nn_addSharer;
-    set_setMRU;
-    uu_profileHit;
-    jj_popL1RequestQueue;
-  }
-  transition({SS,M,OO},L1_BP){
+  transition({SS,M},L1_BP){
 	// just send it to the CPU as dir.
 	d_bp_sendData;
         jj_popL1RequestQueue;
@@ -917,7 +913,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         jj_popL1RequestQueue;
   }
   ///////////////////////////////// FROM DIR ///////////////////////
-  transition(ISS_BPL1, Mem_Data, OO) {
+  transition(ISS_BPL1, Mem_Data, SS) {
         m_writeDataToCache;
 	d_bp_sendData_2;
         //ex_sendExclusiveDataToGetSRequestors;
@@ -925,12 +921,8 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         o_popIncomingResponseQueue;
         kd_wakeUpDependents;
   }
-  transition({SS,OO},Mem_Data_BP){
+  transition(SS,Mem_Data_BP){
 	d_bp_sendData_2;
-        o_popIncomingResponseQueue;
-  }
-  transition({M},Mem_Data_BP){
-	d_bp_sendData_3;
         o_popIncomingResponseQueue;
   }
   transition(MT,Mem_Data_BP){
@@ -940,23 +932,13 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         set_setMRU;
         o_popIncomingResponseQueue;
   }
-
-  transition(OO, L2_Replacement_clean, M_I) {
-    i_allocateTBE;
-    rr_deallocateL2CacheBlock;
-    c_exclusiveCleanReplacement;
-    //jj_popL1RequestQueue;
+  transition(SS , Fwd_dir_BP){
+	d_bp_sendData_2;
+        o_popIncomingResponseQueue;
   }
-  //transition(M_I, Mem_Ack ,NP) {
-  //      o_popIncomingResponseQueue;
-  //      kd_wakeUpDependents;
-  //}
-
-  transition(OO, L1_GETX, SS_MB) {
-    d_sendDataToRequestor;
-    set_setMRU;
-    uu_profileHit;
-    jj_popL1RequestQueue;
+  transition(MT , Fwd_dir_BP){
+	d_bp_sendData_3;
+        o_popIncomingResponseQueue;
   }
   // END PREFETCH
   //===============================================

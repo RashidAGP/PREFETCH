@@ -360,10 +360,9 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     peek(requestNetwork_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, to_mem_ctrl_latency) {
         out_msg.addr := address;
-        out_msg.Type := CoherenceResponseType:MEMORY_DATA_BP;
+        out_msg.Type := CoherenceResponseType:FWD_DIR_BP;
         out_msg.Sender := machineID;
         out_msg.Destination.add(mapAddressToMachine(address, MachineType:L2Cache));
-        out_msg.Dirty := false;
         out_msg.MessageSize := MessageSizeType:Response_Control; 
       }
     }

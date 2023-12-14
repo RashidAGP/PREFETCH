@@ -923,9 +923,10 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   action(hh_store_hit, "\h", desc="Notify sequencer that store completed.")
   {
     assert(is_valid(cache_entry));
-    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    DPRINTF(RubySlicc, "Before.%s\n", cache_entry.DataBlk);
     L1Dcache.setMRU(cache_entry);
     sequencer.writeCallback(address, cache_entry.DataBlk);
+    DPRINTF(RubySlicc, "After.%s\n", cache_entry.DataBlk);
     cache_entry.Dirty := true;
   }
 
@@ -1084,13 +1085,13 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 	bp_l2_sendToDir;
         k_popMandatoryQueue;
   }
-  transition(NP, {BP_DIR_RECV,BP_L2_RECV,BP_L2_RECV_M}){
+  transition(NP, {BP_DIR_RECV,BP_L2_RECV}){
     h_w_load_hit;
     o_popIncomingResponseQueue;
   }
   // IT MUST BE BP_L1_RECV TODO
   transition(S, BP_L2_RECV){
-    h_w_load_hit;
+    h_load_hit;
     o_popIncomingResponseQueue;
   }
   /////////// RECV //////////////
@@ -1099,10 +1100,10 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     h_load_hit;
     l_popRequestQueue;
   }
-  //transition(S, BP_L2_RECV){
-  //  h_load_hit;
-  //  o_popIncomingResponseQueue;
-  //}
+  transition({E,M}, BP_L2_RECV_M){
+    h_load_hit;
+    o_popIncomingResponseQueue;
+  }
 
   // END PREFETCH
   // Transitions for Load/Store/Replacement/WriteBack from transient states

@@ -107,7 +107,7 @@ class RubySequencer(RubyPort):
         16, "max requests (incl. prefetches) outstanding"
     )
     deadlock_threshold = Param.Cycles(
-        500000,
+        50000,
         "max outstanding cycles for a request "
         "before deadlock/livelock declared",
     )

@@ -1,8 +1,5 @@
-
-#    --debug-start=85072755012000 \
-
 ./build/X86/gem5.opt \
-    --debug-flags=TLB,LSQUnit,RubySlicc,RubyGenerated,SyscallVerbose \
+    --debug-flags=RubySlicc,RubyGenerated,RubySequencer,LSQUnit \
     --outdir=/home/rashid/warm_result/gapbs/kron/bc_prefetch \
     --redirect-stdout \
     --redirect-stderr \
