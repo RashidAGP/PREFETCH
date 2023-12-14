@@ -141,8 +141,9 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     BP_L2,      desc="Bypass L1,L2. Go to the Dir";
     // PREFETCH - RECV
     BP_L1_RECV, desc="Recv Data form L2";
-    BP_L2_RECV, desc="Recv Data form DIR";
-    BP_L2_RECV_M, desc="Recv Data form M of L2";
+    BP_DIR_RECV, desc="Recv Data form DIR";
+    BP_L2_RECV, desc="Recv Data form L2";
+    BP_L2_RECV_M, desc="Recv Data form L2 Modified";
     Fwd_GETS_FROM_L2,   desc="GETS from L2 Cache. Bad prediction";
     // END PREFETCH
   }
@@ -442,8 +443,10 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
           trigger(Event:WB_Ack, in_msg.addr, cache_entry, tbe);
         // PREFETCH
         } else if (in_msg.Type == CoherenceResponseType:MEMORY_DATA_BP) {
+          trigger(Event:BP_DIR_RECV, in_msg.addr,cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceResponseType:L2_DATA_BP) {
           trigger(Event:BP_L2_RECV, in_msg.addr,cache_entry, tbe);
-        } else if (in_msg.Type == CoherenceResponseType:MEMORY_DATA_BP_M) {
+        } else if (in_msg.Type == CoherenceResponseType:L2_DATA_BP_M) {
           trigger(Event:BP_L2_RECV_M, in_msg.addr,cache_entry, tbe);
         // END PREFETCH
         } else {
@@ -1081,12 +1084,13 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 	bp_l2_sendToDir;
         k_popMandatoryQueue;
   }
-  transition(NP, {BP_L2_RECV,BP_L2_RECV_M}){
+  transition(NP, {BP_DIR_RECV,BP_L2_RECV,BP_L2_RECV_M}){
     h_w_load_hit;
     o_popIncomingResponseQueue;
   }
+  // IT MUST BE BP_L1_RECV TODO
   transition(S, BP_L2_RECV){
-    h_load_hit;
+    h_w_load_hit;
     o_popIncomingResponseQueue;
   }
   /////////// RECV //////////////

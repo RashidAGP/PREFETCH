@@ -55,7 +55,8 @@ enumeration(CoherenceResponseType, desc="...") {
   MEMORY_DATA, desc="Data block from / to main memory";
   // PREFETCH
   MEMORY_DATA_BP, desc="Data block from main memory to Cache (BP)";
-  MEMORY_DATA_BP_M, desc="Data block from L2 to Cache (BP)";
+  L2_DATA_BP, desc="Data block from L2 cache to L1 cache (BP)";
+  L2_DATA_BP_M, desc="Data block from L2 cache to L1 cache (BP)";
   // END PREFECH
   ACK, desc="Generic invalidate ack";
   WB_ACK, desc="writeback ack";

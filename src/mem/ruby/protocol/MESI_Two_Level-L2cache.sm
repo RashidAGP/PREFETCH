@@ -391,14 +391,12 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         assert(in_msg.Destination.isElement(machineID));
 
         if (is_valid(cache_entry)) {
-          DPRINTF(RubySlicc, "1\n");
           // The L2 contains the block, so proceeded with handling the request
           trigger(L1Cache_request_type_to_event(in_msg.Type, in_msg.addr,
                                                 in_msg.Requestor, cache_entry),
                   in_msg.addr, cache_entry, tbe);
         } else {
           if (L2cache.cacheAvail(in_msg.addr)) {
-            DPRINTF(RubySlicc, "2\n");
             // L2 does't have the line, but we have space for it in the L2
             trigger(L1Cache_request_type_to_event(in_msg.Type, in_msg.addr,
                                                   in_msg.Requestor, cache_entry),
@@ -407,12 +405,9 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
             // No room in the L2, so we need to make room before handling the request
             Addr victim := L2cache.cacheProbe(in_msg.addr);
             Entry L2cache_entry := getCacheEntry(victim);
-            DPRINTF(RubySlicc, "3\n");
             if (isDirty(L2cache_entry)) {
-              DPRINTF(RubySlicc, "4\n");
               trigger(Event:L2_Replacement, victim, L2cache_entry, TBEs[victim]);
             } else {
-              DPRINTF(RubySlicc, "5\n");
               trigger(Event:L2_Replacement_clean,
                       victim, L2cache_entry, TBEs[victim]);
               DPRINTF(RubySlicc, "finalllllllllllllllllllll\n");
@@ -611,9 +606,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   action(f_sendInvToSharers, "f", desc="invalidate sharers for L2 replacement") {
-    DPRINTF(RubySlicc,"fffffffffffff\n");
     enqueue(L1RequestL2Network_out, RequestMsg, to_l1_latency) {
-      DPRINTF(RubySlicc,"zzzzzzzzzzz\n");
       assert(is_valid(cache_entry));
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:INV;
@@ -652,7 +645,6 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
 
   // OTHER ACTIONS
   action(i_allocateTBE, "i", desc="Allocate TBE for request") {
-    DPRINTF(RubySlicc,"xxxxxxxxxxxxx\n");
     check_allocate(TBEs);
     assert(is_valid(cache_entry));
     TBEs.allocate(address);
@@ -746,7 +738,6 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   action(rr_deallocateL2CacheBlock, "\r", desc="Deallocate L2 cache block.  Sets the cache to not present, allowing a replacement in parallel with a fetch.") {
-    DPRINTF(RubySlicc,"pppppppppppppppp\n");
     L2cache.deallocate(address);
     unset_cache_entry();
   }
@@ -849,11 +840,12 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     peek(L1RequestL2Network_in, RequestMsg) {
       enqueue(responseL2Network_out, ResponseMsg, to_l1_latency) {
         out_msg.addr := address;
-        out_msg.Type := CoherenceResponseType:MEMORY_DATA_BP;
+        out_msg.Type := CoherenceResponseType:L2_DATA_BP;
         out_msg.Sender := machineID;
         out_msg.Destination.add(mapAddressToMachine(address, MachineType:L1Cache));
         out_msg.DataBlk := in_msg.DataBlk;
-        out_msg.Dirty := false;
+        //out_msg.Dirty := false;
+        out_msg.Dirty := cache_entry.Dirty;
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
@@ -862,22 +854,24 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   action(d_bp_sendData_2, "d_bp_2", desc="Send data to requestor (L1) without peeking") {
       enqueue(responseL2Network_out, ResponseMsg, to_l1_latency) {
         out_msg.addr := address;
-        out_msg.Type := CoherenceResponseType:MEMORY_DATA_BP;
+        out_msg.Type := CoherenceResponseType:L2_DATA_BP;
         out_msg.Sender := machineID;
         out_msg.Destination.add(mapAddressToMachine(address, MachineType:L1Cache));
         out_msg.DataBlk := cache_entry.DataBlk;
-        out_msg.Dirty := false;
+        //out_msg.Dirty := false;
+        out_msg.Dirty := cache_entry.Dirty;
         out_msg.MessageSize := MessageSizeType:Response_Data;
     }
   }
   action(d_bp_sendData_3, "d_bp_3", desc="Send data to requestor (L1). Data in L2 cache data is correct.") {
       enqueue(responseL2Network_out, ResponseMsg, to_l1_latency) {
         out_msg.addr := address;
-        out_msg.Type := CoherenceResponseType:MEMORY_DATA_BP_M;
+        out_msg.Type := CoherenceResponseType:L2_DATA_BP_M;
         out_msg.Sender := machineID;
         out_msg.Destination.add(mapAddressToMachine(address, MachineType:L1Cache));
         out_msg.DataBlk := cache_entry.DataBlk;
-        out_msg.Dirty := false;
+        out_msg.Dirty := true;
+        //out_msg.Dirty := cache_entry.Dirty;
         out_msg.MessageSize := MessageSizeType:Response_Data;
     }
   }
@@ -957,10 +951,9 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   //      o_popIncomingResponseQueue;
   //      kd_wakeUpDependents;
   //}
+
   transition(OO, L1_GETX, SS_MB) {
     d_sendDataToRequestor;
-    // fw_sendFwdInvToSharers;
-    //fwm_sendFwdInvToSharersMinusRequestor;
     set_setMRU;
     uu_profileHit;
     jj_popL1RequestQueue;

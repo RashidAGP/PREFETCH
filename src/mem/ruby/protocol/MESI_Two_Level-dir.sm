@@ -504,11 +504,13 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
 
   // TRANSITIONS
   // PREFETCH
+  // FROM CPU/L1
   transition(I, Fetch_BP, IM_BP_L2) {
     qf_bp_queueMemoryFetchRequest;
     j_popIncomingRequestQueue;
   }
   // WRONG PREDICTION. Must got to L2.
+  // FROM CPU/L1
   transition(M, Fetch_BP) {
     d_bp_sendData_l2;
     j_popIncomingRequestQueue;
@@ -518,10 +520,12 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     l_popMemQueue;
     kd_wakeUpDependents;
   }
-  transition(IM_BP_L2, Fetch, IM){
-    j_popIncomingRequestQueue;
+  transition(IM_BP_L2, Fetch){
+    z_stallAndWaitRequest;
+    //j_popIncomingRequestQueue;
   }
   // END PREFETCH
+  ///////////////////////////////////
   transition(I, Fetch, IM) {
     qf_queueMemoryFetchRequest;
     j_popIncomingRequestQueue;
