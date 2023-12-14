@@ -692,6 +692,7 @@ void
 CPU::trap(const Fault &fault, ThreadID tid, const StaticInstPtr &inst)
 {
     // Pass the thread's TC into the invoke method.
+    printf("xxxx \n");
     fault->invoke(threadContexts[tid], inst);
 }
 

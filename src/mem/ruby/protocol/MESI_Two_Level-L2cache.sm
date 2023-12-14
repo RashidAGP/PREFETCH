@@ -932,6 +932,10 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         set_setMRU;
         o_popIncomingResponseQueue;
   }
+  transition(M, Fwd_dir_BP ){
+	d_bp_sendData_2;
+        o_popIncomingResponseQueue;
+  }
   transition(SS , Fwd_dir_BP){
 	d_bp_sendData_2;
         o_popIncomingResponseQueue;
