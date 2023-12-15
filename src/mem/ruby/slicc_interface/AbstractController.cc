@@ -291,12 +291,18 @@ AbstractController::serviceMemoryQueue()
 	pkt = Packet::createRead(req);
         uint8_t *newData = new uint8_t[req_size];
         pkt->dataDynamic(newData);
-    } else if (mem_msg->getType() == MemoryRequestType_MEMORY_READ_BP) {
-        DPRINTF(RubyCache,"RubyRequestType is MEMORY_READ_BP\n");
+    } else if (mem_msg->getType() == MemoryRequestType_MEMORY_READ_BP_CPU) {
+        DPRINTF(RubyCache,"RubyRequestType is MEMORY_READ_BP_CPU\n");
 	pkt = Packet::createRead(req);
         uint8_t *newData = new uint8_t[req_size];
         pkt->dataDynamic(newData);
 	pkt->set_BP_L2();
+    } else if (mem_msg->getType() == MemoryRequestType_MEMORY_READ_BP_L2) {
+        DPRINTF(RubyCache,"RubyRequestType is MEMORY_READ_BP_L2\n");
+	pkt = Packet::createRead(req);
+        uint8_t *newData = new uint8_t[req_size];
+        pkt->dataDynamic(newData);
+	pkt->set_BP_L1();
     } else {
         panic("Unknown memory request type (%s) for addr %p",
               MemoryRequestType_to_string(mem_msg->getType()),
@@ -406,8 +412,12 @@ AbstractController::recvTimingResp(PacketPtr pkt)
         (*msg).m_DataBlk.setData(pkt->getPtr<uint8_t>(), 0,
                                  RubySystem::getBlockSizeBytes());
 	if (pkt->get_BP_L2() == true){
-             (*msg).m_Type = MemoryRequestType_MEMORY_READ_BP;
+             (*msg).m_Type = MemoryRequestType_MEMORY_READ_BP_CPU;
 	}
+	if (pkt->get_BP_L1() == true){
+             (*msg).m_Type = MemoryRequestType_MEMORY_READ_BP_L2;
+	}
+	
     } else if (pkt->isWrite()) {
         (*msg).m_Type = MemoryRequestType_MEMORY_WB;
         (*msg).m_MessageSize = MessageSizeType_Writeback_Control;

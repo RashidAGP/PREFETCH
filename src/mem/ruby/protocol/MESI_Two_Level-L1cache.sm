@@ -700,6 +700,22 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
       }
     }
   }
+  action(c_issueDOWNGRADE, "c_down", desc="Issue DOWNGRADE") {
+    peek(mandatoryQueue_in, RubyRequest) {
+      enqueue(requestL1Network_out, RequestMsg,  l1_request_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceRequestType:DOWNGRADE;
+        out_msg.Requestor := machineID;
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
+        DPRINTF(RubySlicc, "address: %#x, destination: %s\n",
+                address, out_msg.Destination);
+        out_msg.MessageSize := MessageSizeType:Control;
+        out_msg.Prefetch := in_msg.Prefetch;
+        out_msg.AccessMode := in_msg.AccessMode;
+      }
+    }
+  }
 
   action(d_sendDataToRequestor, "d", desc="send data to requestor") {
     peek(requestL1Network_in, RequestMsg) {
@@ -1245,11 +1261,13 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     uu_profileDataMiss;
     k_popMandatoryQueue;
   }
-
+  // PREFETCH --> we should send invalidation to the L2 cache
   transition(S, {L1_Replacement, PF_L1_Replacement}, I) {
+    c_issueDOWNGRADE;
     forward_eviction_to_cpu;
     ff_deallocateL1CacheBlock;
   }
+  // END PREFETCH
 
   transition(S, Inv, I) {
     forward_eviction_to_cpu;

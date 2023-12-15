@@ -898,7 +898,7 @@ void TLB::DelayedL2HitEvent:: process(){
    //	req,tc,NULL,mode,delayedResponse,
    //     timing);
    //assert(fault == NoFault && "Error in delayed Translation");
-
+   //DPRINTF(TLB,"NAME IS:%s.\n",tlb->name());
    Fault fault = NoFault;
    DPRINTF(TLB,"Insert in L1 miss of L2:Addr:%#x.Enabel hit_l2 flags\n",this->req->getVaddr());
    //DPRINTF(TLB,"Insert in L1 miss of L2.vaddr_l:%#x.\n",vaddr_l);
@@ -906,9 +906,11 @@ void TLB::DelayedL2HitEvent:: process(){
    tlb->insert_l1(entry_l.vaddr, entry_l, pcid_l);
    fault = tlb->translate(req, tc, translation, mode, delayedResponse,timing);
    //assert(fault == NoFault && "Error in L2 Delayed Translation");
-   req->set_hit_l2();
-   req->reset_miss_l2();
-   tlb->incr_ByPass_L1();   
+   if (tlb->name() == "system.cpu.mmu.dtb"){
+       req->set_hit_l2();
+       req->reset_miss_l2();
+       tlb->incr_ByPass_L1();
+   }
    if (fault == NoFault){
        assert(req->hasPaddr() && "Req has no paddr.\n");
    }

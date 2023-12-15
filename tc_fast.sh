@@ -1,5 +1,5 @@
 ./build/X86/gem5.fast \
-    --outdir=/home/rashid/warm_result/gapbs/kron/tc_prefetch_fast_100 \
+    --outdir=/home/rashid/warm_result/gapbs/kron/tc_prefetch_fast_2m \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
@@ -23,5 +23,5 @@
     --l2_assoc=16 \
     --cpu-clock=2GHz \
     --cacheline_size=64 \
-    -I 100000000
+    -I 2000000
 # -I 500000000

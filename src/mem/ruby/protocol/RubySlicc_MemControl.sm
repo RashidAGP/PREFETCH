@@ -53,8 +53,10 @@ enumeration(MemoryRequestType, desc="...") {
   MEMORY_READ,     desc="Read request to memory";
   MEMORY_WB,       desc="Write back data to memory";
   // PREFETCH
-  MEMORY_READ_BP,  desc="All caches bypassed";
-  MEMORY_DATA_BP,  desc="Data read from memory BP";
+  MEMORY_READ_BP_CPU,  desc="All caches bypassed";
+  MEMORY_READ_BP_L2,  desc="Just L1 bypassed";
+  MEMORY_DATA_BP_L2,  desc="Data read from memory BP";
+  MEMORY_DATA_BP_CPU,  desc="Data read from memory BP";
   // END PREFETCH
   // response from memory to directory
   // (These are currently unused!)
