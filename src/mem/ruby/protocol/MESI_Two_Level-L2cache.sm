@@ -71,7 +71,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     NP, AccessPermission:Invalid, desc="Not present in either cache";
     SS, AccessPermission:Read_Only, desc="L2 cache entry Shared, also present in one or more L1s";
     // PREFETCH
-    SS_OO, AccessPermission:Read_Only, desc="L2 cache entry is shared, non of them has";
+    SS_OO, AccessPermission:Read_Only, desc="L2 cache entry is shared, non of L1 has";
     // END PREFETCH
     M, AccessPermission:Read_Write, desc="L2 cache entry Modified, not present in any L1s", format="!b";
     MT, AccessPermission:Maybe_Stale, desc="L2 cache entry Modified in a local L1, assume L2 copy stale", format="!b";

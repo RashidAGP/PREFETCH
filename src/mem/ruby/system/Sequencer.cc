@@ -566,26 +566,15 @@ Sequencer::readCallback_hxx_2(Addr address, DataBlock data,
         SequencerRequest &seq_req = seq_req_list.front();
         if (ruby_request) {
 	    // PREFETCH
-            assert((seq_req.m_type == RubyRequestType_LD) ||
-                   (seq_req.m_type == RubyRequestType_Load_Linked) ||
-                   (seq_req.m_type == RubyRequestType_IFETCH) ||
-		   (seq_req.m_type == RubyRequestType_BPL1) ||
+            assert((seq_req.m_type == RubyRequestType_BPL1) ||
 		   (seq_req.m_type == RubyRequestType_BPL2));
-        }
-        if ((seq_req.m_type != RubyRequestType_LD) &&
-            (seq_req.m_type != RubyRequestType_Load_Linked) &&
-            (seq_req.m_type != RubyRequestType_IFETCH) &&
-            (seq_req.m_type != RubyRequestType_BPL1) &&
-	    (seq_req.m_type != RubyRequestType_BPL2)) {
-            // Write request: reissue request to the cache hierarchy
-            issueRequest(seq_req.pkt, seq_req.m_second_type);
-            break;
         }
         if (ruby_request) {
             recordMissLatency(&seq_req, true, mach, externalHit,
                               initialRequestTime, forwardRequestTime,
                               firstResponseTime);
         }
+        DPRINTF(RubySequencer, "readCallback_hxx_2. %s\n", data);
         markRemoved();
         hitCallback(&seq_req, data, true, mach, externalHit,
                     initialRequestTime, forwardRequestTime,
@@ -950,6 +939,8 @@ Sequencer::makeRequest(PacketPtr pkt)
 		    primary_type = RubyRequestType_RMW_Read;
 		    secondary_type = RubyRequestType_ST;
 		    DPRINTF(RubySequencer, "RMW\n");
+		    pkt->req->reset_miss_l1();
+		    pkt->req->reset_miss_l2();
 		}else if (pkt->req->get_hit_l2() == true){
 	            DPRINTF(RubySequencer,"BYPASS_1.Addr:%#x\n",pkt->getAddr());
                     primary_type = secondary_type = RubyRequestType_BPL1;
@@ -959,6 +950,8 @@ Sequencer::makeRequest(PacketPtr pkt)
                 } else {
 	            DPRINTF(RubySequencer,"Normal Read Request.Addr:%#x\n",pkt->getAddr());
                     primary_type = secondary_type = RubyRequestType_LD;
+		    pkt->req->reset_miss_l1();
+		    pkt->req->reset_miss_l2();
                 }
             }
         } else if (pkt->isFlush()) {

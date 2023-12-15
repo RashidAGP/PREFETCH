@@ -939,10 +939,8 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   action(hh_store_hit, "\h", desc="Notify sequencer that store completed.")
   {
     assert(is_valid(cache_entry));
-    DPRINTF(RubySlicc, "Before.%s\n", cache_entry.DataBlk);
     L1Dcache.setMRU(cache_entry);
     sequencer.writeCallback(address, cache_entry.DataBlk);
-    DPRINTF(RubySlicc, "After.%s\n", cache_entry.DataBlk);
     cache_entry.Dirty := true;
   }
 
