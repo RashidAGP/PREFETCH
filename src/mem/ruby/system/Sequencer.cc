@@ -307,7 +307,11 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType primary_type,
                          RubyRequestType secondary_type)
 {
     // See if we should schedule a deadlock check
-    DPRINTF(RubySequencer,"Insert in the insertReqest\n");
+    Addr AD = pkt->getAddr() >> 6;
+    AD = AD << 6;
+    DPRINTF(RubySequencer,"Insert in the insertReqest.cache_address:%#x\n",AD);
+    DPRINTF(RubySequencer,"Primary:%s\n,",primary_type);
+    DPRINTF(RubySequencer,"Secondaty:%s\n,",secondary_type);
     if (!deadlockCheckEvent.scheduled() &&
         drainState() != DrainState::Draining) {
         schedule(deadlockCheckEvent, clockEdge(m_deadlock_threshold));
@@ -503,6 +507,9 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
             // Handle SLICC block_on behavior for Locked_RMW accesses. NOTE: the
             // address variable here is assumed to be a line address, so when
             // blocking buffers, must check line addresses.
+	    Addr AD = seq_req.pkt->getAddr();
+	    AD = AD >> 6;
+	    AD = AD << 6;
             if (seq_req.m_type == RubyRequestType_Locked_RMW_Read) {
                 // blockOnQueue blocks all first-level cache controller queues
                 // waiting on memory accesses for the specified address that go
@@ -510,8 +517,10 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
                 // go to the mandatory_q before unblocking the first-level
                 // controller. This will block standard loads, stores, ifetches,
                 // etc.
+		DPRINTF(RubySequencer,"RubyRequestType_Locked_RMW_Read. Address:%#x\n..", AD);
                 m_controller->blockOnQueue(address, m_mandatory_q_ptr);
             } else if (seq_req.m_type == RubyRequestType_Locked_RMW_Write) {
+		DPRINTF(RubySequencer,"RubyRequestType_Locked_RMW_Write. Address:%#x..\n", AD);
                 m_controller->unblock(address);
             }
 
@@ -522,9 +531,14 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
             }
 
             markRemoved();
+	    //PREFETCH
+ 	    //check_address(address, data);
+	    //add_cache_map(address, data.getData(0,64));
+	    // END PREFETCH
             hitCallback(&seq_req, data, success, mach, externalHit,
                         initialRequestTime, forwardRequestTime,
                         firstResponseTime, !ruby_request);
+ 	    //check_address(address, data);
             ruby_request = false;
         } else {
             // handle read request
@@ -534,6 +548,7 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
                         initialRequestTime, forwardRequestTime,
                         firstResponseTime, !ruby_request);
         }
+
         seq_req_list.pop_front();
     }
 
@@ -575,6 +590,7 @@ Sequencer::readCallback_hxx_2(Addr address, DataBlock data,
                               firstResponseTime);
         }
         DPRINTF(RubySequencer, "readCallback_hxx_2. %s\n", data);
+        check_address(address, data);
         markRemoved();
         hitCallback(&seq_req, data, true, mach, externalHit,
                     initialRequestTime, forwardRequestTime,
@@ -632,6 +648,8 @@ Sequencer::readCallback_hxx(Addr address, DataBlock data,
                               firstResponseTime);
         }
         markRemoved();
+        DPRINTF(RubySequencer, "readCallback_hxx. %s\n", data);
+        check_address(address, data);
         hitCallback(&seq_req, data, true, mach, externalHit,
                     initialRequestTime, forwardRequestTime,
                     firstResponseTime, !ruby_request);
@@ -688,6 +706,8 @@ Sequencer::readCallback(Addr address, DataBlock& data,
                               firstResponseTime);
         }
         markRemoved();
+        DPRINTF(RubySequencer, "readCallback_Normal.%s\n", data);
+        check_address(address, data);
         hitCallback(&seq_req, data, true, mach, externalHit,
                     initialRequestTime, forwardRequestTime,
                     firstResponseTime, !ruby_request);
@@ -773,6 +793,10 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
             // Types of stores set the actual data here, apart from
             // failed Store Conditional requests
             data.setData(pkt);
+	    Addr AD = pkt->getAddr();
+	    AD = AD >> 6;
+	    AD = AD << 6;
+	    add_cache_map(AD, data.getData_rashid(0,64));
             DPRINTF(RubySequencer, "set data %s\n", data);
         }
     }
@@ -865,6 +889,9 @@ Sequencer::makeRequest(PacketPtr pkt)
 {
     // HTM abort signals must be allowed to reach the Sequencer
     // the same cycle they are issued. They cannot be retried.
+    Addr AD = pkt->getAddr() >> 6;
+    AD = AD << 6;
+    DPRINTF(RubySequencer,"Starting of makeRequest for cache_address:%#x.\n",AD);
     if ((m_outstanding_count >= m_max_outstanding_requests) &&
         !pkt->req->isHTMAbort()) {
         return RequestStatus_BufferFull;
@@ -906,10 +933,10 @@ Sequencer::makeRequest(PacketPtr pkt)
         // optimization built into the protocol.
         //
         if (pkt->isWrite()) {
-            DPRINTF(RubySequencer, "Issuing Locked RMW Write\n");
+            DPRINTF(RubySequencer, "Issuing Locked RMW Write. Address:%#x\n",AD);
             primary_type = RubyRequestType_Locked_RMW_Write;
         } else {
-            DPRINTF(RubySequencer, "Issuing Locked RMW Read\n");
+            DPRINTF(RubySequencer, "Issuing Locked RMW Read. Address:%#x\n",AD);
             assert(pkt->isRead());
             primary_type = RubyRequestType_Locked_RMW_Read;
         }
@@ -927,6 +954,7 @@ Sequencer::makeRequest(PacketPtr pkt)
             //
             // Note: M5 packets do not differentiate ST from RMW_Write
             //
+	    DPRINTF(RubySequencer, "Normal Store Double ST\n");
             primary_type = secondary_type = RubyRequestType_ST;
         } else if (pkt->isRead()) {
             // hardware transactional memory commands
@@ -938,20 +966,24 @@ Sequencer::makeRequest(PacketPtr pkt)
                 if (pkt->req->isReadModifyWrite()) {
 		    primary_type = RubyRequestType_RMW_Read;
 		    secondary_type = RubyRequestType_ST;
-		    DPRINTF(RubySequencer, "RMW\n");
-		    pkt->req->reset_miss_l1();
+		    DPRINTF(RubySequencer, "RMW. Cache_add:%#x.\n",AD);
+		    pkt->reset_BP_L2();
+		    pkt->reset_BP_L1();
 		    pkt->req->reset_miss_l2();
+		    pkt->req->reset_hit_l2();
 		}else if (pkt->req->get_hit_l2() == true){
-	            DPRINTF(RubySequencer,"BYPASS_1.Addr:%#x\n",pkt->getAddr());
+	            DPRINTF(RubySequencer,"BYPASS_1.Addr:%#x.cache_line_address:%#x.\n",pkt->getAddr(),AD);
                     primary_type = secondary_type = RubyRequestType_BPL1;
 		}else if (pkt->req->get_miss_l2() == true){
-	            DPRINTF(RubySequencer,"BYPASS_2.Addr:%#x\n",pkt->getAddr());
+	            DPRINTF(RubySequencer,"BYPASS_2.Addr:%#x.cache_line_address:%#x\n",pkt->getAddr(),AD);
                     primary_type = secondary_type = RubyRequestType_BPL2;
                 } else {
-	            DPRINTF(RubySequencer,"Normal Read Request.Addr:%#x\n",pkt->getAddr());
+	            DPRINTF(RubySequencer,"Normal Read Request.Addr:%#x.cache_line_address:%#x\n",pkt->getAddr(),AD);
                     primary_type = secondary_type = RubyRequestType_LD;
-		    pkt->req->reset_miss_l1();
+		    pkt->reset_BP_L2();
+		    pkt->reset_BP_L1();
 		    pkt->req->reset_miss_l2();
+		    pkt->req->reset_hit_l2();
                 }
             }
         } else if (pkt->isFlush()) {

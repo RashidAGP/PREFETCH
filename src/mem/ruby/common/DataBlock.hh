@@ -80,6 +80,7 @@ class DataBlock
     void clear();
     uint8_t getByte(int whichByte) const;
     const uint8_t *getData(int offset, int len) const;
+    uint8_t *getData_rashid(int offset, int len) ;
     uint8_t *getDataMod(int offset);
     void setByte(int whichByte, uint8_t data);
     void setData(const uint8_t *data, int offset, int len);
@@ -89,7 +90,6 @@ class DataBlock
     void atomicPartial(const DataBlock & dblk, const WriteMask & mask);
     bool equal(const DataBlock& obj) const;
     void print(std::ostream& out) const;
-
   private:
     void alloc();
     uint8_t *m_data;

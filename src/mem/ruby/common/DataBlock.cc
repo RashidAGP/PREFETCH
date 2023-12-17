@@ -111,6 +111,12 @@ DataBlock::print(std::ostream& out) const
 {
 }
 */
+uint8_t*
+DataBlock::getData_rashid(int offset, int len)
+{
+    assert(offset + len <= RubySystem::getBlockSizeBytes());
+    return &m_data[offset];
+}
 const uint8_t*
 DataBlock::getData(int offset, int len) const
 {

@@ -52,7 +52,7 @@
 #include "mem/ruby/structures/CacheMemory.hh"
 #include "mem/ruby/system/RubyPort.hh"
 #include "params/RubySequencer.hh"
-
+#include "debug/RubySequencer.hh"
 namespace gem5
 {
 
@@ -98,6 +98,55 @@ class Sequencer : public RubyPort
                         DataBlock& data);
 
     // Public Methods
+    //
+    // PREFETCH
+    std::unordered_map<Addr,const uint8_t*> cache_map;
+    void add_cache_map(Addr cache_address,uint8_t* db){
+	    auto it = cache_map.find(cache_address);
+	    if (it != cache_map.end()){
+		delete[] it->second;
+		cache_map.erase(it);
+	        DPRINTF(RubySequencer, "Address:%#x was removed.\n",cache_address); 
+	    }
+	    uint8_t* new_db = new uint8_t[64];
+	    memcpy (new_db, db ,64);	   
+	    DPRINTF(RubySequencer, "Address:%#x added to the map.\n",cache_address); 
+      	    for (int i = 0 ; i < 64 ; i++){
+              	printf("%d ",new_db[i]);
+      	    }
+	    cache_map.insert({cache_address,new_db});
+    }
+    void check_address(Addr cache_address,DataBlock db)
+    {
+	    uint8_t* pointer_to_current = db.getData_rashid(0,64);
+	    //printf("Original cache Line is:");
+	    //for (int i = 0 ; i < 64 ; i++){
+        	//printf("%d ",pointer_to_current[i]);
+	    //}
+	    auto pointer_to_original = cache_map.find(cache_address);
+	    bool match = false;
+	    if (pointer_to_original != cache_map.end() ){
+        	    for (int i = 0 ; i < 64 ; i++){
+        		if (pointer_to_original->second[i] != pointer_to_current[i]){
+        			match = true;
+				printf("The problem was at:%d\n",i);
+        		}
+        	    }
+	    }
+	    if (match == true){
+        	    for (int i = 0 ; i < 64 ; i++){
+                	printf("%d ",pointer_to_original->second[i]);
+        	    }
+        	    printf("\nCurrent cache Line is:");
+        	    for (int i = 0 ; i < 64 ; i++){
+                	printf("%d ",pointer_to_current[i]);
+        	    }
+		DPRINTF(RubySequencer,"\n");
+		DPRINTF(RubySequencer,"Mismatch in Physical Cache Line:%#x\n",cache_address);
+		panic("There is problem in cache coherence!");
+	    }
+    }
+    // END PREFETCH
     virtual void wakeup(); // Used only for deadlock detection
     void resetStats() override;
     void collateStats();
@@ -135,7 +184,7 @@ class Sequencer : public RubyPort
                       const Cycles firstResponseTime = Cycles(0));
     void readCallback_hxx_2(Addr address,
                       DataBlock data,
-                      const bool externalHit = false,
+                      const bool externalHit = true,
                       const MachineType mach = MachineType_NUM,
                       const Cycles initialRequestTime = Cycles(0),
                       const Cycles forwardRequestTime = Cycles(0),

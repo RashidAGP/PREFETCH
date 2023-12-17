@@ -1,5 +1,5 @@
 ./build/X86/gem5.opt \
-    --debug-flags=RubySequencer,RubySlicc,RubyGenerated \
+    --debug-flags=RubySequencer,RubySlicc,RubyGenerated,RubyCache,LSQ,LSQUnit \
     --outdir=/home/rashid/warm_result/gapbs/kron/bc_prefetch \
     --redirect-stdout \
     --redirect-stderr \
@@ -20,7 +20,7 @@
     --l1i_assoc=8 \
     --l2_size=2MB \
     --l2_assoc=16 \
-    --cpu-clock=1GHz \
+    --cpu-clock=2GHz \
     --cacheline_size=64 \
-    -I 400000
+    -I 1000000
 # -I 500000000

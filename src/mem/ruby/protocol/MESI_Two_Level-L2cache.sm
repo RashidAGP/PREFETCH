@@ -70,9 +70,6 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     // Base states
     NP, AccessPermission:Invalid, desc="Not present in either cache";
     SS, AccessPermission:Read_Only, desc="L2 cache entry Shared, also present in one or more L1s";
-    // PREFETCH
-    SS_OO, AccessPermission:Read_Only, desc="L2 cache entry is shared, non of L1 has";
-    // END PREFETCH
     M, AccessPermission:Read_Write, desc="L2 cache entry Modified, not present in any L1s", format="!b";
     MT, AccessPermission:Maybe_Stale, desc="L2 cache entry Modified in a local L1, assume L2 copy stale", format="!b";
 
@@ -710,7 +707,9 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     peek(L1RequestL2Network_in, RequestMsg) {
       assert(is_valid(cache_entry));
       if (in_msg.Dirty) {
+	DPRINTF(RubySlicc,"Before:%s.\n",cache_entry.DataBlk);
         cache_entry.DataBlk := in_msg.DataBlk;
+	DPRINTF(RubySlicc,"After:%s.\n",cache_entry.DataBlk);
         cache_entry.Dirty := in_msg.Dirty;
       }
     }
@@ -860,11 +859,12 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   action(d_bp_sendData, "d_bp", desc="Send data to requestor (L1)") {
     peek(L1RequestL2Network_in, RequestMsg) {
       enqueue(responseL2Network_out, ResponseMsg, to_l1_latency) {
+	DPRINTF(RubySlicc,"BYPASS L1 Forwarded Cache line is:%s\n",in_msg.DataBlk);
         out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:L2_DATA_BP;
         out_msg.Sender := machineID;
         out_msg.Destination.add(mapAddressToMachine(address, MachineType:L1Cache));
-        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.DataBlk := cache_entry.DataBlk;
         //out_msg.Dirty := false;
         out_msg.Dirty := cache_entry.Dirty;
         out_msg.MessageSize := MessageSizeType:Response_Data;
@@ -929,32 +929,14 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         jj_popL1RequestQueue;
   }
   ///////////////////////////////// FROM DIR ///////////////////////
-  transition(ISS_BPL1, Mem_Data_L2, SS_OO) {
+  transition(ISS_BPL1, Mem_Data_L2, SS) {
         m_writeDataToCache;
 	d_bp_sendData_2;
         s_deallocateTBE;
         o_popIncomingResponseQueue;
         kd_wakeUpDependents;
   }
-  transition(SS_OO,{L1_GETS,L1_GET_INSTR},SS) {
-        ds_sendSharedDataToRequestor;
-        nn_addSharer;
-        set_setMRU;
-        uu_profileHit;
-        jj_popL1RequestQueue;
-  }
-  transition(SS_OO,L1_BP) {
-        d_bp_sendData;
-        set_setMRU;
-        uu_profileHit;
-        jj_popL1RequestQueue;
-  }
-  transition(SS_OO,L2_Replacement_clean,M_I) {
-    i_allocateTBE;
-    c_exclusiveCleanReplacement;
-    rr_deallocateL2CacheBlock;
-  }
-  transition(SS,L1_DOWNGRADE, SS_OO) {
+  transition(SS,L1_DOWNGRADE, SS) {
     ll_clearSharers;
     jj_popL1RequestQueue;
   }
@@ -969,7 +951,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         set_setMRU;
         o_popIncomingResponseQueue;
   }
-  transition({M,SS_OO}, Fwd_dir_BP ){
+  transition(M, Fwd_dir_BP ){
 	d_bp_sendData_2;
         o_popIncomingResponseQueue;
   }
@@ -1098,7 +1080,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   }
 
 
-  transition({SS,SS_OO}, L1_GETX, SS_MB) {
+  transition(SS, L1_GETX, SS_MB) {
     d_sendDataToRequestor;
     // fw_sendFwdInvToSharers;
     fwm_sendFwdInvToSharersMinusRequestor;
