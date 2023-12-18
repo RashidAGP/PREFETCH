@@ -1130,7 +1130,7 @@ CPU::instDone(ThreadID tid, const DynInstPtr &inst)
         thread[tid]->threadStats.numInsts++;
         commitStats[tid]->numInstsNotNOP++;
 	committed_inst_number ++;
-        if (committed_inst_number >= 50000000 && reset_stats == false){
+        if (committed_inst_number >= 20000000 && reset_stats == false){
               this->resetStats();
               std::vector<SimObject *> simObjectList = SimObject::getSimObjectList();
               for (auto so : simObjectList)  {

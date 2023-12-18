@@ -1,9 +1,9 @@
 ./build/X86/gem5.fast \
-    --outdir=/home/rashid/warm_result/gapbs/kron/sssp_prefetch \
+    --outdir=/home/rashid/warm_result/gapbs/kron/bc_prefetch \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
-    --checkpoint-dir=/home/rashid/new_benchmarks/kron/sssp \
+    --checkpoint-dir=/home/rashid/new_benchmarks/kron/bc \
     -r 1\
     --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
     --disk-image=/home/rashid/fs_img/gapbs_kron.img \

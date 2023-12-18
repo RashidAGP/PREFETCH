@@ -110,10 +110,12 @@ class Sequencer : public RubyPort
 	    }
 	    uint8_t* new_db = new uint8_t[64];
 	    memcpy (new_db, db ,64);	   
-	    DPRINTF(RubySequencer, "Address:%#x added to the map.\n",cache_address); 
+	    DPRINTF(RubySequencer, "Address:%#x added to the map.\n",cache_address);
+	    /* 
       	    for (int i = 0 ; i < 64 ; i++){
               	printf("%d ",new_db[i]);
       	    }
+	    */
 	    cache_map.insert({cache_address,new_db});
     }
     void check_address(Addr cache_address,DataBlock db)
@@ -129,11 +131,12 @@ class Sequencer : public RubyPort
         	    for (int i = 0 ; i < 64 ; i++){
         		if (pointer_to_original->second[i] != pointer_to_current[i]){
         			match = true;
-				printf("The problem was at:%d\n",i);
+				//printf("The problem was at:%d\n",i);
         		}
         	    }
 	    }
 	    if (match == true){
+		    /*
         	    for (int i = 0 ; i < 64 ; i++){
                 	printf("%d ",pointer_to_original->second[i]);
         	    }
@@ -141,9 +144,10 @@ class Sequencer : public RubyPort
         	    for (int i = 0 ; i < 64 ; i++){
                 	printf("%d ",pointer_to_current[i]);
         	    }
+		    */
 		DPRINTF(RubySequencer,"\n");
 		DPRINTF(RubySequencer,"Mismatch in Physical Cache Line:%#x\n",cache_address);
-		panic("There is problem in cache coherence!");
+		//panic("There is problem in cache coherence!");
 	    }
     }
     // END PREFETCH

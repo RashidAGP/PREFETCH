@@ -874,7 +874,16 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
                           l2_select_low_bit, l2_select_num_bits, intToID(0)));
     }
   }
-
+  action(return_fwd, "rt_fw", desc="return forwared message from L2 (BP)"){
+    enqueue(requestL1Network_out, RequestMsg, 0) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceRequestType:GETS_L2;
+      out_msg.Requestor:= machineID;
+      out_msg.MessageSize := MessageSizeType:Control;
+      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
+    }
+  }
    // END PREFETCH
   action(j_sendUnblock, "j", desc="send unblock to the L2 cache") {
     enqueue(unblockNetwork_out, ResponseMsg, to_l2_latency) {
@@ -1091,15 +1100,15 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   //*****************************************************
   // PREFETCH
   ////////  SENDING ///////////////
-  transition({NP,E,S,M,M_I}, BP_L1){
+  transition({NP,I,E,S,M,M_I}, BP_L1){
 	bp_l1_sendToL2;
         k_popMandatoryQueue;
   }
-  transition({NP,E,S,M}, BP_L2){
+  transition({NP,E,S,M,I}, BP_L2){
 	bp_l2_sendToDir;
         k_popMandatoryQueue;
   }
-  transition(NP, {BP_DIR_RECV,BP_L2_RECV}){
+  transition({NP,I}, {BP_DIR_RECV,BP_L2_RECV}){
     h_w_load_hit;
     o_popIncomingResponseQueue;
   }
@@ -1113,6 +1122,10 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   transition({E,M},Fwd_GETS_FROM_L2){
     h_load_hit;
     l_popRequestQueue;
+  }
+  transition({M_I},Fwd_GETS_FROM_L2){
+	return_fwd;
+        l_popRequestQueue;
   }
   transition({E,M}, BP_L2_RECV_M){
     h_load_hit;
