@@ -1,5 +1,5 @@
 ./build/X86/gem5.fast \
-    --outdir=/home/rashid/warm_result/gapbs/kron/bfs_prefetch \
+    --outdir=/home/rashid/warm_result/gapbs/kron/bfs_minimap \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
@@ -11,7 +11,7 @@
     --restore-with-cpu=DerivO3CPU \
     --mem-size=16GB \
     --mem-type=DRAMsim3\
-    --network=simple\
+    --network=garnet\
     --ruby \
     --l1d_size=64kB \
     --l1i_size=64kB \

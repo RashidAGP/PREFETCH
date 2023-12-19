@@ -695,8 +695,9 @@ LSQUnit::executeStore(const DynInstPtr &store_inst)
     Fault store_fault = store_inst->initiateAcc();
 
     if (store_inst->isTranslationDelayed() &&
-        store_fault == NoFault)
+        store_fault == NoFault){
         return store_fault;
+    }
 
     if (!store_inst->readPredicate()) {
         DPRINTF(LSQUnit, "Store [sn:%lli] not executed from predication\n",
@@ -723,6 +724,14 @@ LSQUnit::executeStore(const DynInstPtr &store_inst)
         return store_fault;
     }
 
+	// PREFETCH
+	printf("%#x.\n",store_inst->physEffAddr);
+	Addr AD = store_inst->physEffAddr >> 6;
+	printf("%#x.\n",AD);
+	AD = AD << 6;
+	add_store_access(AD);
+	print_access(curTick());	
+	// END PREFETCH
     assert(store_fault == NoFault);
 
     if (store_inst->isStoreConditional() || store_inst->isAtomic()) {
@@ -1630,6 +1639,12 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
     DPRINTF(LSQUnit, "Doing memory access for inst [sn:%lli] PC %s\n",
             load_inst->seqNum, load_inst->pcState());
 
+	// PREFETCH
+	Addr AD = load_inst->physEffAddr >> 6;
+	AD = AD << 6;
+	add_load_access(AD);
+	print_access(curTick());
+	// END PREFETCH
     // Allocate memory if this is the first time a load is issued.
     if (!load_inst->memData) {
         load_inst->memData = new uint8_t[request->mainReq()->getSize()];

@@ -39,6 +39,9 @@
 using namespace gem5;
 
 namespace py = pybind11;
+// PREFETCH
+char* csv_path;
+//END PREFETCH
 bool reset_stats;
 // main() is now pretty stripped down and just sets up python and then
 // calls EmbeddedPython::initAll which loads the various embedded python
@@ -50,6 +53,9 @@ main(int argc, char **argv)
     // Initialize gem5 special signal handling.
     initSignals();
     reset_stats = false;
+    // PREFETCH
+    csv_path = argv[1];
+    // END PREFETCH
     // Convert argv[0] to a wchar_t string, using python's locale and cleanup
     // functions.
     std::unique_ptr<wchar_t[], decltype(&PyMem_RawFree)> program(

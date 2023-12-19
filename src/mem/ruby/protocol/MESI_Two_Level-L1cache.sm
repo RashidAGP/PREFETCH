@@ -1123,7 +1123,11 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     h_load_hit;
     l_popRequestQueue;
   }
-  transition({M_I},Fwd_GETS_FROM_L2){
+  //transition({M_I},Fwd_GETS_FROM_L2){
+	//return_fwd;
+        //l_popRequestQueue;
+  //}
+  transition(M_I,{Fwd_GETS_FROM_L2,BP_L2_RECV_M}){
 	return_fwd;
         l_popRequestQueue;
   }
