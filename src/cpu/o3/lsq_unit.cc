@@ -91,6 +91,7 @@ LSQUnit::WritebackEvent::description() const
 bool
 LSQUnit::recvTimingResp(PacketPtr pkt)
 {
+    DPRINTF(LSQUnit,"recv.Addr:%#x.",pkt->getAddr());
     LSQRequest *request = dynamic_cast<LSQRequest*>(pkt->senderState);
     assert(request != nullptr);
     bool ret = true;
@@ -725,9 +726,7 @@ LSQUnit::executeStore(const DynInstPtr &store_inst)
     }
 
 	// PREFETCH
-	printf("%#x.\n",store_inst->physEffAddr);
 	Addr AD = store_inst->physEffAddr >> 6;
-	printf("%#x.\n",AD);
 	AD = AD << 6;
 	add_store_access(AD);
 	print_access(curTick());	
@@ -1323,6 +1322,7 @@ LSQUnit::checkStaleTranslations() const
 void
 LSQUnit::recvRetry()
 {
+    DPRINTF(LSQUnit,"recvRetry.Addr:.");
     if (isStoreBlocked) {
         DPRINTF(LSQUnit, "Receiving retry: blocked store\n");
         writebackBlockedStore();

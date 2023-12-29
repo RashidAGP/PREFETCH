@@ -50,6 +50,8 @@
 #include "string"
 #include "mem/ruby/structures/CacheMemory.hh"
 
+
+extern char* csv_path;
 namespace gem5
 {
 
@@ -67,7 +69,12 @@ namespace X86ISA
         typedef std::list<TlbEntry *> EntryList;
 
         uint32_t configAddress;
-
+        // PREFETCH
+	
+	std::unordered_map<Addr,uint64_t> l2_tlb_hit;	
+	std::unordered_map<Addr,uint64_t> l2_tlb_miss;	
+	Tick last_time_tick;
+	// END PREFETCH
       public:
 
         typedef X86TLBParams Params;
@@ -153,6 +160,27 @@ namespace X86ISA
 
 	    statistics::Scalar ByPass_L1;
 	    statistics::Scalar ByPass_L2;
+
+	    statistics::Scalar LongPML4_l1_miss;
+	    statistics::Scalar LongPML4_l1_hit;
+	    statistics::Scalar LongPML4_l2_miss;
+	    statistics::Scalar LongPML4_l2_hit;
+
+
+	    statistics::Scalar LongPDP_l1_miss;
+	    statistics::Scalar LongPDP_l1_hit;
+	    statistics::Scalar LongPDP_l2_miss;
+	    statistics::Scalar LongPDP_l2_hit;
+
+	    statistics::Scalar LongPD_l1_miss;
+	    statistics::Scalar LongPD_l1_hit;
+	    statistics::Scalar LongPD_l2_miss;
+	    statistics::Scalar LongPD_l2_hit;
+
+	    statistics::Scalar LongPTE_l1_miss;
+	    statistics::Scalar LongPTE_l1_hit;
+	    statistics::Scalar LongPTE_l2_miss;
+	    statistics::Scalar LongPTE_l2_hit;
         } stats;
 
         Fault translateInt(bool read, RequestPtr req, ThreadContext *tc);
@@ -162,6 +190,26 @@ namespace X86ISA
                 bool &delayedResponse, bool timing);
 
       public:
+        void incr_PML4_l1_hit(){stats.LongPML4_l1_hit++;}
+        void incr_PML4_l2_hit(){stats.LongPML4_l2_hit++;}
+        void incr_PML4_l1_miss(){stats.LongPML4_l1_miss++;}
+        void incr_PML4_l2_miss(){stats.LongPML4_l2_miss++;}
+
+        void incr_PDP_l1_hit(){stats.LongPDP_l1_hit++;}
+        void incr_PDP_l2_hit(){stats.LongPDP_l2_hit++;}
+        void incr_PDP_l1_miss(){stats.LongPDP_l1_miss++;}
+        void incr_PDP_l2_miss(){stats.LongPDP_l2_miss++;}
+
+        void incr_PD_l1_hit(){stats.LongPD_l1_hit++;}
+        void incr_PD_l2_hit(){stats.LongPD_l2_hit++;}
+        void incr_PD_l1_miss(){stats.LongPD_l1_miss++;}
+        void incr_PD_l2_miss(){stats.LongPD_l2_miss++;}
+
+        void incr_PTE_l1_hit(){stats.LongPTE_l1_hit++;}
+        void incr_PTE_l2_hit(){stats.LongPTE_l2_hit++;}
+        void incr_PTE_l1_miss(){stats.LongPTE_l1_miss++;}
+        void incr_PTE_l2_miss(){stats.LongPTE_l2_miss++;}
+
 	void incr_ByPass_L1() { stats.ByPass_L1++;}
 	void incr_ByPass_L2() { stats.ByPass_L2++;}
 	uint64_t added_cycles = 0;
@@ -175,6 +223,10 @@ namespace X86ISA
 
         void evictLRU_l1(Addr);
         void evictLRU_l2(Addr);
+	// MINIMAP
+	bool lookup_cache_l1(Addr cache_line);
+	bool lookup_cache_l2(Addr cache_line);
+	// END MINIMAP
         uint64_t
         nextSeq()
         {

@@ -865,7 +865,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     }
   }
   action(bp_l2_sendToDir, "bp_l2", desc="send data to the DIR (BP)") {
-    enqueue(requestL1Network_out, RequestMsg, l1_response_latency) {
+    enqueue(requestL1Network_out, RequestMsg, 0) {
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:GETS_DIR;
       out_msg.Requestor:= machineID;
@@ -1104,7 +1104,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 	bp_l1_sendToL2;
         k_popMandatoryQueue;
   }
-  transition({NP,E,S,M,I}, BP_L2){
+  transition({NP,E,S,M,I,M_I}, BP_L2){
 	bp_l2_sendToDir;
         k_popMandatoryQueue;
   }

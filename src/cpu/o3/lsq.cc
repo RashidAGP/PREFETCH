@@ -383,6 +383,7 @@ LSQ::setLastRetiredHtmUid(ThreadID tid, uint64_t htmUid)
 void
 LSQ::recvReqRetry()
 {
+    DPRINTF(LSQ,"XXXX.Recv packet. Addr.\n");
     iewStage->cacheUnblocked();
     cacheBlocked(false);
 
@@ -402,6 +403,7 @@ LSQ::completeDataAccess(PacketPtr pkt)
 bool
 LSQ::recvTimingResp(PacketPtr pkt)
 {
+    DPRINTF(LSQ,"recvTimingRespe.Recv packet. Addr:%#x.\n",pkt->getAddr());
     if (pkt->isError())
         DPRINTF(LSQ, "Got error packet back for address: %#X\n",
                 pkt->getAddr());
@@ -1188,6 +1190,7 @@ LSQ::SplitDataRequest::markAsStaleTranslation()
 bool
 LSQ::SingleDataRequest::recvTimingResp(PacketPtr pkt)
 {
+    DPRINTF(LSQ,"Single.Recv packet. Addr:%#x.\n",pkt->getAddr());
     assert(_numOutstandingPackets == 1);
     flags.set(Flag::Complete);
     assert(pkt == _packets.front());
@@ -1200,6 +1203,7 @@ bool
 LSQ::SplitDataRequest::recvTimingResp(PacketPtr pkt)
 {
     uint32_t pktIdx = 0;
+    DPRINTF(LSQ,"Split.Recv packet. Addr:%#x.\n",pkt->getAddr());
     while (pktIdx < _packets.size() && pkt != _packets[pktIdx])
         pktIdx++;
     assert(pktIdx < _packets.size());
@@ -1415,12 +1419,14 @@ LSQ::SplitDataRequest::isCacheBlockHit(Addr blockAddr, Addr blockMask)
 bool
 LSQ::DcachePort::recvTimingResp(PacketPtr pkt)
 {
+    DPRINTF(LSQ,"Port.Recv packet. Addr:.\n");
     return lsq->recvTimingResp(pkt);
 }
 
 void
 LSQ::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
 {
+    DPRINTF(LSQ,"Snoop.Recv packet. Addr:%#x.\n",pkt->getAddr());
     for (ThreadID tid = 0; tid < cpu->numThreads; tid++) {
         if (cpu->getCpuAddrMonitor(tid)->doMonitor(pkt)) {
             cpu->wakeup(tid);
@@ -1432,6 +1438,7 @@ LSQ::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
 void
 LSQ::DcachePort::recvReqRetry()
 {
+    DPRINTF(LSQ,"Retry.Recv packet. Addr:\n");
     lsq->recvReqRetry();
 }
 

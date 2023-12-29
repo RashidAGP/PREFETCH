@@ -39,6 +39,9 @@
 
 #include <cstring>
 #include <memory>
+#include <map>
+#include <algorithm>
+#include <queue>
 
 #include "arch/x86/faults.hh"
 #include "arch/x86/insts/microldstop.hh"
@@ -96,7 +99,6 @@ TLB::evictLRU_l1(Addr vpn)
     // Find the entry with the lowest (and hence least recently updated)
     // sequence number.
 
-    DPRINTF(TLB, "REMOVE from L1:%#x\n",vpn);
     uint32_t set = vpn % (size/l1_way);
     uint32_t start = set * l1_way;
     uint32_t end = (set + 1) * (l1_way);
@@ -118,7 +120,6 @@ TLB::evictLRU_l2(Addr vpn)
     // Find the entry with the lowest (and hence least recently updated)
     // sequence number.
 
-    DPRINTF(TLB, "REMOVE from L2:%#x\n",vpn);
     uint32_t set = vpn % (l2_tlb_size/l2_tlb_assoc);
     uint32_t start = set * l2_tlb_assoc;
     uint32_t end = (set + 1) * (l2_tlb_assoc);
@@ -139,13 +140,17 @@ TlbEntry *
 TLB::insert_l1(Addr vaddr, const TlbEntry &entry,uint64_t pc_id)
 {
 
-    DPRINTF(TLB,"Insert in L1.\n");
     Addr vpn = 0;
+    Addr ppn = 0;
     if (entry.logBytes == 12){
        vpn = vaddr >> 12;
+       ppn = entry.paddr >> 12;
+
     }else if (entry.logBytes == 21){
        vpn = vaddr >> 21;
+       ppn = entry.paddr >> 21;
     }
+    DPRINTF(TLB,"Insert in L1.VPN:%#x. PPN:%#x.\n",vpn, ppn);
 
     TlbEntry *newEntry = trie.lookup(vaddr);
     if (newEntry) {
@@ -172,6 +177,41 @@ TLB::insert_l1(Addr vaddr, const TlbEntry &entry,uint64_t pc_id)
 // L2 --------- insert
 
 
+bool
+TLB::lookup_cache_l1(Addr cache_address){
+                   std::string cache_level_one_d = "system.ruby.l1_cntrl0.L1Dcache";
+		   std::vector<SimObject *> simObjectList = SimObject::getSimObjectList();
+		   gem5::ruby::CacheMemory* cache_level_prediction;
+		   bool result = false;
+		   for (SimObject* simObject : simObjectList) {
+			if (simObject->name() == cache_level_one_d){
+				cache_level_prediction = dynamic_cast<gem5::ruby::CacheMemory *>(simObject);
+				if (cache_level_prediction->lookup_rashid(cache_address) == true){
+					result = true;
+					return result;
+				}
+			}
+		   }
+		   return result;
+
+}
+bool
+TLB::lookup_cache_l2(Addr cache_address){
+                   std::string cache_level_two = "system.ruby.l2_cntrl0.L2cache";
+		   std::vector<SimObject *> simObjectList = SimObject::getSimObjectList();
+		   gem5::ruby::CacheMemory* cache_level_prediction;
+		   bool result = false;
+		   for (SimObject* simObject : simObjectList) {
+			if (simObject->name() == cache_level_two){
+				cache_level_prediction = dynamic_cast<gem5::ruby::CacheMemory *>(simObject);
+				if (cache_level_prediction->lookup_rashid(cache_address) == true){
+					result = true;
+					return result;
+				}
+			}
+		   }
+		   return result;
+}
 TlbEntry *
 TLB::insert_l2(Addr vaddr, const TlbEntry &entry,uint64_t pc_id)
 {
@@ -182,8 +222,6 @@ TLB::insert_l2(Addr vaddr, const TlbEntry &entry,uint64_t pc_id)
                    std::string cache_level_two = "system.ruby.l2_cntrl0.L2cache";
 		   std::vector<SimObject *> simObjectList = SimObject::getSimObjectList();
 		   gem5::ruby::CacheMemory* cache_level_prediction;
-		   bool lookup_result_l1 = true;
-		   bool lookup_result_l2 = true;
 		   Addr paddr_to_check = entry.paddr | (vaddr & mask(entry.logBytes));
 		   Addr line_paddr = 0;
 		   line_paddr = paddr_to_check >> 6;
@@ -219,8 +257,8 @@ TLB::insert_l2(Addr vaddr, const TlbEntry &entry,uint64_t pc_id)
     if (entry.logBytes == 12){
 	vaddr = vpn << 12;
     }else {
-vaddr = vpn << 21;
-}
+        vaddr = vpn << 21;
+    }
     TlbEntry *newEntry = triel2.lookup(vaddr);
     if (newEntry) {
         assert(newEntry->vaddr == vaddr);
@@ -244,6 +282,13 @@ vaddr = vpn << 21;
         newEntry->trieHandle =
         triel2.insert(vaddr, TlbEntryTrie::MaxBits, newEntry);
     }
+    // PREFETCH
+    paddr_to_check = entry.paddr | (vaddr & mask(entry.logBytes));
+    line_paddr = 0;
+    line_paddr = paddr_to_check >> 6;
+    line_paddr = line_paddr << 6;
+    l2_tlb_miss[line_paddr]++;
+    // END PREFETCH
     return newEntry;
   } else return NULL;
 
@@ -627,6 +672,44 @@ TLB::translate(const RequestPtr &req,
 				}
 			}
 		   }
+		   l2_tlb_hit[line_paddr]++;
+		   if (curTick() > last_time_tick + 50000000){
+			last_time_tick = curTick();
+			std::ofstream file_l2_tlb_hit;
+			std::ofstream file_l2_tlb_miss;
+
+			std::string delimeter = "=";
+                        std::string csv_path_string(csv_path);
+
+                        size_t pos = csv_path_string.find(delimeter);
+                        std::string csv_path_string_after= csv_path_string.substr(pos+delimeter.length());
+                        std::string file_csv_file_hit = csv_path_string_after + "/l2_tlb_hit.csv";
+                        std::string file_csv_file_miss = csv_path_string_after + "/l2_tlb_miss.csv";
+                        file_l2_tlb_hit.open(file_csv_file_hit);
+                        file_l2_tlb_miss.open(file_csv_file_miss);
+                        std::vector<std::pair<Addr, uint64_t>> l2_tlb_hit_sort;
+                        for (const auto& x:l2_tlb_hit){
+                               l2_tlb_hit_sort.push_back(x);
+                        }
+                        std::vector<std::pair<Addr, uint64_t>> l2_tlb_miss_sort;
+                        for (const auto& x:l2_tlb_miss){
+                               l2_tlb_miss_sort.push_back(x);
+                        }
+                        std::sort(l2_tlb_hit_sort.begin(), l2_tlb_hit_sort.end(), [](const auto& a, const auto& b) {
+                               return a.second > b.second;
+                        });
+			for (auto x : l2_tlb_hit_sort){
+				file_l2_tlb_hit<< "0x" << std::hex << x.first << "," << std::dec << x.second << std::endl;
+			}
+                        std::sort(l2_tlb_miss_sort.begin(), l2_tlb_miss_sort.end(), [](const auto& a, const auto& b) {
+                               return a.second > b.second;
+                        });
+			for (auto x : l2_tlb_miss_sort){
+				file_l2_tlb_miss<< "0x" << std::hex << x.first << "," << std::dec << x.second << std::endl;
+			}
+
+			
+		   }
 		   //End Rashid L2 TLB Hit
                    const Cycles L2Hit_late = Cycles(10);
                    this->walker->schedule(event,this->walker->clockEdge(L2Hit_late));
@@ -637,6 +720,7 @@ TLB::translate(const RequestPtr &req,
                 }else{
                    if (FullSystem) {
                     stats.l2_tlb_Misses++;
+		    DPRINTF(TLB,"L2 TLB misses for address:%#x\n",vaddr);
                     Fault fault = walker->start(tc, translation, req, mode);
                     if (timing || fault != NoFault) {
                         // This gets ignored in atomic mode.
@@ -807,7 +891,27 @@ TLB::TlbStats::TlbStats(statistics::Group *parent)
     ADD_STAT(L2TLB_l2_hit, statistics::units::Count::get(), "L2Cache Hitts (L2 TLB Misses )"),
 
     ADD_STAT(ByPass_L1, statistics::units::Count::get(), "# of ByPass L1 Cache Request"),
-    ADD_STAT(ByPass_L2, statistics::units::Count::get(), "# of ByPass L2 Cache Request")
+    ADD_STAT(ByPass_L2, statistics::units::Count::get(), "# of ByPass L2 Cache Request"),
+
+    ADD_STAT(LongPML4_l1_miss, statistics::units::Count::get(), "# PML4 L1 Cache Miss"),
+    ADD_STAT(LongPML4_l2_miss, statistics::units::Count::get(), "# PML4 L2 Cache Miss"),
+    ADD_STAT(LongPML4_l1_hit, statistics::units::Count::get(), "# PML4 L1 Cache Hit"),
+    ADD_STAT(LongPML4_l2_hit, statistics::units::Count::get(), "# PML4 L2 Cache Hit"),
+
+    ADD_STAT(LongPDP_l1_miss, statistics::units::Count::get(), "# PPD L1 Cache Miss"),
+    ADD_STAT(LongPDP_l2_miss, statistics::units::Count::get(), "# PDP L2 Cache Miss"),
+    ADD_STAT(LongPDP_l1_hit, statistics::units::Count::get(), "# PDP L1 Cache Hit"),
+    ADD_STAT(LongPDP_l2_hit, statistics::units::Count::get(), "# PDP L2 Cache Hit"),
+
+    ADD_STAT(LongPD_l1_miss, statistics::units::Count::get(), "# PP L1 Cache Miss"),
+    ADD_STAT(LongPD_l2_miss, statistics::units::Count::get(), "# PD L2 Cache Miss"),
+    ADD_STAT(LongPD_l1_hit, statistics::units::Count::get(), "# PD L1 Cache Hit"),
+    ADD_STAT(LongPD_l2_hit, statistics::units::Count::get(), "# PD L2 Cache Hit"),
+
+    ADD_STAT(LongPTE_l1_miss, statistics::units::Count::get(), "# PTE L1 Cache Miss"),
+    ADD_STAT(LongPTE_l2_miss, statistics::units::Count::get(), "# PTE L2 Cache Miss"),
+    ADD_STAT(LongPTE_l1_hit, statistics::units::Count::get(), "# PTE L1 Cache Hit"),
+    ADD_STAT(LongPTE_l2_hit, statistics::units::Count::get(), "# PTE L2 Cache Hit")
 
 {
 }
@@ -907,8 +1011,8 @@ void TLB::DelayedL2HitEvent:: process(){
    fault = tlb->translate(req, tc, translation, mode, delayedResponse,timing);
    //assert(fault == NoFault && "Error in L2 Delayed Translation");
    if (tlb->name() == "system.cpu.mmu.dtb"){
-       req->set_hit_l2();
-       req->reset_miss_l2();
+       req->reset_hit_l2();
+       req->set_miss_l2();
        tlb->incr_ByPass_L1();
    }
    if (fault == NoFault){

@@ -49,7 +49,8 @@
 #include "sim/clocked_object.hh"
 #include "sim/faults.hh"
 #include "sim/system.hh"
-
+#include "mem/ruby/structures/CacheMemory.hh"
+#include "sim/sim_object.hh"
 namespace gem5
 {
 
@@ -77,7 +78,6 @@ namespace X86ISA
 
         friend class WalkerPort;
         WalkerPort port;
-
         // State to track each walk of the page table
         class WalkerState
         {

@@ -1,4 +1,4 @@
-gdb --args ./build/X86/gem5.opt \
+gdb --args ./build/X86/gem5.debug \
     --outdir=/home/rashid/warm_result/gapbs/kron/bfs_prefetch \
     ./configs/deprecated/example/fs.py \
     --checkpoint-dir=/home/rashid/new_benchmarks/kron/bfs \

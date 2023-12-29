@@ -63,6 +63,7 @@
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
 #include <random>
+#include "sim/sim_object.hh"
 namespace gem5
 {
 
@@ -158,6 +159,7 @@ bool Walker::sendTiming(WalkerState* sendingState, PacketPtr pkt)
     WalkerSenderState* walker_state = new WalkerSenderState(sendingState);
     pkt->pushSenderState(walker_state);
     if (port.sendTimingReq(pkt)) {
+	DPRINTF(PageTableWalker,"Send Timing Req.%#x.\n",pkt->getAddr());
         return true;
     } else {
         // undo the adding of the sender state and delete it, as we
@@ -234,6 +236,7 @@ Walker::WalkerState::startWalk()
     assert(!started);
     started = true;
     setupWalk(req->getVaddr());
+    CR3 cr3 = tc->readMiscRegNoEffect(misc_reg::Cr3);
     if (timing) {
         nextState = state;
         state = Waiting;
@@ -541,6 +544,24 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
 		    }
 
                 }
+         	bool l1_result = false;
+         	bool l2_result = false;
+         	Addr cache_line = entry.paddr;;
+         	cache_line = cache_line >> 6;
+         	cache_line = cache_line << 6;
+         	DPRINTF(PageTableWalker,"Address of PageWalk Step PTE:%#x\n",cache_line);
+                l1_result = walker->tlb->lookup_cache_l1(cache_line);
+                l2_result = walker->tlb->lookup_cache_l2(cache_line);
+		if (l1_result == true){
+			walker->tlb->incr_PTE_l1_hit();
+		}else{
+			walker->tlb->incr_PTE_l1_miss();
+		}
+		if (l2_result == true){
+			walker->tlb->incr_PTE_l2_hit();
+		}else{
+			walker->tlb->incr_PTE_l2_miss();
+		}
             }
 
         endWalk();
@@ -566,6 +587,62 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             write = NULL;
             delete oldRead;
         }
+        // Rashid L2 TLB Miss
+	bool l1_result = false;
+	bool l2_result = false;
+	Addr cache_line = request->getPaddr();
+	cache_line = cache_line >> 6;
+	cache_line = cache_line << 6;
+	DPRINTF(PageTableWalker,"Address of PageWalk Step:%#x\n",cache_line);
+        l1_result = walker->tlb->lookup_cache_l1(cache_line);
+        l2_result = walker->tlb->lookup_cache_l2(cache_line);
+	if (state == LongPML4){
+		if (l1_result == true){
+			walker->tlb->incr_PML4_l1_hit();
+		}else{
+			walker->tlb->incr_PML4_l1_miss();
+		}
+		if (l2_result == true){
+			walker->tlb->incr_PML4_l2_hit();
+		}else{
+			walker->tlb->incr_PML4_l2_miss();
+		}
+	}else if (state == LongPDP){
+		if (l1_result == true){
+			walker->tlb->incr_PDP_l1_hit();
+		}else{
+			walker->tlb->incr_PDP_l1_miss();
+		}
+		if (l2_result == true){
+			walker->tlb->incr_PDP_l2_hit();
+		}else{
+			walker->tlb->incr_PDP_l2_miss();
+		}
+	}else if (state == LongPD){
+		if (l1_result == true){
+			walker->tlb->incr_PD_l1_hit();
+		}else{
+			walker->tlb->incr_PD_l1_miss();
+		}
+		if (l2_result == true){
+			walker->tlb->incr_PD_l2_hit();
+		}else{
+			walker->tlb->incr_PD_l2_miss();
+		}
+	}else if (state == LongPTE){
+		l1_result = walker->tlb->lookup_cache_l1(req->getPaddr());
+		l2_result = walker->tlb->lookup_cache_l2(req->getPaddr());
+		if (l1_result == true){
+			walker->tlb->incr_PTE_l1_hit();
+		}else{
+			walker->tlb->incr_PTE_l1_miss();
+		}
+		if (l2_result == true){
+			walker->tlb->incr_PTE_l2_hit();
+		}else{
+			walker->tlb->incr_PTE_l2_miss();
+		}
+	}
     }
     return fault;
 }
@@ -590,8 +667,17 @@ Walker::WalkerState::setupWalk(Addr vaddr)
     Addr topAddr;
     if (efer.lma) {
         // Do long mode.
+	DPRINTF(PageTableWalker,"Setup Walk.vaddr:%#x\n",vaddr);
+	DPRINTF(PageTableWalker,"Setup Walk.CR3:%#x\n",cr3);
+	DPRINTF(PageTableWalker,"Setup Walk.CR3.longPdtb:%#x\n",cr3.longPdtb);
+	DPRINTF(PageTableWalker,"Setup Walk.addr.longl4:%#x\n",addr.longl4);
+	DPRINTF(PageTableWalker,"Setup Walk.addr.longl3:%#x\n",addr.longl3);
+	DPRINTF(PageTableWalker,"Setup Walk.addr.longl2:%#x\n",addr.longl2);
+	DPRINTF(PageTableWalker,"Setup Walk.addr.longl1:%#x\n",addr.longl1);
+	DPRINTF(PageTableWalker,"Setup Walk.dataSize:%#x\n",dataSize);
         state = LongPML4;
         topAddr = (cr3.longPdtb << 12) + addr.longl4 * dataSize;
+	DPRINTF(PageTableWalker,"Setup Walk.topAddr:%#x\n",topAddr);
         enableNX = efer.nxe;
     } else {
         // We're in some flavor of legacy mode.
