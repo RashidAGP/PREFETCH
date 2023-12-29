@@ -1,5 +1,5 @@
 ./build/X86/gem5.opt \
-    --debug-flags=RubySlicc,PageTableWalker,TLB,LSQ,LSQUnit,Faults,IEW,Rename,Commit,IQ,ROB,O3CPU \
+    --debug-flags=RubySlicc,PageTableWalker,TLB,LSQ,LSQUnit,RubyGenerated,RubyCache \
     --outdir=/home/rashid/warm_result/gapbs/kron/bfs_prefetch \
     --redirect-stdout \
     --redirect-stderr \
