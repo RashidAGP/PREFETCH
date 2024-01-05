@@ -533,6 +533,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         		    const Cycles insert_delay = Cycles(0);
         		    walker->schedule(event,walker->clockEdge(insert_delay));
 		    }else{
+
 			    req->set_miss_l2();
 			    req->reset_hit_l2();
 			    DPRINTF(PageTableWalker,"PW finished. Enable the miss_l2.\n");

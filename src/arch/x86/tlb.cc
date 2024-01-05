@@ -614,16 +614,16 @@ TLB::translate(const RequestPtr &req,
 			if (simObject->name() == cache_level_one_d){
 				cache_level_prediction = dynamic_cast<gem5::ruby::CacheMemory *>(simObject);
 				if (cache_level_prediction->lookup_rashid(line_paddr) == true){
-					stats.L1TLB_l1_hit++;
-				}else{
-					stats.L1TLB_l1_miss++;
+					// Do nothing
 				}
 			}else if (simObject->name() == cache_level_two){
 				cache_level_prediction = dynamic_cast<gem5::ruby::CacheMemory *>(simObject);
 				if (cache_level_prediction->lookup_rashid(line_paddr) == true){
-					stats.L1TLB_l2_hit++;
+					req->set_hit_l2();
+					req->reset_miss_l2();
 				}else{
-					stats.L1TLB_l2_miss++;
+					req->set_miss_l2();
+					req->reset_hit_l2();					
 				}
 			}
 		   }
@@ -909,7 +909,7 @@ void TLB::DelayedL2HitEvent:: process(){
    if (tlb->name() == "system.cpu.mmu.dtb"){
        req->set_hit_l2();
        req->reset_miss_l2();
-       tlb->incr_ByPass_L1();
+       //tlb->incr_ByPass_L1();
    }
    if (fault == NoFault){
        assert(req->hasPaddr() && "Req has no paddr.\n");
