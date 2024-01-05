@@ -533,8 +533,8 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         		    const Cycles insert_delay = Cycles(0);
         		    walker->schedule(event,walker->clockEdge(insert_delay));
 		    }else{
-			    req->set_miss_l2();
-			    req->reset_hit_l2();
+			    //req->set_miss_l2();
+			    //req->reset_hit_l2();
 			    DPRINTF(PageTableWalker,"PW finished. Enable the miss_l2.\n");
                             walker->tlb->insert_l1(entry.vaddr, entry, 0x000);
                             walker->tlb->insert_l2(entry.vaddr, entry, 0x000);
@@ -811,8 +811,8 @@ void Walker::DelayedInsertEvent:: process(){
    tlb_p->insert_l1(entry_p.vaddr, entry_p, 0x000);
    tlb_p->insert_l2(entry_p.vaddr, entry_p, 0x000);
    if (tlb_p->name() == "system.cpu.mmu.dtb"){
-       req_p->set_miss_l2();
-       req_p->reset_hit_l2();
+       //req_p->set_miss_l2();
+       //req_p->reset_hit_l2();
        tlb_p->incr_ByPass_L2();
    }
    //this->translation->finish(fault,req,tc,mode);

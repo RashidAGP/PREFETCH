@@ -907,8 +907,8 @@ void TLB::DelayedL2HitEvent:: process(){
    fault = tlb->translate(req, tc, translation, mode, delayedResponse,timing);
    //assert(fault == NoFault && "Error in L2 Delayed Translation");
    if (tlb->name() == "system.cpu.mmu.dtb"){
-       req->set_hit_l2();
-       req->reset_miss_l2();
+       //req->set_hit_l2();
+       //req->reset_miss_l2();
        tlb->incr_ByPass_L1();
    }
    if (fault == NoFault){

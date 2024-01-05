@@ -1100,17 +1100,29 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   //*****************************************************
   // PREFETCH
   ////////  SENDING ///////////////
-  transition({NP,I,E,S,M,M_I}, BP_L1){
+  transition({NP,I},BP_L1,IS){
+    oo_allocateL1DCacheBlock;
+    i_allocateTBE;
+    a_issueGETS;
+    uu_profileDataMiss;
+    po_observeMiss
+    k_popMandatoryQueue;
+  }
+  transition({NP,I},BP_L2,IS){
+    oo_allocateL1DCacheBlock;
+    i_allocateTBE;
+    bp_l2_sendToDir;
+    uu_profileDataMiss;
+    po_observeMiss
+    k_popMandatoryQueue;
+  }
+  transition({E,S,M}, BP_L1){
 	bp_l1_sendToL2;
         k_popMandatoryQueue;
   }
-  transition({NP,E,S,M,I}, BP_L2){
+  transition({E,S,M}, BP_L2){
 	bp_l2_sendToDir;
         k_popMandatoryQueue;
-  }
-  transition({NP,I}, {BP_DIR_RECV,BP_L2_RECV}){
-    h_w_load_hit;
-    o_popIncomingResponseQueue;
   }
   // IT MUST BE BP_L1_RECV TODO
   transition(S, BP_L2_RECV){
@@ -1123,13 +1135,8 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     h_load_hit;
     l_popRequestQueue;
   }
-  //transition({M_I},Fwd_GETS_FROM_L2){
-	//return_fwd;
-        //l_popRequestQueue;
-  //}
   transition(M_I,BP_L2_RECV_M){
 	return_fwd;
-        //l_popRequestQueue;
          o_popIncomingResponseQueue;
   }
   transition(M_I,Fwd_GETS_FROM_L2){

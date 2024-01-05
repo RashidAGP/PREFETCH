@@ -559,7 +559,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     kd_wakeUpDependents;
   }
   transition(IM_BP_CPU, Memory_Data_BP_CPU, I) {
-    d_bp_sendData;
+    d_sendData;
     l_popMemQueue;
     kd_wakeUpDependents;
   }

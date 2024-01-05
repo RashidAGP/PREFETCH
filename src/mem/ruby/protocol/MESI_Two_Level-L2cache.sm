@@ -925,16 +925,23 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     ret_to_dir
     o_popIncomingResponseQueue;
   }
-  transition({SS,M,SS_OO},L1_BP){
+  transition({SS,M},L1_BP){
 	// just send it to the CPU as dir.
 	d_bp_sendData;
         jj_popL1RequestQueue;
   }
+  transition(SS_OO,L1_BP,SS){
+	// just send it to the CPU as dir.
+        ds_sendSharedDataToRequestor;
+        set_setMRU;
+        uu_profileHit;
+        ll_clearSharers;
+        nn_addSharer;
+        jj_popL1RequestQueue;
+  }
   // Wrong Pred
   transition(MT,L1_BP){
-	// forward to L1 cache.
         b_bp_forwardRequestToExclusive;
-        //uu_profileMiss;
         set_setMRU;
         jj_popL1RequestQueue;
   }
