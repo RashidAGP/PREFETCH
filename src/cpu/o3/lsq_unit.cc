@@ -725,9 +725,9 @@ LSQUnit::executeStore(const DynInstPtr &store_inst)
     }
 
 	// PREFETCH
-	printf("%#x.\n",store_inst->physEffAddr);
+	//printf("%#x.\n",store_inst->physEffAddr);
 	Addr AD = store_inst->physEffAddr >> 6;
-	printf("%#x.\n",AD);
+	//printf("%#x.\n",AD);
 	AD = AD << 6;
 	add_store_access(AD);
 	print_access(curTick());	

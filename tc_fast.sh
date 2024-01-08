@@ -1,5 +1,5 @@
 ./build/X86/gem5.fast \
-    --outdir=/home/rashid/warm_result/gapbs/kron/tc_prefetch \
+    --outdir=/home/rashid/warm_result/gapbs/kron/tc_vv2 \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
