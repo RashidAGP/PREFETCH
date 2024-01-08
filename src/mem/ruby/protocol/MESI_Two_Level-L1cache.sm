@@ -1117,6 +1117,9 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     h_load_hit;
     o_popIncomingResponseQueue;
   }
+  transition(M_I, BP_L2){
+    z_stallAndWaitMandatoryQueue;
+  }
   /////////// RECV //////////////
 
   transition({E,M},Fwd_GETS_FROM_L2){
