@@ -99,7 +99,7 @@ class LSQUnit
     void add_store_access(Addr address_t){ store_access[address_t]++;}
     // Print Functions
     void print_access(Tick current){
-     if (current > last_time_tick + 500000000){
+     if (current > last_time_tick + 1000000000){
 	last_time_tick = current;
     	std::ofstream file_load;
     	std::ofstream file_store;
