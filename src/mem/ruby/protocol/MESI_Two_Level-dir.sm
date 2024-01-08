@@ -567,6 +567,9 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     z_stallAndWaitRequest;
     //j_popIncomingRequestQueue;
   }
+  transition(IM, Fetch_BP_CPU){
+    z_stallAndWaitRequest;
+  }
   // END PREFETCH
   ///////////////////////////////////
   transition(I, Fetch, IM) {
