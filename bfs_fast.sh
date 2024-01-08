@@ -1,5 +1,5 @@
 ./build/X86/gem5.fast \
-    --outdir=/home/rashid/warm_result/gapbs/kron/bfs_minimap \
+    --outdir=/home/rashid/warm_result/gapbs/kron/bfs_skip \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
@@ -21,5 +21,5 @@
     --l2_assoc=16 \
     --cpu-clock=2GHz \
     --cacheline_size=64 \
-    -I 100000000
+    -I 5000000
 # -I 500000000
