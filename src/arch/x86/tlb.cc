@@ -610,13 +610,19 @@ TLB::translate(const RequestPtr &req,
 		   line_paddr = line_paddr << 6;
 		   stats.L1TLB_l1_access++;
 		   stats.L1TLB_l2_access++;
+		   bool stop = false;
 		   for (SimObject* simObject : simObjectList) {
 			if (simObject->name() == cache_level_one_d){
 				cache_level_prediction = dynamic_cast<gem5::ruby::CacheMemory *>(simObject);
 				if (cache_level_prediction->lookup_rashid(line_paddr) == true){
 					// Do nothing
+					stop = true;
 				}
-			}else if (simObject->name() == cache_level_two){
+				
+			}
+		   }
+		   for (SimObject* simObject : simObjectList) {
+			if ((simObject->name() == cache_level_two) && (stop = false)){
 				cache_level_prediction = dynamic_cast<gem5::ruby::CacheMemory *>(simObject);
 				if (cache_level_prediction->lookup_rashid(line_paddr) == true){
 					req->set_hit_l2();
