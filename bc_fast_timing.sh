@@ -7,8 +7,8 @@
     -r 1\
     --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
     --disk-image=/home/rashid/fs_img/gapbs_kron.img \
-    --cpu-type=DerivO3CPU \
-    --restore-with-cpu=DerivO3CPU \
+    --cpu-type=TimingSimpleCPU \
+    --restore-with-cpu=TimingSimpleCPU \
     --mem-size=16GB \
     --mem-type=DRAMsim3\
     --network=simple\
@@ -21,5 +21,5 @@
     --l2_assoc=16 \
     --cpu-clock=2GHz \
     --cacheline_size=64 \
-    -I 10000000
+    -I 100000000
 # -I 500000000
