@@ -1643,6 +1643,7 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
 	Addr AD = load_inst->physEffAddr >> 6;
 	AD = AD << 6;
 	add_load_access(AD);
+	add_PC_cache(AD,load_inst->pcState().instAddr());
 	print_access(curTick());
 	// END PREFETCH
     // Allocate memory if this is the first time a load is issued.

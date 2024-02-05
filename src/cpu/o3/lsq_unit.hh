@@ -93,6 +93,11 @@ class LSQUnit
     // PREFETCH
     std::unordered_map<Addr, uint64_t> load_access;
     std::unordered_map<Addr, uint64_t> store_access;
+    // PC
+    std::unordered_map<Addr,std::unordered_map<Addr,uint64_t>> PC_cache;
+
+    void add_PC_cache(Addr address_t,Addr PC_t){ PC_cache[address_t][PC_t]++;}
+
     Tick last_time_tick = 0;
     // Add functions
     void add_load_access(Addr address_t){ load_access[address_t]++;}
@@ -131,6 +136,28 @@ class LSQUnit
 	for (auto x : map_vector_store){
 		file_store << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
 	}
+	// PC
+        std::vector<std::pair<Addr, std::unordered_map<Addr, uint64_t>>> sortedVector(PC_cache.begin(), PC_cache.end());
+
+    // Sort the vector based on uint64_t values
+	    for (auto& outerPair : sortedVector) {
+		std::vector<std::pair<Addr, uint64_t>> innerVector(outerPair.second.begin(), outerPair.second.end());
+		std::sort(innerVector.begin(), innerVector.end(),
+		          [](const auto& a, const auto& b) { return a.second < b.second; });
+		outerPair.second = std::unordered_map<Addr, uint64_t>(innerVector.begin(), innerVector.end());
+	    }
+
+    // Write the sorted data to a CSV file
+    std::string PC_string = csv_path_string_after + "/PC.csv";    
+    std::ofstream outputFile(PC_string);
+    for (const auto& outerPair : sortedVector) {
+        for (const auto& innerPair : outerPair.second) {
+            outputFile << "0x" <<std::hex <<outerPair.first << ",0x" << std::hex << innerPair.first << "," << std::dec <<innerPair.second << "\n";
+        }
+    }
+
+    outputFile.close();	
+	
      }
     }
 
