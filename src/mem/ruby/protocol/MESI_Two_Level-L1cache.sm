@@ -450,6 +450,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
           trigger(Event:BP_L2_RECV_M, in_msg.addr,cache_entry, tbe);
         // END PREFETCH
         } else {
+	  DPRINTF(RubySlicc, "Invalid Message for address:%#x. Messsage is :%s.\n",in_msg.addr,in_msg.Type);
           error("Invalid L1 response type");
         }
       }

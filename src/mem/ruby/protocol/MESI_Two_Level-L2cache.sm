@@ -706,11 +706,99 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   // UAC
   action(m_pr_writeDataToCache, "m_pr", desc="Write data from controller to the cache (Prefetching)") {
     peek(responseL2Network_in, ResponseMsg) {
-      if(is_valid(cache_entry) == false){
-    
-          cache_entry.DataBlk := in_msg.DataBlk;
-          cache_entry.Dirty := false;
-      }
+      Entry cache_entry := getCacheEntry(in_msg.addr);
+      bool break_replace := false;
+      if (L2cache.cacheAvail(in_msg.addr) == false) {
+                  Addr victim := L2cache.cacheProbe(in_msg.addr); 
+                  Addr victim_1 := L2cache.ss_oo_cacheProbe_1(in_msg.addr); 
+                  Addr victim_2 := L2cache.ss_oo_cacheProbe_2(in_msg.addr); 
+                  Addr victim_3 := L2cache.ss_oo_cacheProbe_3(in_msg.addr); 
+                  Addr victim_4 := L2cache.ss_oo_cacheProbe_4(in_msg.addr);
+        	  DPRINTF(RubySlicc,"UCA, Cache set is full. Replace it with a cache line with SS_OO state.\n"); 
+        	  cache_entry := getCacheEntry(victim);
+                  if (cache_entry.CacheState == State:SS_OO) {
+			DPRINTF(RubySlicc,"UCA, Write into a Evict 0.\n");
+        		// 1) Eviction
+        		L2cache.ss_oo_deallocate(victim);
+        		// 2) Allocate a new clean cache line
+        		L2cache.allocate(victim,new Entry);
+        		// 3) Write in the Cache
+                        cache_entry.DataBlk := in_msg.DataBlk;
+        		break_replace := true;
+        	  }
+        	  cache_entry := getCacheEntry(victim_1);
+                  if (break_replace == false){
+                     if (cache_entry.CacheState == State:SS_OO && break_replace == false) {
+			DPRINTF(RubySlicc,"UCA, Write into a Evict 1.\n");
+        		// 1) Eviction
+        		L2cache.ss_oo_deallocate(victim);
+        		// 2) Allocate a new clean cache line
+        		L2cache.allocate(victim,new Entry);
+        		// 3) Write in the Cache
+                        cache_entry.DataBlk := in_msg.DataBlk;
+        		break_replace := true;
+		     }
+        	  }
+     	          cache_entry := getCacheEntry(victim_2);
+                  if (break_replace == false){
+                      if (cache_entry.CacheState == State:SS_OO && break_replace == false) {
+			DPRINTF(RubySlicc,"UCA, Write into a Evict 2.\n");
+        		// 1) Eviction
+        		L2cache.ss_oo_deallocate(victim);
+        		// 2) Allocate a new clean cache line
+        		L2cache.allocate(victim, new Entry);
+        		// 3) Write in the Cache
+                        cache_entry.DataBlk := in_msg.DataBlk;
+        		break_replace := true;
+        	      }
+        	  }
+       	          cache_entry := getCacheEntry(victim_3);
+                  if (break_replace == false){
+                      if (cache_entry.CacheState == State:SS_OO && break_replace == false) {
+			DPRINTF(RubySlicc,"UCA, Write into a Evict 3.\n");
+        		// 1) Eviction
+        		L2cache.ss_oo_deallocate(victim);
+        		// 2) Allocate a new clean cache line
+        		L2cache.allocate(victim, new Entry);
+        		// 3) Write in the Cache
+                        cache_entry.DataBlk := in_msg.DataBlk;
+        		break_replace := true;
+        	      }
+        	  }
+       	          cache_entry := getCacheEntry(victim_4);
+                  if (break_replace == false){
+                      if (cache_entry.CacheState == State:SS_OO && break_replace == false) {
+			DPRINTF(RubySlicc,"UCA, Write into a Evict 4.\n");
+        		// 1) Eviction
+        		L2cache.ss_oo_deallocate(victim);
+        		// 2) Allocate a new clean cache line
+        		L2cache.allocate(victim, new Entry);
+        		// 3) Write in the Cache
+                        cache_entry.DataBlk := in_msg.DataBlk;
+        		break_replace := true;
+        	      }
+        	  }
+
+	}else{
+       	        cache_entry := getCacheEntry(in_msg.addr);
+		if (is_invalid(cache_entry)){
+			DPRINTF(RubySlicc,"UCA, Write into a free spot L2 cache line.\n");
+                	// 1) Eviction ->  No Eviction
+                	//unset_cache_entry();
+                	// 2) Allocate a new clean cache line
+			//L2cache.allocate(in_msg.addr, new Entry);
+                	set_cache_entry(L2cache.allocate(in_msg.addr, new Entry));
+          	        cache_entry := getCacheEntry(in_msg.addr);
+                	// 3) Write in the Cache
+                        cache_entry.DataBlk := in_msg.DataBlk;
+        		cache_entry.Dirty := false;
+        		cache_entry.CacheState := State:SS_OO;
+                        cache_entry.Sharers.clear();
+			DPRINTF(RubySlicc,"cache_entry is :%#x.\n",cache_entry);
+		}
+	}
+
+	
     }
   }
   // End UAC
@@ -968,7 +1056,13 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   ///////////////////////////////// FROM DIR ///////////////////////
   // UAC
   transition(NP, Mem_Data_L2, SS_OO){
+    // This function (action) is doing following steps:
+	// 1) Eviction -> based on a new replacemnet policy.
+	// 2) Allocate a new clean cache.
+	// 3) Write in the cache.
     m_pr_writeDataToCache;
+    set_setMRU;
+    //ll_clearSharers;
     o_popIncomingResponseQueue;
   }
   // End UAC
