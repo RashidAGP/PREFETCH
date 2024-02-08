@@ -539,6 +539,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
   // TRANSITIONS
   // PREFETCH
   // FROM CPU/L1
+   ////////////////// SEND REQ TO MEM ///////////////////
   transition(I, Fetch_BP_L2, IM_BP_L2) {
     qf_bp_queueMemoryFetchRequest_l2;
     j_popIncomingRequestQueue;
@@ -553,16 +554,20 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     d_bp_sendData_forw_l2;
     j_popIncomingRequestQueue;
   }
+  ////////////////// RECV DATA FROM MEM ///////////////////
   transition(IM_BP_L2, Memory_Data_BP_L2, M) {
     d_bp_sendData_to_l2;
     l_popMemQueue;
     kd_wakeUpDependents;
   }
-  transition(IM_BP_CPU, Memory_Data_BP_CPU, I) {
+  // UAC
+  transition(IM_BP_CPU, Memory_Data_BP_CPU, M) {
+    d_bp_sendData_to_l2;
     d_bp_sendData;
     l_popMemQueue;
     kd_wakeUpDependents;
   }
+  // End UAC
   transition({IM_BP_L2, IM_BP_CPU}, Fetch){
     z_stallAndWaitRequest;
     //j_popIncomingRequestQueue;

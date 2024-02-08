@@ -35,7 +35,6 @@ class BaseReplacementPolicy(SimObject):
     cxx_class = "gem5::replacement_policy::Base"
     cxx_header = "mem/cache/replacement_policies/base.hh"
 
-
 class DuelingRP(BaseReplacementPolicy):
     type = "DuelingRP"
     cxx_class = "gem5::replacement_policy::Dueling"
@@ -163,13 +162,11 @@ class SHiPPCRP(SHiPRP):
     cxx_class = "gem5::replacement_policy::SHiPPC"
     cxx_header = "mem/cache/replacement_policies/ship_rp.hh"
 
-
 class TreePLRURP(BaseReplacementPolicy):
     type = "TreePLRURP"
     cxx_class = "gem5::replacement_policy::TreePLRU"
     cxx_header = "mem/cache/replacement_policies/tree_plru_rp.hh"
     num_leaves = Param.Int(Parent.assoc, "Number of leaves in each tree")
-
 
 class WeightedLRURP(LRURP):
     type = "WeightedLRURP"

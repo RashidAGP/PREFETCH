@@ -83,6 +83,16 @@ class WeightedLRU : public LRU
      */
     ReplaceableEntry* getVictim(const ReplacementCandidates&
                                               candidates) const override;
+    // UAC
+    ReplaceableEntry* getVictim_1(const ReplacementCandidates& candidates) const
+                                                                     override {};
+    ReplaceableEntry* getVictim_2(const ReplacementCandidates& candidates) const
+                                                                     override {};
+    ReplaceableEntry* getVictim_3(const ReplacementCandidates& candidates) const
+                                                                     override {};
+    ReplaceableEntry* getVictim_4(const ReplacementCandidates& candidates) const
+                                                                     override {};
+    // End UAC
 };
 
 } // namespace replacement_policy

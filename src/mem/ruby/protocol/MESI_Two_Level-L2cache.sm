@@ -703,6 +703,17 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
       }
     }
   }
+  // UAC
+  action(m_pr_writeDataToCache, "m_pr", desc="Write data from controller to the cache (Prefetching)") {
+    peek(responseL2Network_in, ResponseMsg) {
+      if(is_valid(cache_entry) == false){
+    
+          cache_entry.DataBlk := in_msg.DataBlk;
+          cache_entry.Dirty := false;
+      }
+    }
+  }
+  // End UAC
 
   action(mr_writeDataToCacheFromRequest, "mr", desc="Write data from response queue to cache") {
     peek(L1RequestL2Network_in, RequestMsg) {
@@ -762,6 +773,12 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     L2cache.deallocate(address);
     unset_cache_entry();
   }
+  // UAC
+  action(rr_ss_oo_deallocateL2CacheBlock, "\rr_ss_oo", desc="Deallocate L2 cache block, which is clean and is not shared by any L1") {
+    L2cache.ss_oo_deallocate(address);
+    unset_cache_entry();
+  }
+  // End UAC
 
   action(t_sendWBAck, "t", desc="Send writeback ACK") {
     peek(L1RequestL2Network_in, RequestMsg) {
@@ -949,12 +966,19 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         jj_popL1RequestQueue;
   }
   ///////////////////////////////// FROM DIR ///////////////////////
+  // UAC
+  transition(NP, Mem_Data_L2, SS_OO){
+    m_pr_writeDataToCache;
+    o_popIncomingResponseQueue;
+  }
+  // End UAC
+
   transition(ISS_BPL1, Mem_Data_L2, SS_OO) {
-        m_writeDataToCache;
-	d_bp_sendData_2;
-        s_deallocateTBE;
-        o_popIncomingResponseQueue;
-        kd_wakeUpDependents;
+    m_writeDataToCache;
+    d_bp_sendData_2;
+    s_deallocateTBE;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
   }
   transition(SS,L1_DOWNGRADE, SS_OO) {
     ll_clearSharers;

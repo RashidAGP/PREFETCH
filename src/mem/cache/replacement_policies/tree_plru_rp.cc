@@ -194,6 +194,121 @@ TreePLRU::getVictim(const ReplacementCandidates& candidates) const
     // number of non-leaf nodes
     return candidates[tree_index - (numLeaves - 1)];
 }
+// UAC
+
+ReplaceableEntry*
+TreePLRU::getVictim_1(const ReplacementCandidates& candidates) const
+{
+    // There must be at least one replacement candidate
+    assert(candidates.size() > 0);
+
+    // Get tree
+    const PLRUTree* tree = std::static_pointer_cast<TreePLRUReplData>(
+            candidates[0]->replacementData)->tree.get();
+
+    // Index of the tree entry we are currently checking. Start with root.
+    uint64_t tree_index = 0;
+
+    // Parse tree
+    while (tree_index < tree->size()) {
+        // Go to the next tree entry
+        if (tree->at(tree_index)) {
+            tree_index = rightSubtreeIndex(tree_index);
+        } else {
+            tree_index = leftSubtreeIndex(tree_index);
+        }
+    }
+
+    // The tree index is currently at the leaf of the victim displaced by the
+    // number of non-leaf nodes
+    return candidates[tree_index - (numLeaves - 1)];
+}
+
+
+ReplaceableEntry*
+TreePLRU::getVictim_2(const ReplacementCandidates& candidates) const
+{
+    // There must be at least one replacement candidate
+    assert(candidates.size() > 0);
+
+    // Get tree
+    const PLRUTree* tree = std::static_pointer_cast<TreePLRUReplData>(
+            candidates[0]->replacementData)->tree.get();
+
+    // Index of the tree entry we are currently checking. Start with root.
+    uint64_t tree_index = 0;
+
+    // Parse tree
+    while (tree_index < tree->size()) {
+        // Go to the next tree entry
+        if (tree->at(tree_index)) {
+            tree_index = rightSubtreeIndex(tree_index);
+        } else {
+            tree_index = leftSubtreeIndex(tree_index);
+        }
+    }
+
+    // The tree index is currently at the leaf of the victim displaced by the
+    // number of non-leaf nodes
+    return candidates[tree_index - (numLeaves - 1)];
+}
+
+ReplaceableEntry*
+TreePLRU::getVictim_3(const ReplacementCandidates& candidates) const
+{
+    // There must be at least one replacement candidate
+    assert(candidates.size() > 0);
+
+    // Get tree
+    const PLRUTree* tree = std::static_pointer_cast<TreePLRUReplData>(
+            candidates[0]->replacementData)->tree.get();
+
+    // Index of the tree entry we are currently checking. Start with root.
+    uint64_t tree_index = 0;
+
+    // Parse tree
+    while (tree_index < tree->size()) {
+        // Go to the next tree entry
+        if (tree->at(tree_index)) {
+            tree_index = rightSubtreeIndex(tree_index);
+        } else {
+            tree_index = leftSubtreeIndex(tree_index);
+        }
+    }
+
+    // The tree index is currently at the leaf of the victim displaced by the
+    // number of non-leaf nodes
+    return candidates[tree_index - (numLeaves - 1)];
+}
+
+ReplaceableEntry*
+TreePLRU::getVictim_4(const ReplacementCandidates& candidates) const
+{
+    // There must be at least one replacement candidate
+    assert(candidates.size() > 0);
+
+    // Get tree
+    const PLRUTree* tree = std::static_pointer_cast<TreePLRUReplData>(
+            candidates[0]->replacementData)->tree.get();
+
+    // Index of the tree entry we are currently checking. Start with root.
+    uint64_t tree_index = 0;
+
+    // Parse tree
+    while (tree_index < tree->size()) {
+        // Go to the next tree entry
+        if (tree->at(tree_index)) {
+            tree_index = rightSubtreeIndex(tree_index);
+        } else {
+            tree_index = leftSubtreeIndex(tree_index);
+        }
+    }
+
+    // The tree index is currently at the leaf of the victim displaced by the
+    // number of non-leaf nodes
+    return candidates[tree_index - (numLeaves - 1)];
+}
+
 
 std::shared_ptr<ReplacementData>
 TreePLRU::instantiateEntry()

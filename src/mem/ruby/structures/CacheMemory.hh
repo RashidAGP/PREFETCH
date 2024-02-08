@@ -112,11 +112,17 @@ class CacheMemory : public SimObject
 
     // Explicitly free up this address
     void deallocate(Addr address);
-    void deallocate_BP(Addr address);
-
+    // UAC
+    void ss_oo_deallocate(Addr address);
+    // End UAC
     // Returns with the physical address of the conflicting cache line
     Addr cacheProbe(Addr address) const;
-
+    // UAC
+    Addr ss_oo_cacheProbe_1(Addr address) const;
+    Addr ss_oo_cacheProbe_2(Addr address) const;
+    Addr ss_oo_cacheProbe_3(Addr address) const;
+    Addr ss_oo_cacheProbe_4(Addr address) const;
+    // End UAC
     // looks an address up in the cache
     AbstractCacheEntry* lookup(Addr address);
     const AbstractCacheEntry* lookup(Addr address) const;

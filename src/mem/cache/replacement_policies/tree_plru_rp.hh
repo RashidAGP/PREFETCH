@@ -195,7 +195,16 @@ class TreePLRU : public Base
      */
     ReplaceableEntry* getVictim(const ReplacementCandidates& candidates) const
                                                                      override;
-
+    // UAC
+    ReplaceableEntry* getVictim_1(const ReplacementCandidates& candidates) const
+                                                                     override;
+    ReplaceableEntry* getVictim_2(const ReplacementCandidates& candidates) const
+                                                                     override;
+    ReplaceableEntry* getVictim_3(const ReplacementCandidates& candidates) const
+                                                                     override;
+    ReplaceableEntry* getVictim_4(const ReplacementCandidates& candidates) const
+                                                                     override;
+    // End UAC
     /**
      * Instantiate a replacement data entry. Consecutive calls to this
      * function use the same tree up to numLeaves. When numLeaves replacement

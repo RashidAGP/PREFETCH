@@ -319,7 +319,21 @@ CacheMemory::deallocate(Addr address)
     m_cache[cache_set][way] = NULL;
     m_tag_index.erase(address);
 }
-
+// UAC
+void
+CacheMemory::ss_oo_deallocate(Addr address)
+{
+    DPRINTF(RubyCache, "UAC. Deallocate clean Cache Line.address: %#x\n", address);
+    AbstractCacheEntry* entry = lookup(address);
+    assert(entry != nullptr);
+    m_replacementPolicy_ptr->invalidate(entry->replacementData);
+    uint32_t cache_set = entry->getSet();
+    uint32_t way = entry->getWay();
+    delete entry;
+    m_cache[cache_set][way] = NULL;
+    m_tag_index.erase(address);
+}
+//End UAC
 // Returns with the physical address of the conflicting cache line
 Addr
 CacheMemory::cacheProbe(Addr address) const
@@ -336,7 +350,69 @@ CacheMemory::cacheProbe(Addr address) const
     return m_cache[cacheSet][m_replacementPolicy_ptr->
                         getVictim(candidates)->getWay()]->m_Address;
 }
+// UAC
+Addr
+CacheMemory::ss_oo_cacheProbe_1(Addr address) const
+{
+    assert(address == makeLineAddress(address));
+    assert(!cacheAvail(address));
 
+    int64_t cacheSet = addressToCacheSet(address);
+    std::vector<ReplaceableEntry*> candidates;
+    for (int i = 0; i < m_cache_assoc; i++) {
+        candidates.push_back(static_cast<ReplaceableEntry*>(
+                                                       m_cache[cacheSet][i]));
+    }
+    return m_cache[cacheSet][m_replacementPolicy_ptr->
+                        getVictim(candidates)->getWay()]->m_Address;
+}
+Addr
+CacheMemory::ss_oo_cacheProbe_2(Addr address) const
+{
+    assert(address == makeLineAddress(address));
+    assert(!cacheAvail(address));
+
+    int64_t cacheSet = addressToCacheSet(address);
+    std::vector<ReplaceableEntry*> candidates;
+    for (int i = 0; i < m_cache_assoc; i++) {
+        candidates.push_back(static_cast<ReplaceableEntry*>(
+                                                       m_cache[cacheSet][i]));
+    }
+    return m_cache[cacheSet][m_replacementPolicy_ptr->
+                        getVictim(candidates)->getWay()]->m_Address;
+}
+Addr
+CacheMemory::ss_oo_cacheProbe_3(Addr address) const
+{
+    assert(address == makeLineAddress(address));
+    assert(!cacheAvail(address));
+
+    int64_t cacheSet = addressToCacheSet(address);
+    std::vector<ReplaceableEntry*> candidates;
+    for (int i = 0; i < m_cache_assoc; i++) {
+        candidates.push_back(static_cast<ReplaceableEntry*>(
+                                                       m_cache[cacheSet][i]));
+    }
+    return m_cache[cacheSet][m_replacementPolicy_ptr->
+                        getVictim(candidates)->getWay()]->m_Address;
+}
+
+Addr
+CacheMemory::ss_oo_cacheProbe_4(Addr address) const
+{
+    assert(address == makeLineAddress(address));
+    assert(!cacheAvail(address));
+
+    int64_t cacheSet = addressToCacheSet(address);
+    std::vector<ReplaceableEntry*> candidates;
+    for (int i = 0; i < m_cache_assoc; i++) {
+        candidates.push_back(static_cast<ReplaceableEntry*>(
+                                                       m_cache[cacheSet][i]));
+    }
+    return m_cache[cacheSet][m_replacementPolicy_ptr->
+                        getVictim(candidates)->getWay()]->m_Address;
+}
+// End UAC
 // looks an address up in the cache
 AbstractCacheEntry*
 CacheMemory::lookup(Addr address)

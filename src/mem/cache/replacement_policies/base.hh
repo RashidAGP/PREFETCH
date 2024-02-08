@@ -102,7 +102,18 @@ class Base : public SimObject
      */
     virtual ReplaceableEntry* getVictim(
                            const ReplacementCandidates& candidates) const = 0;
-
+    // UAC
+    virtual ReplaceableEntry* getVictim_1(
+                           const ReplacementCandidates& candidates) const = 0;
+    
+    virtual ReplaceableEntry* getVictim_2(
+                           const ReplacementCandidates& candidates) const = 0;
+    virtual ReplaceableEntry* getVictim_3(
+                           const ReplacementCandidates& candidates) const = 0;
+    virtual ReplaceableEntry* getVictim_4(
+                           const ReplacementCandidates& candidates) const = 0;
+    
+    // End UAC
     /**
      * Instantiate a replacement data entry.
      *

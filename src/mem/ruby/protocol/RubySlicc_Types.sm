@@ -207,6 +207,9 @@ structure (CacheMemory, external = "yes") {
   AbstractCacheEntry allocate(Addr, AbstractCacheEntry, bool);
   void allocateVoid(Addr, AbstractCacheEntry);
   void deallocate(Addr);
+  // UAC
+  void ss_oo_deallocate(Addr);
+  // End UAC
   AbstractCacheEntry lookup(Addr);
   bool isTagPresent(Addr);
   Cycles getTagLatency();
