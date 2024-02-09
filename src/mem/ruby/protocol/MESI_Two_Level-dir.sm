@@ -77,6 +77,10 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     Memory_Data_BP_CPU, desc="Data from memory arrives (BP). REQ from CPU";
     Memory_Data_BP_L2, desc="Data from memory arrives (BP). REQ from L2";
     // END PREFETCH
+    // UAC
+    INV_DIR_NO_VICTIM,   desc="Invalidiation for DIR from L2 (fetched cache line)";
+    INV_DIR_VICTIM,   desc="Invalidiation for DIR from L2 (victim cache line)";
+    // End UAC
   }
 
   // TYPES
@@ -222,6 +226,12 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
                   TBEs[makeLineAddress(in_msg.addr)]);
         } else if (in_msg.Type == CoherenceRequestType:DMA_WRITE) {
           trigger(Event:DMA_WRITE, makeLineAddress(in_msg.addr),
+                  TBEs[makeLineAddress(in_msg.addr)]);
+        } else if (in_msg.Type == CoherenceRequestType:INV_DIR_NO_VICTIM) {
+          trigger(Event:INV_DIR_NO_VICTIM, makeLineAddress(in_msg.addr),
+                  TBEs[makeLineAddress(in_msg.addr)]);
+        } else if (in_msg.Type == CoherenceRequestType:INV_DIR_VICTIM) {
+          trigger(Event:INV_DIR_VICTIM, makeLineAddress(in_msg.addr),
                   TBEs[makeLineAddress(in_msg.addr)]);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg);
@@ -566,6 +576,9 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     d_bp_sendData;
     l_popMemQueue;
     kd_wakeUpDependents;
+  }
+  transition(M, {INV_DIR_NO_VICTIM, INV_DIR_VICTIM}, I){
+    j_popIncomingRequestQueue;
   }
   // End UAC
   transition({IM_BP_L2, IM_BP_CPU}, Fetch){

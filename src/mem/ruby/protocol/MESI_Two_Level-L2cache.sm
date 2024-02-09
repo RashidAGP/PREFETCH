@@ -717,14 +717,19 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         	  DPRINTF(RubySlicc,"UCA, Cache set is full. Replace it with a cache line with SS_OO state.\n"); 
         	  cache_entry := getCacheEntry(victim);
                   if (cache_entry.CacheState == State:SS_OO) {
-			DPRINTF(RubySlicc,"UCA, Write into a Evict 0.\n");
+			DPRINTF(RubySlicc,"UCA, Write into a Evict 0. New Cache Line Address:%#x. Victim_0 Address:%#x\n",in_msg.addr,victim);
         		// 1) Eviction
         		L2cache.ss_oo_deallocate(victim);
         		// 2) Allocate a new clean cache line
-        		L2cache.allocate(victim,new Entry);
+        		set_cache_entry(L2cache.allocate(in_msg.addr,new Entry));
+			cache_entry := getCacheEntry(in_msg.addr);
         		// 3) Write in the Cache
                         cache_entry.DataBlk := in_msg.DataBlk;
+			cache_entry.Dirty := false;
+			cache_entry.CacheState := State:SS_OO;
+			cache_entry.Sharers.clear();
         		break_replace := true;
+
         	  }
         	  cache_entry := getCacheEntry(victim_1);
                   if (break_replace == false){
@@ -778,6 +783,27 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         		break_replace := true;
         	      }
         	  }
+		  if (break_replace == false){
+		    // Send invalidation for fetched cache line.
+                    enqueue(DirRequestL2Network_out, RequestMsg, l2_request_latency) {
+		      DPRINTF(RubySlicc,"UAC.Send INV_DIR_NO_VICTIM for directory. Fetched Address:%#x.\n",in_msg.addr);
+                      out_msg.addr := in_msg.addr;
+                      out_msg.Type := CoherenceRequestType:INV_DIR_NO_VICTIM;
+                      out_msg.Requestor := machineID;
+                      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+                      out_msg.MessageSize := MessageSizeType:Control;
+		    }
+		   }else{
+		    // Send invalidation for evictted cache line.
+                    enqueue(DirRequestL2Network_out, RequestMsg, l2_request_latency) {
+		      DPRINTF(RubySlicc,"UAC.Send INV_DIR_VICTIM for directory. Victim Address:%#x.\n",victim);
+                      out_msg.addr := victim;
+                      out_msg.Type := CoherenceRequestType:INV_DIR_NO_VICTIM;
+                      out_msg.Requestor := machineID;
+                      out_msg.Destination.add(mapAddressToMachine(victim, MachineType:Directory));
+                      out_msg.MessageSize := MessageSizeType:Control;
+		    }
+     		  }
 
 	}else{
        	        cache_entry := getCacheEntry(in_msg.addr);

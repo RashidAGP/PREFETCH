@@ -44,6 +44,11 @@ enumeration(CoherenceRequestType, desc="...") {
   GETS_DIR,   desc="Get data from DIR";
   GETS_FROM_L2, desc="Get data from L1. Because of bad prediction. It must forward to L1 cache";
   // END PREFETCH
+  // UAC
+  INV_DIR_NO_VICTIM,   desc="Invalidation because of there is no victim";
+  INV_DIR_VICTIM,   desc="Invalidation of victim";
+
+  // End UAC
   WB_ACK,    desc="Writeback ack";
 
   DMA_READ, desc="DMA Read";
