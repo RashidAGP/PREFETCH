@@ -1,10 +1,11 @@
 ./build/X86/gem5.opt \
-    --debug-flags=RubySlicc,RubyCache,RubyGenerated \
-    --outdir=/home/rashid/warm_result/gapbs/kron/bfs_perfect \
+    --debug-start=58760614072500 \
+    --debug-flags=RubySlicc,RubyGenerated,RubyCache \
+    --outdir=/home/rashid/UAC/bfs_opt \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
-    --checkpoint-dir=/home/rashid/uppmaxfs/rashid_files/gapbs_checkpoints/bfs -r 1\
+    --checkpoint-dir=/home/rashid/checkpoints/gapbs_checkpoints/bfs -r 1\
     -r 1\
     --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
     --disk-image=/home/rashid/fs_img/gapbs_kron.img \
@@ -27,5 +28,5 @@
     --l2_assoc=16 \
     --cpu-clock=2GHz \
     --cacheline_size=64 \
-    -I 200000000
+    -I 100000000
 # -I 500000000

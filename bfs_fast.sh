@@ -1,9 +1,9 @@
 ./build/X86/gem5.fast \
-    --outdir=/home/rashid/warm_result/gapbs/kron/bfs_perfect \
+    --outdir=/home/rashid/UAC/bfs \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
-    --checkpoint-dir=/home/rashid/new_benchmarks/kron/bfs \
+    --checkpoint-dir=/home/rashid/checkpoints/gapbs_checkpoints/bfs -r 1\
     -r 1\
     --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
     --disk-image=/home/rashid/fs_img/gapbs_kron.img \
@@ -26,5 +26,5 @@
     --l2_assoc=16 \
     --cpu-clock=2GHz \
     --cacheline_size=64 \
-    -I 200000000
+    -I 100000000
 # -I 500000000

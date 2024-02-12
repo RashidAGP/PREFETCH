@@ -1,9 +1,9 @@
-./build/X86/gem5.fast \
-    --outdir=/home/rashid/UAC/cc \
+../build/X86/gem5.fast \
+    --outdir=/home/rashid/UAC/bfs \
     --redirect-stdout \
     --redirect-stderr \
-    ./configs/deprecated/example/fs.py \
-    --checkpoint-dir=/home/rashid/checkpoints/gapbs_checkpoints/cc -r 1\
+    ../configs/deprecated/example/fs.py \
+    --checkpoint-dir=/home/rashid/checkpoints/gapbs_checkpoints/bfs -r 1\
     -r 1\
     --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
     --disk-image=/home/rashid/fs_img/gapbs_kron.img \

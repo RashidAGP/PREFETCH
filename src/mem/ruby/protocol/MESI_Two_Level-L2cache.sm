@@ -1091,6 +1091,9 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     //ll_clearSharers;
     o_popIncomingResponseQueue;
   }
+  transition(I_I,L1_DOWNGRADE){
+    jj_popL1RequestQueue;
+  }
   // End UAC
 
   transition(ISS_BPL1, Mem_Data_L2, SS_OO) {

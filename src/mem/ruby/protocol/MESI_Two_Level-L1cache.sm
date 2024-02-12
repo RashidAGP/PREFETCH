@@ -1140,6 +1140,12 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 	return_fwd;
         l_popRequestQueue;
   }
+  // UAC
+  transition(NP, Fwd_GETS_FROM_L2){
+	return_fwd;
+        l_popRequestQueue;
+  }
+  // End UAC
   transition({E,M}, BP_L2_RECV_M){
     h_load_hit;
     o_popIncomingResponseQueue;

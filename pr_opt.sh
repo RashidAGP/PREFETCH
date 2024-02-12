@@ -1,9 +1,11 @@
-./build/X86/gem5.fast \
-    --outdir=/home/rashid/UAC/cc \
+./build/X86/gem5.opt \
+    --debug-start=209006138424000 \
+    --debug-flags=RubySlicc,RubyGenerated,RubyCache \
+    --outdir=/home/rashid/UAC/pr_opt \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
-    --checkpoint-dir=/home/rashid/checkpoints/gapbs_checkpoints/cc -r 1\
+    --checkpoint-dir=/home/rashid/checkpoints/gapbs_checkpoints/pr -r 1\
     -r 1\
     --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
     --disk-image=/home/rashid/fs_img/gapbs_kron.img \
