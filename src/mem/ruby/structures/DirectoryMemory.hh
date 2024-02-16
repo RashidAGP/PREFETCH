@@ -44,6 +44,9 @@
 #include <iostream>
 #include <string>
 
+//UAC
+#include "base/statistics.hh"
+//End UAC
 #include "base/addr_range.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/protocol/DirectoryRequestType.hh"
@@ -91,6 +94,12 @@ class DirectoryMemory : public SimObject
     void print(std::ostream& out) const;
     void recordRequestType(DirectoryRequestType requestType);
 
+
+    // UAC
+    void profile_miss_predict() {directoryMemoryStats.m_miss_predict++;}
+    void profile_hit_predict() {directoryMemoryStats.m_hit_predict++;}
+    void profile_half_predict() {directoryMemoryStats.m_half_predict++;}
+    // UAC
   private:
     // Private copy constructor and assignment operator
     DirectoryMemory(const DirectoryMemory& obj);
@@ -105,6 +114,17 @@ class DirectoryMemory : public SimObject
     uint64_t m_size_bits;
     uint64_t m_num_entries;
 
+
+    // UAC
+    struct DirectoryMemoryStats : public statistics::Group
+    {
+	DirectoryMemoryStats(statistics::Group *parent);
+
+	statistics::Scalar m_miss_predict;
+	statistics::Scalar m_hit_predict;
+	statistics::Scalar m_half_predict;
+    } directoryMemoryStats;
+    // End UAC
     /**
      * The address range for which the directory responds. Normally
      * this is all possible memory addresses.

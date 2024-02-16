@@ -363,6 +363,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
   }
    // PREFETCH
   action(qf_bp_queueMemoryFetchRequest_cpu, "qf_bp_cpu", desc="Queue off-chip fetch request (BP)") {
+    directory.profile_hit_predict();
     peek(requestNetwork_in, RequestMsg) {
       enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
         out_msg.addr := address;
@@ -374,6 +375,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     }
   }
   action(qf_bp_queueMemoryFetchRequest_l2, "qf_bp_l2", desc="Queue off-chip fetch request (BP)") {
+    directory.profile_half_predict();
     peek(requestNetwork_in, RequestMsg) {
       enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
         out_msg.addr := address;
@@ -385,6 +387,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     }
   }
   action(d_bp_sendData_forw_l2, "d_bp_fw_l2", desc="Send request to L2 cache") {
+    directory.profile_miss_predict();
     peek(requestNetwork_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, to_mem_ctrl_latency) {
         out_msg.addr := address;

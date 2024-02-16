@@ -924,6 +924,18 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   action(uu_profileMiss, "\um", desc="Profile the demand miss") {
     L2cache.profileDemandMiss();
   }
+  // UAC
+  action(uu_profileMissPredict, "\mp", desc="Profile miss Predict") {
+    L2cache.profileMissPredict();
+  }
+  action(uu_profileHalfPredict, "\hlp", desc="Profile half Predict") {
+    L2cache.profileHalfPredict();
+  }
+  action(uu_profileHitPredict, "\hp", desc="Profile hit Predict") {
+    L2cache.profileHitPredict();
+  }
+   // End UAC
+
 
   action(uu_profileHit, "\uh", desc="Profile the demand hit") {
     L2cache.profileDemandHit();
@@ -1059,6 +1071,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   transition({SS,M,SS_OO},L1_BP){
 	// just send it to the CPU as dir.
 	d_bp_sendData;
+	uu_profileHitPredict;
         jj_popL1RequestQueue;
   }
   // Wrong Pred
@@ -1067,6 +1080,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         b_bp_forwardRequestToExclusive;
         //uu_profileMiss;
         set_setMRU;
+	uu_profileMissPredict;
         jj_popL1RequestQueue;
   }
   //So so Pred
@@ -1077,6 +1091,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         i_allocateTBE;
         ss_recordGetSL1ID;
         a_issueFetchToMemory_bp;
+	uu_profileHalfPredict;
         jj_popL1RequestQueue;
   }
   ///////////////////////////////// FROM DIR ///////////////////////

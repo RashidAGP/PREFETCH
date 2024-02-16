@@ -56,7 +56,7 @@ namespace ruby
 {
 
 DirectoryMemory::DirectoryMemory(const Params &p)
-    : SimObject(p), addrRanges(p.addr_ranges.begin(), p.addr_ranges.end())
+    : SimObject(p), addrRanges(p.addr_ranges.begin(), p.addr_ranges.end()),directoryMemoryStats(this)
 {
     m_size_bytes = 0;
     for (const auto &r: addrRanges) {
@@ -136,6 +136,24 @@ DirectoryMemory::allocate(Addr address, AbstractCacheEntry *entry)
     m_entries[idx] = entry;
 
     return entry;
+}
+// UAC
+
+
+
+//End UCA
+
+DirectoryMemory::
+DirectoryMemoryStats::DirectoryMemoryStats(statistics::Group *parent)
+	: statistics::Group(parent),
+	  ADD_STAT(m_miss_predict, " Number of Miss Prediction"),
+	  ADD_STAT(m_half_predict, " Number of Half Prediction"),
+	  ADD_STAT(m_hit_predict, " Number of Hit Prediction")
+{
+	m_miss_predict
+		.flags(statistics::nozero);
+	m_hit_predict
+		.flags(statistics::nozero);
 }
 
 void

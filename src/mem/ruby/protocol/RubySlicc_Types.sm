@@ -197,6 +197,11 @@ structure (DirectoryMemory, external = "yes") {
   bool isPresent(Addr);
   void invalidateBlock(Addr);
   void recordRequestType(DirectoryRequestType);
+  // UAC
+  void profile_miss_predict();
+  void profile_half_predict();
+  void profile_hit_predict();
+  // End UAC
 }
 
 structure (CacheMemory, external = "yes") {
@@ -238,6 +243,11 @@ structure (CacheMemory, external = "yes") {
   void profileDemandMiss();
   void profilePrefetchHit();
   void profilePrefetchMiss();
+  // UAC
+  void profileMissPredict();
+  void profileHalfPredict();
+  void profileHitPredict();
+  // End UAC
 }
 
 structure (WireBuffer, inport="yes", outport="yes", external = "yes") {

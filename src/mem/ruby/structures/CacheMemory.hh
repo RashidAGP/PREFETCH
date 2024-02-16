@@ -256,6 +256,12 @@ class CacheMemory : public SimObject
           statistics::Formula m_prefetch_accesses;
 
           statistics::Vector m_accessModeType;
+
+	  // UAC
+	  statistics::Scalar m_miss_predict;
+	  statistics::Scalar m_half_predict;
+	  statistics::Scalar m_hit_predict;
+	  // End UAC
       } cacheMemoryStats;
 
     public:
@@ -265,6 +271,11 @@ class CacheMemory : public SimObject
       void profileDemandMiss();
       void profilePrefetchHit();
       void profilePrefetchMiss();
+      // UAC
+      void profileMissPredict();
+      void profileHalfPredict();
+      void profileHitPredict();
+      // End UAC
 };
 
 std::ostream& operator<<(std::ostream& out, const CacheMemory& obj);

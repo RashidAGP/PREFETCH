@@ -633,7 +633,11 @@ CacheMemoryStats::CacheMemoryStats(statistics::Group *parent)
       ADD_STAT(m_prefetch_misses, "Number of cache prefetch misses"),
       ADD_STAT(m_prefetch_accesses, "Number of cache prefetch accesses",
                m_prefetch_hits + m_prefetch_misses),
-      ADD_STAT(m_accessModeType, "")
+      ADD_STAT(m_accessModeType, ""),
+      ADD_STAT(m_miss_predict," Number of miss prediction"),
+      ADD_STAT(m_half_predict," Number of half prediction"),
+      ADD_STAT(m_hit_predict," Number of hit prediction")
+
 {
     numDataArrayReads
         .flags(statistics::nozero);
@@ -835,7 +839,23 @@ CacheMemory::htmCommitTransaction()
     DPRINTF(HtmMem, "htmCommitTransaction: read set=%u write set=%u\n",
         htmReadSetSize, htmWriteSetSize);
 }
-
+// UAC
+void
+CacheMemory::profileMissPredict()
+{
+    cacheMemoryStats.m_miss_predict++;
+}
+void
+CacheMemory::profileHalfPredict()
+{
+    cacheMemoryStats.m_half_predict++;
+}
+void
+CacheMemory::profileHitPredict()
+{
+    cacheMemoryStats.m_hit_predict++;
+}
+// End UAC
 void
 CacheMemory::profileDemandHit()
 {
