@@ -1,11 +1,11 @@
 ./build/X86/gem5.fast \
-    --outdir=/home/rashid/UAC/sssp_raw \
+    --outdir=/home/rashid/UAC/bfs_raw \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
-    --checkpoint-dir=/home/rashid/checkpoints/gapbs_checkpoints/sssp -r 1\
+    --checkpoint-dir=/home/rashid/checkpoints/gapbs_checkpoints/bfs -r 1\
     -r 1\
-    --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
+    --kernel=/home/rashid/linux_kernel/linux \
     --disk-image=/home/rashid/fs_img/gapbs_kron.img \
     --cpu-type=DerivO3CPU \
     --restore-with-cpu=DerivO3CPU \
@@ -26,5 +26,4 @@
     --l2_assoc=16 \
     --cpu-clock=2GHz \
     --cacheline_size=64 \
-#    -I 100000000
-    -I 50000000
+     -I 50000000

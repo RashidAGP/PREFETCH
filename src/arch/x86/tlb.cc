@@ -105,6 +105,10 @@ TLB::evictLRU_l1(Addr vpn)
         if (tlb[i].lruSeq < tlb[lru].lruSeq)
             lru = i;
     }
+    // UAC
+    add_page_eviction_l1(tlb[lru].paddr);
+    print_eviction();
+    // End UAC
     assert(tlb[lru].trieHandle);
     trie.remove(tlb[lru].trieHandle);
     tlb[lru].trieHandle = NULL;
@@ -112,6 +116,11 @@ TLB::evictLRU_l1(Addr vpn)
 }
 
 // L2 -------- Evict
+void
+TLB::add_page_eviction_l1(Addr address_t){
+	page_eviction_l1[address_t] = page_eviction_l1[address_t] + 1;
+	page_eviction_l1_time[address_t] = this->walker->curCycle();
+}
 void
 TLB::evictLRU_l2(Addr vpn)
 {
@@ -127,6 +136,9 @@ TLB::evictLRU_l2(Addr vpn)
         if (l2tlb[i].lruSeq < l2tlb[lru].lruSeq)
             lru = i;
     }
+    // UAC
+    add_page_eviction_l2(l2tlb[lru].paddr);
+    // End UAC
 
     assert(l2tlb[lru].trieHandle);
     triel2.remove(l2tlb[lru].trieHandle);
@@ -669,6 +681,9 @@ TLB::translate(const RequestPtr &req,
 
             DPRINTF(TLB, "Entry found with paddr %#x, "
                     "doing protection checks.\n", entry->paddr);
+	    // UAC
+	    add_page_access(entry->paddr);
+	    // End UAC
             // Do paging protection checks.
             bool inUser = m5Reg.cpl == 3 && !(flags & CPL0FlagBit);
             CR0 cr0 = tc->readMiscRegNoEffect(misc_reg::Cr0);
@@ -708,6 +723,74 @@ TLB::translate(const RequestPtr &req,
 
     return finalizePhysical(req, tc, mode);
 }
+
+// UAC
+void
+TLB::print_eviction(){
+	if (this->walker->curCycle() > last_cycle + 5000000){
+		last_cycle = this->walker->curCycle();
+		std::string delimeter = "=";
+                std::string csv_path_string(csv_path);
+                size_t pos = csv_path_string.find(delimeter);
+                std::string csv_path_string_after= csv_path_string.substr(pos+delimeter.length());
+		// L1
+                std::string file_csv_page_eviction = csv_path_string_after + "/page_eviction_l1.csv";
+		if(!page_eviction_l1.empty()){
+			std::ofstream file_eviction_l1(file_csv_page_eviction);
+			if (file_eviction_l1.is_open()){
+        		    for (auto x : page_eviction_l1){
+                                file_eviction_l1 << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
+			    }
+                        }
+        		file_eviction_l1.flush();
+        		file_eviction_l1.close();
+		}else{
+			printf("Why???\n");
+		}
+                std::string file_csv_page_eviction_l2 = csv_path_string_after + "/page_eviction_l2.csv";
+		if(!page_eviction_l2.empty()){
+			std::ofstream file_eviction_l2(file_csv_page_eviction_l2);
+			if (file_eviction_l2.is_open()){
+        		    for (auto x : page_eviction_l2){
+                                file_eviction_l2 << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
+			    }
+                        }
+        		file_eviction_l2.flush();
+        		file_eviction_l2.close();
+		}else{
+			printf("Why???\n");
+		}
+                std::string file_csv_page_eviction_l1_time = csv_path_string_after + "/page_eviction_l1_time.csv";
+		if(!page_eviction_l1_time.empty()){
+			std::ofstream file_eviction_l1_time(file_csv_page_eviction_l1_time);
+			if (file_eviction_l1_time.is_open()){
+        		    for (auto x : page_eviction_l1_time){
+                                file_eviction_l1_time << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
+			    }
+                        }
+        		file_eviction_l1_time.flush();
+        		file_eviction_l1_time.close();
+		}else{
+			printf("Why???\n");
+		}
+                std::string file_csv_page_access = csv_path_string_after + "/page_access.csv";
+		if(!page_access.empty()){
+			std::ofstream file_page_access(file_csv_page_access);
+			if (file_page_access.is_open()){
+        		    for (auto x : page_access){
+                                file_page_access << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
+			    }
+                        }
+        		file_page_access.flush();
+        		file_page_access.close();
+		}else{
+			printf("Why???\n");
+		}
+	}
+
+}
+// End UAC
+
 
 
 Fault

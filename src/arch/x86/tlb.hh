@@ -50,6 +50,10 @@
 #include "string"
 #include "mem/ruby/structures/CacheMemory.hh"
 
+
+extern char* csv_path;
+
+
 namespace gem5
 {
 
@@ -90,8 +94,22 @@ namespace X86ISA
         EntryList::iterator lookupIt(Addr va, bool update_lru = true);
 
         Walker * walker;
+	// UAC
+	std::unordered_map<Addr, uint64_t> page_access = {};
+	std::unordered_map<Addr, uint64_t> page_eviction_l1 = {};
+	std::unordered_map<Addr, uint64_t> page_eviction_l2 = {};
+	std::unordered_map<Addr, uint64_t> page_eviction_l1_time = {};
+
+	Cycles last_cycle = Cycles(0);
+	// UAC End
 
       public:
+	// UAC
+	void add_page_access(Addr address_t){ page_access[address_t]++;}
+	void add_page_eviction_l1(Addr address_t);
+	void add_page_eviction_l2(Addr address_t){page_eviction_l2[address_t] = page_eviction_l2[address_t] + 1 ;}
+	void print_eviction();
+	// End UAC
         Walker *getWalker();
 
         void flushAll() override;
