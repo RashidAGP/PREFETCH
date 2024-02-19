@@ -1,5 +1,5 @@
 ./build/X86/gem5.fast \
-    --outdir=/home/rashid/UAC/sssp \
+    --outdir=/home/rashid/UAC/sssp_UAC \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
