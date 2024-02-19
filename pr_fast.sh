@@ -27,4 +27,3 @@
     --cpu-clock=2GHz \
     --cacheline_size=64 \
     -I 100000000
-# -I 500000000
