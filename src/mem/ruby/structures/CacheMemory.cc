@@ -145,6 +145,23 @@ CacheMemory::findTagInSet(int64_t cacheSet, Addr tag) const
     return -1; // Not found
 }
 
+
+int
+CacheMemory::findTagInSet_test(int64_t cacheSet, Addr tag) const
+{
+    assert(tag == makeLineAddress(tag));
+    // search the set for the tags
+    auto it = m_tag_index.find(tag);
+    if (it != m_tag_index.end())
+        if (m_cache[cacheSet][it->second]->m_Permission !=
+            AccessPermission_NotPresent &&
+	    m_cache[cacheSet][it->second]->m_Permission !=
+            AccessPermission_Invalid )
+            return it->second;
+    return -1; // Not found
+}
+
+
 // Given a cache index: returns the index of the tag in a set.
 // returns -1 if the tag is not found.
 int
@@ -361,14 +378,31 @@ CacheMemory::lookup(Addr address) const
 //Rashid
 bool
 CacheMemory::lookup_rashid(Addr address){
+
+	/*	
 	assert(address == makeLineAddress(address) && "The address must be in line shape");
 	int64_t cacheSet = addressToCacheSet(address);
-	int loc = findTagInSet(cacheSet,address);
+	int loc = findTagInSet_test(cacheSet,address);
 	if (loc == -1){
 		return false;
 	}else{
 		return true;
 	}
+	*/
+
+
+    DPRINTF(RubyCache, "address: %#x\n", address);
+    AbstractCacheEntry* entry = lookup(address);
+    if (entry != nullptr) {
+	if ( entry->m_Permission == AccessPermission_NotPresent ||
+	 entry->m_Permission == AccessPermission_Invalid || 
+	 entry->m_Permission == AccessPermission_Busy){
+		return false;
+	}else{
+		return true;
+        }
+    }
+    return false;
 }
 
 //End Rashid

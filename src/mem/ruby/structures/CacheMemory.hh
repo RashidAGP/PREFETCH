@@ -177,6 +177,7 @@ class CacheMemory : public SimObject
     // Given a cache tag: returns the index of the tag in a set.
     // returns -1 if the tag is not found.
     int findTagInSet(int64_t line, Addr tag) const;
+    int findTagInSet_test(int64_t line, Addr tag) const;
     int findTagInSetIgnorePermissions(int64_t cacheSet, Addr tag) const;
 
     // Private copy constructor and assignment operator
