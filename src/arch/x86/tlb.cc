@@ -226,8 +226,7 @@ TLB::insert_l2(Addr vaddr, Addr pa, const TlbEntry &entry,uint64_t pc_id)
 				}else{
 					stats.L2TLB_l2_miss++;
 					if (inclusive == true){
-						printf("XXXXXXXX \n");
-						assert(inclusive && "Whyyyyyy \n");
+						//assert(inclusive && "Whyyyyyy \n");
 					}
 				
 				}
@@ -767,7 +766,7 @@ TLB::print_eviction(){
         		file_eviction_l1.flush();
         		file_eviction_l1.close();
 		}else{
-			printf("Why???\n");
+			//printf("Why???\n");
 		}
                 std::string file_csv_page_eviction_l2 = csv_path_string_after + "/page_eviction_l2.csv";
 		if(!page_eviction_l2.empty()){
@@ -780,7 +779,7 @@ TLB::print_eviction(){
         		file_eviction_l2.flush();
         		file_eviction_l2.close();
 		}else{
-			printf("Why???\n");
+			//printf("Why???\n");
 		}
                 std::string file_csv_page_eviction_l1_time = csv_path_string_after + "/page_eviction_l1_time.csv";
 		if(!page_eviction_l1_time.empty()){
