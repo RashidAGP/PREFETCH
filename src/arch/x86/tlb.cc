@@ -96,7 +96,7 @@ TLB::evictLRU_l1(Addr vpn)
     // Find the entry with the lowest (and hence least recently updated)
     // sequence number.
 
-    DPRINTF(TLB, "REMOVE from L1:%#x\n",vpn);
+    DPRINTF(TLB, "REMOVE from L1. Insert for VPN:%#x\n",vpn);
     uint32_t set = vpn % (size/l1_way);
     uint32_t start = set * l1_way;
     uint32_t end = (set + 1) * (l1_way);
@@ -151,7 +151,7 @@ TlbEntry *
 TLB::insert_l1(Addr vaddr, const TlbEntry &entry,uint64_t pc_id)
 {
 
-    DPRINTF(TLB,"Insert in L1.\n");
+    DPRINTF(TLB,"Insert in L1.VA:%#x\n",vaddr);
     Addr vpn = 0;
     if (entry.logBytes == 12){
        vpn = vaddr >> 12;
@@ -185,11 +185,12 @@ TLB::insert_l1(Addr vaddr, const TlbEntry &entry,uint64_t pc_id)
 
 
 TlbEntry *
-TLB::insert_l2(Addr vaddr, const TlbEntry &entry,uint64_t pc_id)
+TLB::insert_l2(Addr vaddr, Addr pa, const TlbEntry &entry,uint64_t pc_id)
 {
   if (l2_tlb_size != 0){
-
+	if (this->name() == "system.cpu.mmu.dtb"){
 		   // Rashid L2 TLB Miss
+		   DPRINTF(TLB,"Insert in L2 TLB. VA:%#x.\n",vaddr);
                    std::string cache_level_one_d = "system.ruby.l1_cntrl0.L1Dcache";
                    std::string cache_level_two = "system.ruby.l2_cntrl0.L2cache";
 		   std::vector<SimObject *> simObjectList = SimObject::getSimObjectList();
@@ -198,28 +199,41 @@ TLB::insert_l2(Addr vaddr, const TlbEntry &entry,uint64_t pc_id)
 		   bool lookup_result_l2 = true;
 		   Addr paddr_to_check = entry.paddr | (vaddr & mask(entry.logBytes));
 		   Addr line_paddr = 0;
-		   line_paddr = paddr_to_check >> 6;
+		   line_paddr = pa >> 6;
 		   line_paddr = line_paddr << 6;
-		   stats.L2TLB_l1_access++;
-		   stats.L2TLB_l2_access++;
+		   DPRINTF(TLB,"L2 TLB Miss:%#x.\n",line_paddr);
+		   bool inclusive = false;
 		   for (SimObject* simObject : simObjectList) {
 			if (simObject->name() == cache_level_one_d){
 				cache_level_prediction = dynamic_cast<gem5::ruby::CacheMemory *>(simObject);
+				DPRINTF(TLB,"Name is :%s.\n",cache_level_one_d);
+                		stats.L2TLB_l1_access++;
 				if (cache_level_prediction->lookup_rashid(line_paddr) == true){
 					stats.L2TLB_l1_hit++;
+					inclusive = true;
 				}else{
 					stats.L2TLB_l1_miss++;
 				}
-			}else if (simObject->name() == cache_level_two){
+			}
+		   }
+		   for (SimObject* simObject : simObjectList) {
+			if (simObject->name() == cache_level_two){
 				cache_level_prediction = dynamic_cast<gem5::ruby::CacheMemory *>(simObject);
+				DPRINTF(TLB,"Name is :%s.\n",cache_level_two);
+                 		stats.L2TLB_l2_access++;
 				if (cache_level_prediction->lookup_rashid(line_paddr) == true){
 					stats.L2TLB_l2_hit++;
 				}else{
 					stats.L2TLB_l2_miss++;
+					if (inclusive == true){
+						printf("XXXXXXXX \n");
+						assert(inclusive && "Whyyyyyy \n");
+					}
+				
 				}
 			}
-		   }
-
+		}
+	}
     vaddr = concAddrPcid(vaddr, pc_id);
 
     Addr vpn = 0;
@@ -622,11 +636,16 @@ TLB::translate(const RequestPtr &req,
 		   line_paddr = line_paddr << 6;
 		   stats.L1TLB_l1_access++;
 		   stats.L1TLB_l2_access++;
-		   for (SimObject* simObject : simObjectList) {
+		   DPRINTF(TLB,"L2 TLB Hit. PA:%#x, CL:%#x.\n",paddr_to_check,line_paddr);
+		   bool inclusive = false;
+
+                   if (this->name() == "system.cpu.mmu.dtb"){
+		     for (SimObject* simObject : simObjectList) {
 			if (simObject->name() == cache_level_one_d){
 				cache_level_prediction = dynamic_cast<gem5::ruby::CacheMemory *>(simObject);
 				if (cache_level_prediction->lookup_rashid(line_paddr) == true){
 					stats.L1TLB_l1_hit++;
+					inclusive = true;
 				}else{
 					stats.L1TLB_l1_miss++;
 				}
@@ -636,8 +655,10 @@ TLB::translate(const RequestPtr &req,
 					stats.L1TLB_l2_hit++;
 				}else{
 					stats.L1TLB_l2_miss++;
+					assert(inclusive && "How it possible???\n");
 				}
 			}
+		      }
 		   }
 		   //End Rashid L2 TLB Hit
                    const Cycles L2Hit_late = Cycles(10);
@@ -668,7 +689,8 @@ TLB::translate(const RequestPtr &req,
                         Addr alignedVaddr = p->pTable->pageAlign(vaddr);
                         DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,
                                 pte->paddr);
-                        entry = insert_l2(alignedVaddr, TlbEntry(
+			// It is incorrect
+                        entry = insert_l2(alignedVaddr,pte->paddr,TlbEntry(
                                 p->pTable->pid(), alignedVaddr, pte->paddr,
                                 pte->flags & EmulationPageTable::Uncacheable,
                                 pte->flags & EmulationPageTable::ReadOnly),
