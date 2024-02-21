@@ -173,10 +173,10 @@ TLB::insert_l1(Addr vaddr, const TlbEntry &entry,uint64_t pc_id)
 
 
 TlbEntry *
-TLB::insert_l2(Addr vaddr, const TlbEntry &entry,uint64_t pc_id)
+TLB::insert_l2(Addr vaddr, Addr pa, const TlbEntry &entry,uint64_t pc_id)
 {
   if (l2_tlb_size != 0){
-
+	if (this->name() == "system.cpu.mmu.dtb"){
 		   // Rashid L2 TLB Miss
                    std::string cache_level_one_d = "system.ruby.l1_cntrl0.L1Dcache";
                    std::string cache_level_two = "system.ruby.l2_cntrl0.L2cache";
@@ -188,18 +188,21 @@ TLB::insert_l2(Addr vaddr, const TlbEntry &entry,uint64_t pc_id)
 		   Addr line_paddr = 0;
 		   line_paddr = paddr_to_check >> 6;
 		   line_paddr = line_paddr << 6;
-		   stats.L2TLB_l1_access++;
-		   stats.L2TLB_l2_access++;
 		   for (SimObject* simObject : simObjectList) {
 			if (simObject->name() == cache_level_one_d){
 				cache_level_prediction = dynamic_cast<gem5::ruby::CacheMemory *>(simObject);
+                		stats.L2TLB_l1_access++;
 				if (cache_level_prediction->lookup_rashid(line_paddr) == true){
 					stats.L2TLB_l1_hit++;
 				}else{
 					stats.L2TLB_l1_miss++;
 				}
-			}else if (simObject->name() == cache_level_two){
+			}
+		   }
+		   for (SimObject* simObject : simObjectList) {
+		       if (simObject->name() == cache_level_two){
 				cache_level_prediction = dynamic_cast<gem5::ruby::CacheMemory *>(simObject);
+                		stats.L2TLB_l2_access++;
 				if (cache_level_prediction->lookup_rashid(line_paddr) == true){
 					stats.L2TLB_l2_hit++;
 				}else{
@@ -207,7 +210,7 @@ TLB::insert_l2(Addr vaddr, const TlbEntry &entry,uint64_t pc_id)
 				}
 			}
 		   }
-
+	}
     vaddr = concAddrPcid(vaddr, pc_id);
 
     Addr vpn = 0;
@@ -617,6 +620,9 @@ TLB::translate(const RequestPtr &req,
 				if (cache_level_prediction->lookup_rashid(line_paddr) == true){
 					// Do nothing
 					stop = true;
+					stats.L1TLB_l1_hit++;
+				}else{
+					stats.L1TLB_l1_miss++;
 				}
 				
 			}
@@ -625,11 +631,13 @@ TLB::translate(const RequestPtr &req,
 			if ((simObject->name() == cache_level_two) && (stop = false)){
 				cache_level_prediction = dynamic_cast<gem5::ruby::CacheMemory *>(simObject);
 				if (cache_level_prediction->lookup_rashid(line_paddr) == true){
-					req->set_hit_l2();
-					req->reset_miss_l2();
+					//req->set_hit_l2();
+					//req->reset_miss_l2();
+					stats.L1TLB_l2_hit++;
 				}else{
-					req->set_miss_l2();
-					req->reset_hit_l2();					
+					//req->set_miss_l2();
+					//req->reset_hit_l2();					
+					stats.L1TLB_l2_miss++;
 				}
 			}
 		   }
@@ -662,7 +670,8 @@ TLB::translate(const RequestPtr &req,
                         Addr alignedVaddr = p->pTable->pageAlign(vaddr);
                         DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,
                                 pte->paddr);
-                        entry = insert_l2(alignedVaddr, TlbEntry(
+			// It is incorrect
+                        entry = insert_l2(alignedVaddr,pte->paddr, TlbEntry(
                                 p->pTable->pid(), alignedVaddr, pte->paddr,
                                 pte->flags & EmulationPageTable::Uncacheable,
                                 pte->flags & EmulationPageTable::ReadOnly),

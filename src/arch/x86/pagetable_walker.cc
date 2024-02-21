@@ -516,8 +516,8 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
 		    uint64_t delay_PW = static_cast<uint64_t>(stop - start_time);
 		    printf("Delay is :%ld.\n",delay_PW);
 		    walker->tlb->incr_pw_latency(delay_PW);
-                    walker->tlb->insert_l1(entry.vaddr, entry, cr3.pcid);
-                    walker->tlb->insert_l2(entry.vaddr, entry, cr3.pcid);
+                    //walker->tlb->insert_l1(entry.vaddr, entry, cr3.pcid);
+                    //walker->tlb->insert_l2(entry.vaddr, entry, cr3.pcid);
                 }
                 else{
   		    walker->tlb->incr_pw_number();
@@ -537,8 +537,8 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
 			    req->set_miss_l2();
 			    req->reset_hit_l2();
 			    DPRINTF(PageTableWalker,"PW finished. Enable the miss_l2.\n");
-                            walker->tlb->insert_l1(entry.vaddr, entry, 0x000);
-                            walker->tlb->insert_l2(entry.vaddr, entry, 0x000);
+                            //walker->tlb->insert_l1(entry.vaddr, entry, 0x000);
+                            //walker->tlb->insert_l2(entry.vaddr, entry, 0x000);
 		    }
 
                 }
@@ -810,7 +810,7 @@ void Walker::DelayedInsertEvent:: process(){
    DPRINTF(PageTableWalker,"PageWalker is writing in the TLB.\n");
    //assert(req->hasPaddr() && "Req has no paddr.\n");
    tlb_p->insert_l1(entry_p.vaddr, entry_p, 0x000);
-   tlb_p->insert_l2(entry_p.vaddr, entry_p, 0x000);
+   tlb_p->insert_l2(entry_p.vaddr, entry_p.paddr | req_p->getVaddr() & mask(entry_p.logBytes), entry_p, 0x000);
    if (tlb_p->name() == "system.cpu.mmu.dtb"){
        req_p->set_miss_l2();
        req_p->reset_hit_l2();
