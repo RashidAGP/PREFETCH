@@ -106,7 +106,11 @@ TLB::evictLRU_l1(Addr vpn)
             lru = i;
     }
     // UAC
-    add_page_eviction_l1(tlb[lru].paddr);
+    if (tlb[lru].logBytes == 12){
+        add_page_eviction_l1_4kb(tlb[lru].paddr);
+    }else{
+        add_page_eviction_l1_2mb(tlb[lru].paddr);
+    }
     print_eviction();
     // End UAC
     assert(tlb[lru].trieHandle);
@@ -117,8 +121,13 @@ TLB::evictLRU_l1(Addr vpn)
 
 // L2 -------- Evict
 void
-TLB::add_page_eviction_l1(Addr address_t){
-	page_eviction_l1[address_t] = page_eviction_l1[address_t] + 1;
+TLB::add_page_eviction_l1_4kb(Addr address_t){
+	page_eviction_l1_4kb[address_t] = page_eviction_l1_4kb[address_t] + 1;
+	page_eviction_l1_time[address_t] = this->walker->curCycle();
+}
+void
+TLB::add_page_eviction_l1_2mb(Addr address_t){
+	page_eviction_l1_2mb[address_t] = page_eviction_l1_2mb[address_t] + 1;
 	page_eviction_l1_time[address_t] = this->walker->curCycle();
 }
 void
@@ -137,7 +146,11 @@ TLB::evictLRU_l2(Addr vpn)
             lru = i;
     }
     // UAC
-    add_page_eviction_l2(l2tlb[lru].paddr);
+    if (l2tlb[lru].logBytes == 12){
+        add_page_eviction_l2_4kb(l2tlb[lru].paddr);
+    }else{
+        add_page_eviction_l2_2mb(l2tlb[lru].paddr);
+    }
     // End UAC
 
     assert(l2tlb[lru].trieHandle);
@@ -755,29 +768,51 @@ TLB::print_eviction(){
                 size_t pos = csv_path_string.find(delimeter);
                 std::string csv_path_string_after= csv_path_string.substr(pos+delimeter.length());
 		// L1
-                std::string file_csv_page_eviction = csv_path_string_after + "/page_eviction_l1.csv";
-		if(!page_eviction_l1.empty()){
-			std::ofstream file_eviction_l1(file_csv_page_eviction);
-			if (file_eviction_l1.is_open()){
-        		    for (auto x : page_eviction_l1){
-                                file_eviction_l1 << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
+                std::string file_csv_page_eviction_4kb = csv_path_string_after + "/page_eviction_l1_4kb.csv";
+		if(!page_eviction_l1_4kb.empty()){
+			std::ofstream file_eviction_l1_4kb(file_csv_page_eviction_4kb);
+			if (file_eviction_l1_4kb.is_open()){
+        		    for (auto x : page_eviction_l1_4kb){
+                                file_eviction_l1_4kb << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
 			    }
                         }
-        		file_eviction_l1.flush();
-        		file_eviction_l1.close();
+        		file_eviction_l1_4kb.flush();
+        		file_eviction_l1_4kb.close();
+		}
+                std::string file_csv_page_eviction_2mb = csv_path_string_after + "/page_eviction_l1_2mb.csv";
+		if(!page_eviction_l1_2mb.empty()){
+			std::ofstream file_eviction_l1_2mb(file_csv_page_eviction_2mb);
+			if (file_eviction_l1_2mb.is_open()){
+        		    for (auto x : page_eviction_l1_2mb){
+                                file_eviction_l1_2mb << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
+			    }
+                        }
+        		file_eviction_l1_2mb.flush();
+        		file_eviction_l1_2mb.close();
+		}
+                std::string file_csv_page_eviction_l2_4kb = csv_path_string_after + "/page_eviction_l2_4kb.csv";
+		if(!page_eviction_l2_4kb.empty()){
+			std::ofstream file_eviction_l2_4kb(file_csv_page_eviction_l2_4kb);
+			if (file_eviction_l2_4kb.is_open()){
+        		    for (auto x : page_eviction_l2_4kb){
+                                file_eviction_l2_4kb << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
+			    }
+                        }
+        		file_eviction_l2_4kb.flush();
+        		file_eviction_l2_4kb.close();
 		}else{
 			//printf("Why???\n");
 		}
-                std::string file_csv_page_eviction_l2 = csv_path_string_after + "/page_eviction_l2.csv";
-		if(!page_eviction_l2.empty()){
-			std::ofstream file_eviction_l2(file_csv_page_eviction_l2);
-			if (file_eviction_l2.is_open()){
-        		    for (auto x : page_eviction_l2){
-                                file_eviction_l2 << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
+                std::string file_csv_page_eviction_l2_2mb = csv_path_string_after + "/page_eviction_l2_2mb.csv";
+		if(!page_eviction_l2_2mb.empty()){
+			std::ofstream file_eviction_l2_2mb(file_csv_page_eviction_l2_2mb);
+			if (file_eviction_l2_2mb.is_open()){
+        		    for (auto x : page_eviction_l2_2mb){
+                                file_eviction_l2_2mb << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
 			    }
                         }
-        		file_eviction_l2.flush();
-        		file_eviction_l2.close();
+        		file_eviction_l2_2mb.flush();
+        		file_eviction_l2_2mb.close();
 		}else{
 			//printf("Why???\n");
 		}
@@ -791,8 +826,6 @@ TLB::print_eviction(){
                         }
         		file_eviction_l1_time.flush();
         		file_eviction_l1_time.close();
-		}else{
-			printf("Why???\n");
 		}
                 std::string file_csv_page_access = csv_path_string_after + "/page_access.csv";
 		if(!page_access.empty()){
@@ -804,8 +837,6 @@ TLB::print_eviction(){
                         }
         		file_page_access.flush();
         		file_page_access.close();
-		}else{
-			printf("Why???\n");
 		}
 	}
 
