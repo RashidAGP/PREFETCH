@@ -115,7 +115,9 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
 
     // events initiated by this L2
     L2_Replacement,     desc="L2 Replacement", format="!r";
+    L2_Replacement_noShares,     desc="L2 Replacement", format="!r";
     L2_Replacement_clean,     desc="L2 Replacement, but data is clean", format="!r";
+    L2_Replacement_clean_noShares,     desc="L2 Replacement, but data is clean and No shared", format="!r";
 
     // events from memory controller
     Mem_Data,     desc="data from memory", format="!r";
@@ -413,10 +415,20 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
             Addr victim := L2cache.cacheProbe(in_msg.addr);
             Entry L2cache_entry := getCacheEntry(victim);
             if (isDirty(L2cache_entry)) {
-              trigger(Event:L2_Replacement, victim, L2cache_entry, TBEs[victim]);
+	      if (L2cache_entry.Sharers.count() == 0){
+                   trigger(Event:L2_Replacement_noShares, victim, L2cache_entry, TBEs[victim]);
+	      }else{
+                   trigger(Event:L2_Replacement, victim, L2cache_entry, TBEs[victim]);
+	      }
             } else {
-              trigger(Event:L2_Replacement_clean,
+	      // MC
+		if (L2cache_entry.Sharers.count() ==0 ){
+                  trigger(Event:L2_Replacement_clean_noShares,
                       victim, L2cache_entry, TBEs[victim]);
+		} else{
+                  trigger(Event:L2_Replacement_clean,
+                      victim, L2cache_entry, TBEs[victim]);
+		}
             }
           }
         }
@@ -626,6 +638,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
 
   action(f_sendInvToSharers, "f", desc="invalidate sharers for L2 replacement") {
     enqueue(L1RequestL2Network_out, RequestMsg, to_l1_latency) {
+      DPRINTF(RubySlicc, "The sharers are :%d.\n",cache_entry.Sharers.count());
       assert(is_valid(cache_entry));
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:INV;
@@ -1116,10 +1129,13 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
   }
-  transition(SS,L1_DOWNGRADE, SS_OO) {
-    ll_clearSharers;
+  // MC
+  transition(SS,L1_DOWNGRADE) {
+    //ll_clearSharers;
+    kk_removeRequestSharer;
     jj_popL1RequestQueue;
   }
+  // End MC
   transition(SS,Mem_Data_BP){
 	d_bp_sendData_2;
         o_popIncomingResponseQueue;
@@ -1282,7 +1298,14 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     f_sendInvToSharers;
     rr_deallocateL2CacheBlock;
   }
-
+  // MC
+  transition(SS, {L2_Replacement_clean_noShares, L2_Replacement_noShares}, M_I) {
+    i_allocateTBE;
+    //f_sendInvToSharers;
+    rr_deallocateL2CacheBlock;
+    c_exclusiveCleanReplacement;
+  }
+  // End MC
   transition(SS, {L2_Replacement, MEM_Inv}, S_I) {
     i_allocateTBE;
     f_sendInvToSharers;
@@ -1334,13 +1357,13 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     jj_popL1RequestQueue;
   }
 
-  transition(M, {L2_Replacement, MEM_Inv}, M_I) {
+  transition(M, {L2_Replacement,L2_Replacement_noShares MEM_Inv}, M_I) {
     i_allocateTBE;
     c_exclusiveReplacement;
     rr_deallocateL2CacheBlock;
   }
 
-  transition(M, L2_Replacement_clean, M_I) {
+  transition(M,{L2_Replacement_clean,L2_Replacement_clean_noShares }, M_I) {
     i_allocateTBE;
     c_exclusiveCleanReplacement;
     rr_deallocateL2CacheBlock;
