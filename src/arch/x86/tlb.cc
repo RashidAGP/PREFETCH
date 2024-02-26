@@ -107,9 +107,11 @@ TLB::evictLRU_l1(Addr vpn)
     }
     // UAC
     if (tlb[lru].logBytes == 12){
-        add_page_eviction_l1_4kb(tlb[lru].paddr);
+        add_page_eviction_l1_4kb(tlb[lru].vaddr, tlb[lru].paddr);
+        //add_page_eviction_l1_4kb_VA(tlb[lru].vaddr);
     }else{
-        add_page_eviction_l1_2mb(tlb[lru].paddr);
+        add_page_eviction_l1_2mb(tlb[lru].vaddr, tlb[lru].paddr);
+        //add_page_eviction_l1_2mb_VA(tlb[lru].vaddr);
     }
     print_eviction();
     // End UAC
@@ -120,15 +122,27 @@ TLB::evictLRU_l1(Addr vpn)
 }
 
 // L2 -------- Evict
+// PA
 void
-TLB::add_page_eviction_l1_4kb(Addr address_t){
-	page_eviction_l1_4kb[address_t] = page_eviction_l1_4kb[address_t] + 1;
-	page_eviction_l1_time[address_t] = this->walker->curCycle();
+TLB::add_page_eviction_l1_4kb(Addr address_v, Addr address_p){
+	page_eviction_l1_4kb[address_v][address_p] = page_eviction_l1_4kb[address_v][address_p] + 1;
+	//page_eviction_l1_time[address_v][address_p] = this->walker->curCycle();
 }
 void
-TLB::add_page_eviction_l1_2mb(Addr address_t){
-	page_eviction_l1_2mb[address_t] = page_eviction_l1_2mb[address_t] + 1;
-	page_eviction_l1_time[address_t] = this->walker->curCycle();
+TLB::add_page_eviction_l1_2mb(Addr address_v,Addr address_p){
+	page_eviction_l1_2mb[address_v][address_p] = page_eviction_l1_2mb[address_v][address_p] + 1;
+	//page_eviction_l1_time[address_t] = this->walker->curCycle();
+}
+// VA
+void
+TLB::add_page_eviction_l1_4kb_VA(Addr address_t){
+	page_eviction_l1_4kb_VA[address_t] = page_eviction_l1_4kb_VA[address_t] + 1;
+	page_eviction_l1_time_VA[address_t] = this->walker->curCycle();
+}
+void
+TLB::add_page_eviction_l1_2mb_VA(Addr address_t){
+	page_eviction_l1_2mb_VA[address_t] = page_eviction_l1_2mb_VA[address_t] + 1;
+	page_eviction_l1_time_VA[address_t] = this->walker->curCycle();
 }
 void
 TLB::evictLRU_l2(Addr vpn)
@@ -147,9 +161,11 @@ TLB::evictLRU_l2(Addr vpn)
     }
     // UAC
     if (l2tlb[lru].logBytes == 12){
-        add_page_eviction_l2_4kb(l2tlb[lru].paddr);
+        add_page_eviction_l2_4kb(l2tlb[lru].vaddr, l2tlb[lru].paddr);
+        //add_page_eviction_l2_4kb_VA(l2tlb[lru].vaddr);
     }else{
-        add_page_eviction_l2_2mb(l2tlb[lru].paddr);
+        add_page_eviction_l2_2mb(l2tlb[lru].vaddr, l2tlb[lru].paddr);
+        //add_page_eviction_l2_2mb_VA(l2tlb[lru].vaddr);
     }
     // End UAC
 
@@ -198,7 +214,7 @@ TLB::insert_l1(Addr vaddr, const TlbEntry &entry,uint64_t pc_id)
 
 
 TlbEntry *
-TLB::insert_l2(Addr vaddr, Addr pa, const TlbEntry &entry,uint64_t pc_id)
+TLB::insert_l2(Addr vaddr, Addr pa, Addr va_csv, const TlbEntry &entry,uint64_t pc_id)
 {
   if (l2_tlb_size != 0){
 	if (this->name() == "system.cpu.mmu.dtb"){
@@ -702,11 +718,13 @@ TLB::translate(const RequestPtr &req,
                         DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,
                                 pte->paddr);
 			// It is incorrect
+			/*
                         entry = insert_l2(alignedVaddr,pte->paddr,TlbEntry(
                                 p->pTable->pid(), alignedVaddr, pte->paddr,
                                 pte->flags & EmulationPageTable::Uncacheable,
                                 pte->flags & EmulationPageTable::ReadOnly),
                                 pcid);
+				*/
                     }
                     DPRINTF(TLB, "Miss was serviced.\n");
                   }
@@ -761,20 +779,24 @@ TLB::translate(const RequestPtr &req,
 // UAC
 void
 TLB::print_eviction(){
-	if (this->walker->curCycle() > last_cycle + 5000000){
+	if (this->walker->curCycle() > last_cycle + 10000000){
 		last_cycle = this->walker->curCycle();
 		std::string delimeter = "=";
                 std::string csv_path_string(csv_path);
                 size_t pos = csv_path_string.find(delimeter);
                 std::string csv_path_string_after= csv_path_string.substr(pos+delimeter.length());
 		// L1
+		// PA
                 std::string file_csv_page_eviction_4kb = csv_path_string_after + "/page_eviction_l1_4kb.csv";
 		if(!page_eviction_l1_4kb.empty()){
 			std::ofstream file_eviction_l1_4kb(file_csv_page_eviction_4kb);
 			if (file_eviction_l1_4kb.is_open()){
-        		    for (auto x : page_eviction_l1_4kb){
-                                file_eviction_l1_4kb << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
-			    }
+        			for (const auto& outerPair : page_eviction_l1_4kb){
+        			    for (const auto& innerPair : outerPair.second){
+        				    file_eviction_l1_4kb << "0x" << std::hex << outerPair.first << ",0x" << std::hex << innerPair.first << "," << std::dec << innerPair.second << "\n";
+        
+        			    }
+        			}
                         }
         		file_eviction_l1_4kb.flush();
         		file_eviction_l1_4kb.close();
@@ -783,21 +805,53 @@ TLB::print_eviction(){
 		if(!page_eviction_l1_2mb.empty()){
 			std::ofstream file_eviction_l1_2mb(file_csv_page_eviction_2mb);
 			if (file_eviction_l1_2mb.is_open()){
-        		    for (auto x : page_eviction_l1_2mb){
-                                file_eviction_l1_2mb << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
-			    }
+        			for (const auto& outerPair : page_eviction_l1_2mb){
+        			    for (const auto& innerPair : outerPair.second){
+        				    file_eviction_l1_2mb << "0x" << std::hex << outerPair.first << ",0x" << std::hex << innerPair.first << "," << std::dec << innerPair.second << "\n";
+        
+        			    }
+        			}
                         }
         		file_eviction_l1_2mb.flush();
         		file_eviction_l1_2mb.close();
 		}
+		//  VA
+                std::string file_csv_page_eviction_4kb_VA = csv_path_string_after + "/page_eviction_l1_4kb_VA.csv";
+		if(!page_eviction_l1_4kb_VA.empty()){
+			std::ofstream file_eviction_l1_4kb_VA(file_csv_page_eviction_4kb_VA);
+			if (file_eviction_l1_4kb_VA.is_open()){
+        		    for (auto x : page_eviction_l1_4kb_VA){
+                                file_eviction_l1_4kb_VA << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
+			    }
+                        }
+        		file_eviction_l1_4kb_VA.flush();
+        		file_eviction_l1_4kb_VA.close();
+		}
+                std::string file_csv_page_eviction_2mb_VA = csv_path_string_after + "/page_eviction_l1_2mb_VA.csv";
+		if(!page_eviction_l1_2mb_VA.empty()){
+			std::ofstream file_eviction_l1_2mb_VA(file_csv_page_eviction_2mb_VA);
+			if (file_eviction_l1_2mb_VA.is_open()){
+        		    for (auto x : page_eviction_l1_2mb_VA){
+                                file_eviction_l1_2mb_VA << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
+			    }
+                        }
+        		file_eviction_l1_2mb_VA.flush();
+        		file_eviction_l1_2mb_VA.close();
+		}
+		
+		// L2
+		// PA
                 std::string file_csv_page_eviction_l2_4kb = csv_path_string_after + "/page_eviction_l2_4kb.csv";
 		if(!page_eviction_l2_4kb.empty()){
 			std::ofstream file_eviction_l2_4kb(file_csv_page_eviction_l2_4kb);
 			if (file_eviction_l2_4kb.is_open()){
-        		    for (auto x : page_eviction_l2_4kb){
-                                file_eviction_l2_4kb << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
-			    }
-                        }
+        			for (const auto& outerPair : page_eviction_l2_4kb){
+        			    for (const auto& innerPair : outerPair.second){
+        				    file_eviction_l2_4kb << "0x" << std::hex << outerPair.first << ",0x" << std::hex << innerPair.first << "," << std::dec << innerPair.second << "\n";
+        
+        			    }
+        			}
+                       }
         		file_eviction_l2_4kb.flush();
         		file_eviction_l2_4kb.close();
 		}else{
@@ -807,12 +861,42 @@ TLB::print_eviction(){
 		if(!page_eviction_l2_2mb.empty()){
 			std::ofstream file_eviction_l2_2mb(file_csv_page_eviction_l2_2mb);
 			if (file_eviction_l2_2mb.is_open()){
-        		    for (auto x : page_eviction_l2_2mb){
-                                file_eviction_l2_2mb << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
-			    }
+        			for (const auto& outerPair : page_eviction_l2_2mb){
+        			    for (const auto& innerPair : outerPair.second){
+        				    file_eviction_l2_2mb << "0x" << std::hex << outerPair.first << ",0x" << std::hex << innerPair.first << "," << std::dec << innerPair.second << "\n";
+        
+        			    }
+        			}
                         }
         		file_eviction_l2_2mb.flush();
         		file_eviction_l2_2mb.close();
+		}else{
+			//printf("Why???\n");
+		}
+		// VA
+                std::string file_csv_page_eviction_l2_4kb_VA = csv_path_string_after + "/page_eviction_l2_4kb_VA.csv";
+		if(!page_eviction_l2_4kb_VA.empty()){
+			std::ofstream file_eviction_l2_4kb_VA(file_csv_page_eviction_l2_4kb);
+			if (file_eviction_l2_4kb_VA.is_open()){
+        		    for (auto x : page_eviction_l2_4kb_VA){
+                                file_eviction_l2_4kb_VA << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
+			    }
+                        }
+        		file_eviction_l2_4kb_VA.flush();
+        		file_eviction_l2_4kb_VA.close();
+		}else{
+			//printf("Why???\n");
+		}
+                std::string file_csv_page_eviction_l2_2mb_VA = csv_path_string_after + "/page_eviction_l2_2mb_VA.csv";
+		if(!page_eviction_l2_2mb_VA.empty()){
+			std::ofstream file_eviction_l2_2mb_VA(file_csv_page_eviction_l2_2mb);
+			if (file_eviction_l2_2mb_VA.is_open()){
+        		    for (auto x : page_eviction_l2_2mb_VA){
+                                file_eviction_l2_2mb_VA << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
+			    }
+                        }
+        		file_eviction_l2_2mb_VA.flush();
+        		file_eviction_l2_2mb_VA.close();
 		}else{
 			//printf("Why???\n");
 		}

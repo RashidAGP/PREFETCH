@@ -95,23 +95,46 @@ namespace X86ISA
 
         Walker * walker;
 	// UAC
+	// PA
 	std::unordered_map<Addr, uint64_t> page_access = {};
+	/*
 	std::unordered_map<Addr, uint64_t> page_eviction_l1_4kb = {};
 	std::unordered_map<Addr, uint64_t> page_eviction_l1_2mb = {};
 	std::unordered_map<Addr, uint64_t> page_eviction_l2_4kb = {};
 	std::unordered_map<Addr, uint64_t> page_eviction_l2_2mb = {};
+	*/
 	std::unordered_map<Addr, uint64_t> page_eviction_l1_time = {};
-
+	// VA
+	std::unordered_map<Addr, uint64_t> page_access_VA = {};
+	std::unordered_map<Addr, uint64_t> page_eviction_l1_4kb_VA = {};
+	std::unordered_map<Addr, uint64_t> page_eviction_l1_2mb_VA = {};
+	std::unordered_map<Addr, uint64_t> page_eviction_l2_4kb_VA = {};
+	std::unordered_map<Addr, uint64_t> page_eviction_l2_2mb_VA = {};
+	std::unordered_map<Addr, uint64_t> page_eviction_l1_time_VA = {};
+	// New
+	std::unordered_map<Addr, std::unordered_map<Addr, uint64_t>> page_eviction_l1_4kb ;
+	std::unordered_map<Addr, std::unordered_map<Addr, uint64_t>> page_eviction_l1_2mb ;
+	std::unordered_map<Addr, std::unordered_map<Addr, uint64_t>> page_eviction_l2_4kb ;
+	std::unordered_map<Addr, std::unordered_map<Addr, uint64_t>> page_eviction_l2_2mb ;
+	//
 	Cycles last_cycle = Cycles(0);
 	// UAC End
 
       public:
 	// UAC
+	// PA
 	void add_page_access(Addr address_t){ page_access[address_t]++;}
-	void add_page_eviction_l1_4kb(Addr address_t);
-	void add_page_eviction_l1_2mb(Addr address_t);
-	void add_page_eviction_l2_4kb(Addr address_t){page_eviction_l2_4kb[address_t] = page_eviction_l2_4kb[address_t] + 1 ;}
-	void add_page_eviction_l2_2mb(Addr address_t){page_eviction_l2_2mb[address_t] = page_eviction_l2_2mb[address_t] + 1 ;}
+	void add_page_eviction_l1_4kb(Addr, Addr);
+	void add_page_eviction_l1_2mb(Addr, Addr);
+	void add_page_eviction_l2_4kb(Addr address_v, Addr address_p){page_eviction_l2_4kb[address_v][address_p] = page_eviction_l2_4kb[address_v][address_p] + 1 ;}
+	void add_page_eviction_l2_2mb(Addr address_v, Addr address_p){page_eviction_l2_2mb[address_v][address_p] = page_eviction_l2_2mb[address_v][address_p] + 1 ;}
+	// VA
+	void add_page_access_VA(Addr address_t){ page_access[address_t]++;}
+	void add_page_eviction_l1_4kb_VA(Addr address_t);
+	void add_page_eviction_l1_2mb_VA(Addr address_t);
+	void add_page_eviction_l2_4kb_VA(Addr address_t){page_eviction_l2_4kb_VA[address_t] = page_eviction_l2_4kb_VA[address_t] + 1 ;}
+	void add_page_eviction_l2_2mb_VA(Addr address_t){page_eviction_l2_2mb_VA[address_t] = page_eviction_l2_2mb_VA[address_t] + 1 ;}
+
 	void print_eviction();
 	// End UAC
         Walker *getWalker();
@@ -235,7 +258,7 @@ namespace X86ISA
                                BaseMMU::Mode mode) const override;
 
         TlbEntry *insert_l1(Addr vpn, const TlbEntry &entry, uint64_t pcid);
-        TlbEntry *insert_l2(Addr vpn, Addr pa, const TlbEntry &entry, uint64_t pcid);
+        TlbEntry *insert_l2(Addr vpn, Addr pa, Addr va, const TlbEntry &entry, uint64_t pcid);
 
         // Checkpointing
         void serialize(CheckpointOut &cp) const override;
