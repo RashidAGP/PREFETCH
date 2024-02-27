@@ -779,7 +779,7 @@ TLB::translate(const RequestPtr &req,
 // UAC
 void
 TLB::print_eviction(){
-	if (this->walker->curCycle() > last_cycle + 10000000){
+	if (this->walker->curCycle() > last_cycle + 50000000){
 		last_cycle = this->walker->curCycle();
 		std::string delimeter = "=";
                 std::string csv_path_string(csv_path);

@@ -1,9 +1,9 @@
 #sudo sh -c 'echo 1 >/proc/sys/kernel/perf_event_paranoid'
-../../../build/X86/gem5.fast --outdir=/home/rashid/new_benchmarks/kron/bc --redirect-stdout --redirect-stderr ../../../configs/deprecated/example/fs.py \
+../../../build/X86/gem5.fast --outdir=/home/rashid/new_benchmarks/kron/bc_kvm --redirect-stdout --redirect-stderr ../../../configs/deprecated/example/fs.py \
     --script=/home/rashid/all_scripts/gapbs/kron/bc.rcS \
     --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
     --disk-image=/home/rashid/fs_img/gapbs_kron.img \
-    --cpu-type=AtomicSimpleCPU \
+    --cpu-type=X86KvmCPU \
     --mem-size=16GB \
     --ruby \
     --network=garnet \
