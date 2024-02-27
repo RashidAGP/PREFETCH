@@ -421,7 +421,6 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
               }else{
                    trigger(Event:L2_Replacement, victim, L2cache_entry, TBEs[victim]);
               }
-		// End MC
             } else {
              // MC
               if (L2cache_entry.Sharers.count() ==0 ){
@@ -979,11 +978,16 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         kd_wakeUpDependents;
   }
   //
-  transition(SS,L1_DOWNGRADE, SS_OO) {
-    //ll_clearSharers;
+  // MC
+  transition(SS,L1_DOWNGRADE){
     kk_removeRequestSharer;
-    jj_popL1RequestQueue;
+    jj_popL1RequestQueue
   }
+  //transition(SS,L1_DOWNGRADE, SS_OO) {
+    //ll_clearSharers;
+  //  kk_removeRequestSharer;
+  //  jj_popL1RequestQueue;
+  //}
   transition(SS,Mem_Data_BP){
 	d_bp_sendData_2;
         o_popIncomingResponseQueue;
@@ -1039,7 +1043,6 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   transition({SS_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, {L1_GETS, L1_GET_INSTR, L1_GETX, L1_UPGRADE}) {
     zz_stallAndWaitL1RequestQueue;
   }
-
 
   transition(NP, L1_GETS,  ISS) {
     qq_allocateL2CacheBlock;
