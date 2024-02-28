@@ -113,7 +113,8 @@ TLB::evictLRU_l1(Addr vpn)
         add_page_eviction_l1_2mb(tlb[lru].vaddr, tlb[lru].paddr);
         //add_page_eviction_l1_2mb_VA(tlb[lru].vaddr);
     }
-    print_eviction();
+    //
+    //print_eviction();
     // End UAC
     assert(tlb[lru].trieHandle);
     trie.remove(tlb[lru].trieHandle);
@@ -547,7 +548,11 @@ TLB::translate(const RequestPtr &req,
 
     Addr vaddr = req->getVaddr();
     DPRINTF(TLB, "Translating vaddr %#x.\n", vaddr);
-
+    // UAC
+    Addr CL_address = vaddr >> 6;
+    CL_address = CL_address << 6;
+    add_CL_access(CL_address);
+    // End UAC
     HandyM5Reg m5Reg = tc->readMiscRegNoEffect(misc_reg::M5Reg);
 
     const Addr logAddrSize = (flags >> AddrSizeFlagShift) & AddrSizeFlagMask;
@@ -777,6 +782,7 @@ TLB::translate(const RequestPtr &req,
 }
 
 // UAC
+/*
 void
 TLB::print_eviction(){
 	if (this->walker->curCycle() > last_cycle + 50000000){
@@ -787,6 +793,17 @@ TLB::print_eviction(){
                 std::string csv_path_string_after= csv_path_string.substr(pos+delimeter.length());
 		// L1
 		// PA
+                std::string file_csv_cl_access = csv_path_string_after + "/CL_access.csv";
+		if(!CL_access.empty()){
+			std::ofstream file_cl_access(file_csv_cl_access);
+			if (file_cl_access.is_open()){
+        			for (const auto& x : CL_access){
+        				    file_cl_access << "0x" << std::hex << x.first << "," << std::dec << x.second << "\n";
+        			}
+                        }
+        		file_cl_access.flush();
+        		file_cl_access.close();
+		}
                 std::string file_csv_page_eviction_4kb = csv_path_string_after + "/page_eviction_l1_4kb.csv";
 		if(!page_eviction_l1_4kb.empty()){
 			std::ofstream file_eviction_l1_4kb(file_csv_page_eviction_4kb);
@@ -925,6 +942,7 @@ TLB::print_eviction(){
 	}
 
 }
+*/
 // End UAC
 
 

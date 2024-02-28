@@ -97,6 +97,7 @@ namespace X86ISA
 	// UAC
 	// PA
 	std::unordered_map<Addr, uint64_t> page_access = {};
+	std::unordered_map<Addr, uint64_t> CL_access = {};
 	/*
 	std::unordered_map<Addr, uint64_t> page_eviction_l1_4kb = {};
 	std::unordered_map<Addr, uint64_t> page_eviction_l1_2mb = {};
@@ -123,6 +124,7 @@ namespace X86ISA
       public:
 	// UAC
 	// PA
+	void add_CL_access(Addr CL) {CL_access[CL]++;}
 	void add_page_access(Addr address_t){ page_access[address_t]++;}
 	void add_page_eviction_l1_4kb(Addr, Addr);
 	void add_page_eviction_l1_2mb(Addr, Addr);
@@ -135,7 +137,7 @@ namespace X86ISA
 	void add_page_eviction_l2_4kb_VA(Addr address_t){page_eviction_l2_4kb_VA[address_t] = page_eviction_l2_4kb_VA[address_t] + 1 ;}
 	void add_page_eviction_l2_2mb_VA(Addr address_t){page_eviction_l2_2mb_VA[address_t] = page_eviction_l2_2mb_VA[address_t] + 1 ;}
 
-	void print_eviction();
+	//void print_eviction();
 	// End UAC
         Walker *getWalker();
 
