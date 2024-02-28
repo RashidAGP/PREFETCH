@@ -105,17 +105,6 @@ TLB::evictLRU_l1(Addr vpn)
         if (tlb[i].lruSeq < tlb[lru].lruSeq)
             lru = i;
     }
-    // UAC
-    if (tlb[lru].logBytes == 12){
-        add_page_eviction_l1_4kb(tlb[lru].vaddr, tlb[lru].paddr);
-        //add_page_eviction_l1_4kb_VA(tlb[lru].vaddr);
-    }else{
-        add_page_eviction_l1_2mb(tlb[lru].vaddr, tlb[lru].paddr);
-        //add_page_eviction_l1_2mb_VA(tlb[lru].vaddr);
-    }
-    //
-    //print_eviction();
-    // End UAC
     assert(tlb[lru].trieHandle);
     trie.remove(tlb[lru].trieHandle);
     tlb[lru].trieHandle = NULL;
@@ -160,15 +149,6 @@ TLB::evictLRU_l2(Addr vpn)
         if (l2tlb[i].lruSeq < l2tlb[lru].lruSeq)
             lru = i;
     }
-    // UAC
-    if (l2tlb[lru].logBytes == 12){
-        add_page_eviction_l2_4kb(l2tlb[lru].vaddr, l2tlb[lru].paddr);
-        //add_page_eviction_l2_4kb_VA(l2tlb[lru].vaddr);
-    }else{
-        add_page_eviction_l2_2mb(l2tlb[lru].vaddr, l2tlb[lru].paddr);
-        //add_page_eviction_l2_2mb_VA(l2tlb[lru].vaddr);
-    }
-    // End UAC
 
     assert(l2tlb[lru].trieHandle);
     triel2.remove(l2tlb[lru].trieHandle);
@@ -215,183 +195,149 @@ TLB::insert_l1(Addr vaddr, const TlbEntry &entry,uint64_t pc_id)
 
 
 TlbEntry *
-TLB::insert_l2(Addr vaddr, Addr pa, Addr va_csv, const TlbEntry &entry,uint64_t pc_id)
+TLB::insert_l2(Addr vaddr, const TlbEntry &entry,uint64_t pc_id)
 {
-  if (l2_tlb_size != 0){
-	if (this->name() == "system.cpu.mmu.dtb"){
-		   // Rashid L2 TLB Miss
-		   DPRINTF(TLB,"Insert in L2 TLB. VA:%#x.\n",vaddr);
-                   std::string cache_level_one_d = "system.ruby.l1_cntrl0.L1Dcache";
-                   std::string cache_level_two = "system.ruby.l2_cntrl0.L2cache";
-		   std::vector<SimObject *> simObjectList = SimObject::getSimObjectList();
-		   gem5::ruby::CacheMemory* cache_level_prediction;
-		   bool lookup_result_l1 = true;
-		   bool lookup_result_l2 = true;
-		   Addr paddr_to_check = entry.paddr | (vaddr & mask(entry.logBytes));
-		   Addr line_paddr = 0;
-		   line_paddr = pa >> 6;
-		   line_paddr = line_paddr << 6;
-		   DPRINTF(TLB,"L2 TLB Miss:%#x.\n",line_paddr);
-		   bool inclusive = false;
-		   for (SimObject* simObject : simObjectList) {
-			if (simObject->name() == cache_level_one_d){
-				cache_level_prediction = dynamic_cast<gem5::ruby::CacheMemory *>(simObject);
-				DPRINTF(TLB,"Name is :%s.\n",cache_level_one_d);
-                		stats.L2TLB_l1_access++;
-				if (cache_level_prediction->lookup_rashid(line_paddr) == true){
-					stats.L2TLB_l1_hit++;
-					inclusive = true;
-				}else{
-					stats.L2TLB_l1_miss++;
-				}
-			}
-		   }
-		   for (SimObject* simObject : simObjectList) {
-			if (simObject->name() == cache_level_two){
-				cache_level_prediction = dynamic_cast<gem5::ruby::CacheMemory *>(simObject);
-				DPRINTF(TLB,"Name is :%s.\n",cache_level_two);
-                 		stats.L2TLB_l2_access++;
-				if (cache_level_prediction->lookup_rashid(line_paddr) == true){
-					stats.L2TLB_l2_hit++;
-				}else{
-					stats.L2TLB_l2_miss++;
-					if (inclusive == true){
-						//assert(inclusive && "Whyyyyyy \n");
-					}
-				
-				}
-			}
-		}
-	}
-    vaddr = concAddrPcid(vaddr, pc_id);
+if (l2_tlb_size != 0){
+if (this->name() == "system.cpu.mmu.dtb"){
+	   // Rashid L2 TLB Miss
+	   DPRINTF(TLB,"Insert in L2 TLB. VA:%#x.\n",vaddr);
+	   std::string cache_level_one_d = "system.ruby.l1_cntrl0.L1Dcache";
+	   std::string cache_level_two = "system.ruby.l2_cntrl0.L2cache";
+	   std::vector<SimObject *> simObjectList = SimObject::getSimObjectList();
+	   gem5::ruby::CacheMemory* cache_level_prediction;
+	   bool lookup_result_l1 = true;
+	   bool lookup_result_l2 = true;
+	   Addr paddr_to_check = entry.paddr | (vaddr & mask(entry.logBytes));
+}
+vaddr = concAddrPcid(vaddr, pc_id);
 
-    Addr vpn = 0;
-    if (entry.logBytes == 12){
-        vpn = vaddr >> 12;
-    }else if (entry.logBytes == 21){
-        vpn = vaddr >> 21;
-    }
-    if (entry.logBytes == 12){
-	vaddr = vpn << 12;
-    }else {
+Addr vpn = 0;
+if (entry.logBytes == 12){
+vpn = vaddr >> 12;
+}else if (entry.logBytes == 21){
+vpn = vaddr >> 21;
+}
+if (entry.logBytes == 12){
+vaddr = vpn << 12;
+}else {
 vaddr = vpn << 21;
 }
-    TlbEntry *newEntry = triel2.lookup(vaddr);
-    if (newEntry) {
-        assert(newEntry->vaddr == vaddr);
-        return newEntry;
-    }
+TlbEntry *newEntry = triel2.lookup(vaddr);
+if (newEntry) {
+assert(newEntry->vaddr == vaddr);
+return newEntry;
+}
 
-    if (freeList_l2.empty())
-        evictLRU_l2(vpn);
+if (freeList_l2.empty())
+evictLRU_l2(vpn);
 
-    newEntry = freeList_l2.front();
-    freeList_l2.pop_front();
+newEntry = freeList_l2.front();
+freeList_l2.pop_front();
 
-    *newEntry = entry;
-    newEntry->lruSeq = nextSeq_l2();
-    newEntry->vaddr = vaddr;
-    if (FullSystem) {
-        newEntry->trieHandle =
-        triel2.insert(vaddr, TlbEntryTrie::MaxBits-entry.logBytes, newEntry);
-    }
-    else {
-        newEntry->trieHandle =
-        triel2.insert(vaddr, TlbEntryTrie::MaxBits, newEntry);
-    }
-    return newEntry;
-  } else return NULL;
+*newEntry = entry;
+newEntry->lruSeq = nextSeq_l2();
+newEntry->vaddr = vaddr;
+if (FullSystem) {
+newEntry->trieHandle =
+triel2.insert(vaddr, TlbEntryTrie::MaxBits-entry.logBytes, newEntry);
+}
+else {
+newEntry->trieHandle =
+triel2.insert(vaddr, TlbEntryTrie::MaxBits, newEntry);
+}
+return newEntry;
+} else return NULL;
 
 }
 // End RA.
 TlbEntry *
 TLB::lookup_l1(Addr va, bool update_lru)
 {
-    TlbEntry *entry = trie.lookup(va);
-    if (entry && update_lru)
-        entry->lruSeq = nextSeq();
-    return entry;
+TlbEntry *entry = trie.lookup(va);
+if (entry && update_lru)
+entry->lruSeq = nextSeq();
+return entry;
 }
 
 
 TlbEntry *
 TLB::lookup_l2(Addr va, bool update_lru)
 {
-    TlbEntry *entry = triel2.lookup(va);
-    if (entry && update_lru)
-        entry->lruSeq = nextSeq_l2();
-    return entry;
+TlbEntry *entry = triel2.lookup(va);
+if (entry && update_lru)
+entry->lruSeq = nextSeq_l2();
+return entry;
 }
 
 void
 TLB::flushAll()
 {
-    DPRINTF(TLB, "Invalidating all entries.\n");
-    for (unsigned i = 0; i < size; i++) {
-        if (tlb[i].trieHandle) {
-            trie.remove(tlb[i].trieHandle);
-            tlb[i].trieHandle = NULL;
-            freeList.push_back(&tlb[i]);
-      }
-    }
+DPRINTF(TLB, "Invalidating all entries.\n");
+for (unsigned i = 0; i < size; i++) {
+if (tlb[i].trieHandle) {
+    trie.remove(tlb[i].trieHandle);
+    tlb[i].trieHandle = NULL;
+    freeList.push_back(&tlb[i]);
+}
+}
 
-    for (unsigned i = 0; i < l2_tlb_size; i++) {
-        if (l2tlb[i].trieHandle) {
-            triel2.remove(l2tlb[i].trieHandle);
-            l2tlb[i].trieHandle = NULL;
-            freeList_l2.push_back(&l2tlb[i]);
-      }
-    }
+for (unsigned i = 0; i < l2_tlb_size; i++) {
+if (l2tlb[i].trieHandle) {
+    triel2.remove(l2tlb[i].trieHandle);
+    l2tlb[i].trieHandle = NULL;
+    freeList_l2.push_back(&l2tlb[i]);
+}
+}
 }
 
 void
 TLB::setConfigAddress(uint32_t addr)
 {
-    configAddress = addr;
+configAddress = addr;
 }
 
 void
 TLB::flushNonGlobal()
 {
-    DPRINTF(TLB, "Invalidating all non global entries.\n");
-    for (unsigned set = 0; set < size; set++) {
-        if (tlb[set].trieHandle && !tlb[set].global) {
-            trie.remove(tlb[set].trieHandle);
-            tlb[set].trieHandle = NULL;
-            freeList.push_back(&tlb[set]);
-        }
-    }
+DPRINTF(TLB, "Invalidating all non global entries.\n");
+for (unsigned set = 0; set < size; set++) {
+if (tlb[set].trieHandle && !tlb[set].global) {
+    trie.remove(tlb[set].trieHandle);
+    tlb[set].trieHandle = NULL;
+    freeList.push_back(&tlb[set]);
+}
+}
 
-    for (unsigned set = 0; set < l2_tlb_size; set++) {
-        if (l2tlb[set].trieHandle && !l2tlb[set].global) {
-            triel2.remove(l2tlb[set].trieHandle);
-            l2tlb[set].trieHandle = NULL;
-            freeList_l2.push_back(&l2tlb[set]);
-        }
-    }
+for (unsigned set = 0; set < l2_tlb_size; set++) {
+if (l2tlb[set].trieHandle && !l2tlb[set].global) {
+    triel2.remove(l2tlb[set].trieHandle);
+    l2tlb[set].trieHandle = NULL;
+    freeList_l2.push_back(&l2tlb[set]);
+}
+}
 }
 
 void
 TLB::demapPage(Addr va, uint64_t asn)
 {
-    TlbEntry *entry = NULL;
-    entry = trie.lookup(va);
-    if (entry != NULL) {
-        trie.remove(entry->trieHandle);
-        entry->trieHandle = NULL;
-        freeList.push_back(entry);
+TlbEntry *entry = NULL;
+entry = trie.lookup(va);
+if (entry != NULL) {
+trie.remove(entry->trieHandle);
+entry->trieHandle = NULL;
+freeList.push_back(entry);
 
-        DPRINTF(TLB, "DEMAP L1:%#x\n",va);
-    }
-    TlbEntry *entry2 = NULL;
-    entry2 = triel2.lookup(va);
-    if (entry2 != NULL) {
-        triel2.remove(entry2->trieHandle);
-        entry2->trieHandle = NULL;
-        freeList_l2.push_back(entry2);
+DPRINTF(TLB, "DEMAP L1:%#x\n",va);
+}
+TlbEntry *entry2 = NULL;
+entry2 = triel2.lookup(va);
+if (entry2 != NULL) {
+triel2.remove(entry2->trieHandle);
+entry2->trieHandle = NULL;
+freeList_l2.push_back(entry2);
 
-        DPRINTF(TLB, "DEMAP L2:%#x\n",va);
-    }
+DPRINTF(TLB, "DEMAP L2:%#x\n",va);
+}
 
 }
 
@@ -400,19 +346,19 @@ namespace
 
 Cycles
 localMiscRegAccess(bool read, RegIndex regNum,
-                   ThreadContext *tc, PacketPtr pkt)
+	   ThreadContext *tc, PacketPtr pkt)
 {
-    if (read) {
-        RegVal data = htole(tc->readMiscReg(regNum));
-        assert(pkt->getSize() <= sizeof(RegVal));
-        pkt->setData((uint8_t *)&data);
-    } else {
-        RegVal data = htole(tc->readMiscRegNoEffect(regNum));
-        assert(pkt->getSize() <= sizeof(RegVal));
-        pkt->writeData((uint8_t *)&data);
-        tc->setMiscReg(regNum, letoh(data));
-    }
-    return Cycles(1);
+if (read) {
+RegVal data = htole(tc->readMiscReg(regNum));
+assert(pkt->getSize() <= sizeof(RegVal));
+pkt->setData((uint8_t *)&data);
+} else {
+RegVal data = htole(tc->readMiscRegNoEffect(regNum));
+assert(pkt->getSize() <= sizeof(RegVal));
+pkt->writeData((uint8_t *)&data);
+tc->setMiscReg(regNum, letoh(data));
+}
+return Cycles(1);
 }
 
 } // anonymous namespace
@@ -420,372 +366,331 @@ localMiscRegAccess(bool read, RegIndex regNum,
 Fault
 TLB::translateInt(bool read, RequestPtr req, ThreadContext *tc)
 {
-    DPRINTF(TLB, "Addresses references internal memory.\n");
-    Addr vaddr = req->getVaddr();
-    Addr prefix = (vaddr >> 3) & IntAddrPrefixMask;
-    if (prefix == IntAddrPrefixCPUID) {
-        panic("CPUID memory space not yet implemented!\n");
-    } else if (prefix == IntAddrPrefixMSR) {
-        vaddr = (vaddr >> 3) & ~IntAddrPrefixMask;
+DPRINTF(TLB, "Addresses references internal memory.\n");
+Addr vaddr = req->getVaddr();
+Addr prefix = (vaddr >> 3) & IntAddrPrefixMask;
+if (prefix == IntAddrPrefixCPUID) {
+panic("CPUID memory space not yet implemented!\n");
+} else if (prefix == IntAddrPrefixMSR) {
+vaddr = (vaddr >> 3) & ~IntAddrPrefixMask;
 
-        RegIndex regNum;
-        if (!msrAddrToIndex(regNum, vaddr))
-            return std::make_shared<GeneralProtection>(0);
+RegIndex regNum;
+if (!msrAddrToIndex(regNum, vaddr))
+    return std::make_shared<GeneralProtection>(0);
 
-        req->setPaddr(req->getVaddr());
-        req->setLocalAccessor(
-            [read,regNum](ThreadContext *tc, PacketPtr pkt)
-            {
-                return localMiscRegAccess(read, regNum, tc, pkt);
-            }
-        );
-
-        return NoFault;
-    } else if (prefix == IntAddrPrefixIO) {
-        // TODO If CPL > IOPL or in virtual mode, check the I/O permission
-        // bitmap in the TSS.
-
-        Addr IOPort = vaddr & ~IntAddrPrefixMask;
-        // Make sure the address fits in the expected 16 bit IO address
-        // space.
-        assert(!(IOPort & ~0xFFFF));
-        if (IOPort == 0xCF8 && req->getSize() == 4) {
-            req->setPaddr(req->getVaddr());
-            req->setLocalAccessor(
-                [read](ThreadContext *tc, PacketPtr pkt)
-                {
-                    return localMiscRegAccess(
-                            read, misc_reg::PciConfigAddress, tc, pkt);
-                }
-            );
-        } else if ((IOPort & ~mask(2)) == 0xCFC) {
-            req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
-            Addr configAddress =
-                tc->readMiscRegNoEffect(misc_reg::PciConfigAddress);
-            if (bits(configAddress, 31, 31)) {
-                req->setPaddr(PhysAddrPrefixPciConfig |
-                        mbits(configAddress, 30, 2) |
-                        (IOPort & mask(2)));
-            } else {
-                req->setPaddr(PhysAddrPrefixIO | IOPort);
-            }
-        } else {
-            req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
-            req->setPaddr(PhysAddrPrefixIO | IOPort);
-        }
-        return NoFault;
-    } else {
-        panic("Access to unrecognized internal address space %#x.\n",
-                prefix);
+req->setPaddr(req->getVaddr());
+req->setLocalAccessor(
+    [read,regNum](ThreadContext *tc, PacketPtr pkt)
+    {
+	return localMiscRegAccess(read, regNum, tc, pkt);
     }
+);
+
+return NoFault;
+} else if (prefix == IntAddrPrefixIO) {
+// TODO If CPL > IOPL or in virtual mode, check the I/O permission
+// bitmap in the TSS.
+
+Addr IOPort = vaddr & ~IntAddrPrefixMask;
+// Make sure the address fits in the expected 16 bit IO address
+// space.
+assert(!(IOPort & ~0xFFFF));
+if (IOPort == 0xCF8 && req->getSize() == 4) {
+    req->setPaddr(req->getVaddr());
+    req->setLocalAccessor(
+	[read](ThreadContext *tc, PacketPtr pkt)
+	{
+	    return localMiscRegAccess(
+		    read, misc_reg::PciConfigAddress, tc, pkt);
+	}
+    );
+} else if ((IOPort & ~mask(2)) == 0xCFC) {
+    req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
+    Addr configAddress =
+	tc->readMiscRegNoEffect(misc_reg::PciConfigAddress);
+    if (bits(configAddress, 31, 31)) {
+	req->setPaddr(PhysAddrPrefixPciConfig |
+		mbits(configAddress, 30, 2) |
+		(IOPort & mask(2)));
+    } else {
+	req->setPaddr(PhysAddrPrefixIO | IOPort);
+    }
+} else {
+    req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
+    req->setPaddr(PhysAddrPrefixIO | IOPort);
+}
+return NoFault;
+} else {
+panic("Access to unrecognized internal address space %#x.\n",
+	prefix);
+}
 }
 
 Fault
 TLB::finalizePhysical(const RequestPtr &req,
-                      ThreadContext *tc, BaseMMU::Mode mode) const
+	      ThreadContext *tc, BaseMMU::Mode mode) const
 {
-    Addr paddr = req->getPaddr();
+Addr paddr = req->getPaddr();
 
-    if (m5opRange.contains(paddr)) {
-        req->setFlags(Request::STRICT_ORDER);
-        uint8_t func;
-        pseudo_inst::decodeAddrOffset(paddr - m5opRange.start(), func);
-        req->setLocalAccessor(
-            [func, mode](ThreadContext *tc, PacketPtr pkt) -> Cycles
-            {
-                uint64_t ret;
-                pseudo_inst::pseudoInst<X86PseudoInstABI, true>(tc, func, ret);
-                if (mode == BaseMMU::Read)
-                    pkt->setLE(ret);
-                return Cycles(1);
-            }
-        );
-    } else if (FullSystem) {
-        // Check for an access to the local APIC
-        LocalApicBase localApicBase =
-            tc->readMiscRegNoEffect(misc_reg::ApicBase);
-        AddrRange apicRange(localApicBase.base * PageBytes,
-                            (localApicBase.base + 1) * PageBytes);
-
-        if (apicRange.contains(paddr)) {
-            // The Intel developer's manuals say the below restrictions apply,
-            // but the linux kernel, because of a compiler optimization, breaks
-            // them.
-            /*
-            // Check alignment
-            if (paddr & ((32/8) - 1))
-                return new GeneralProtection(0);
-            // Check access size
-            if (req->getSize() != (32/8))
-                return new GeneralProtection(0);
-            */
-            // Force the access to be uncacheable.
-            req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
-            req->setPaddr(x86LocalAPICAddress(tc->contextId(),
-                                              paddr - apicRange.start()));
-        }
+if (m5opRange.contains(paddr)) {
+req->setFlags(Request::STRICT_ORDER);
+uint8_t func;
+pseudo_inst::decodeAddrOffset(paddr - m5opRange.start(), func);
+req->setLocalAccessor(
+    [func, mode](ThreadContext *tc, PacketPtr pkt) -> Cycles
+    {
+	uint64_t ret;
+	pseudo_inst::pseudoInst<X86PseudoInstABI, true>(tc, func, ret);
+	if (mode == BaseMMU::Read)
+	    pkt->setLE(ret);
+	return Cycles(1);
     }
+);
+} else if (FullSystem) {
+// Check for an access to the local APIC
+LocalApicBase localApicBase =
+    tc->readMiscRegNoEffect(misc_reg::ApicBase);
+AddrRange apicRange(localApicBase.base * PageBytes,
+		    (localApicBase.base + 1) * PageBytes);
 
-    return NoFault;
+if (apicRange.contains(paddr)) {
+    // The Intel developer's manuals say the below restrictions apply,
+    // but the linux kernel, because of a compiler optimization, breaks
+    // them.
+    /*
+    // Check alignment
+    if (paddr & ((32/8) - 1))
+	return new GeneralProtection(0);
+    // Check access size
+    if (req->getSize() != (32/8))
+	return new GeneralProtection(0);
+    */
+    // Force the access to be uncacheable.
+    req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
+    req->setPaddr(x86LocalAPICAddress(tc->contextId(),
+				      paddr - apicRange.start()));
+}
+}
+
+return NoFault;
 }
 
 Fault
 TLB::translate(const RequestPtr &req,
-        ThreadContext *tc, BaseMMU::Translation *translation,
-        BaseMMU::Mode mode, bool &delayedResponse, bool timing)
+ThreadContext *tc, BaseMMU::Translation *translation,
+BaseMMU::Mode mode, bool &delayedResponse, bool timing)
 {
-    Request::Flags flags = req->getFlags();
-    int seg = flags & SegmentFlagMask;
-    bool storeCheck = flags & Request::READ_MODIFY_WRITE;
+Request::Flags flags = req->getFlags();
+int seg = flags & SegmentFlagMask;
+bool storeCheck = flags & Request::READ_MODIFY_WRITE;
 
-    delayedResponse = false;
+delayedResponse = false;
 
-    // If this is true, we're dealing with a request to a non-memory address
-    // space.
-    if (seg == segment_idx::Ms) {
-        return translateInt(mode == BaseMMU::Read, req, tc);
+// If this is true, we're dealing with a request to a non-memory address
+// space.
+if (seg == segment_idx::Ms) {
+return translateInt(mode == BaseMMU::Read, req, tc);
+}
+
+Addr vaddr = req->getVaddr();
+DPRINTF(TLB, "Translating vaddr %#x.\n", vaddr);
+// UAC
+Addr CL_address = vaddr >> 6;
+CL_address = CL_address << 6;
+add_CL_access(CL_address);
+// End UAC
+HandyM5Reg m5Reg = tc->readMiscRegNoEffect(misc_reg::M5Reg);
+
+const Addr logAddrSize = (flags >> AddrSizeFlagShift) & AddrSizeFlagMask;
+const int addrSize = 8 << logAddrSize;
+const Addr addrMask = mask(addrSize);
+
+// If protected mode has been enabled...
+if (m5Reg.prot) {
+DPRINTF(TLB, "In protected mode.\n");
+// If we're not in 64-bit mode, do protection/limit checks
+if (m5Reg.mode != LongMode) {
+    DPRINTF(TLB, "Not in long mode. Checking segment protection.\n");
+
+    // CPUs won't know to use CS when building fetch requests, so we
+    // need to override the value of "seg" here if this is a fetch.
+    if (mode == BaseMMU::Execute)
+	seg = segment_idx::Cs;
+
+    SegAttr attr = tc->readMiscRegNoEffect(misc_reg::segAttr(seg));
+    // Check for an unusable segment.
+    if (attr.unusable) {
+	DPRINTF(TLB, "Unusable segment.\n");
+	return std::make_shared<GeneralProtection>(0);
     }
+    bool expandDown = false;
+    if (seg >= segment_idx::Es && seg <= segment_idx::Hs) {
+	if (!attr.writable && (mode == BaseMMU::Write || storeCheck)) {
+	    DPRINTF(TLB, "Tried to write to unwritable segment.\n");
+	    return std::make_shared<GeneralProtection>(0);
+	}
+	if (!attr.readable && mode == BaseMMU::Read) {
+	    DPRINTF(TLB, "Tried to read from unreadble segment.\n");
+	    return std::make_shared<GeneralProtection>(0);
+	}
+	expandDown = attr.expandDown;
 
-    Addr vaddr = req->getVaddr();
-    DPRINTF(TLB, "Translating vaddr %#x.\n", vaddr);
-    // UAC
-    Addr CL_address = vaddr >> 6;
-    CL_address = CL_address << 6;
-    add_CL_access(CL_address);
-    // End UAC
-    HandyM5Reg m5Reg = tc->readMiscRegNoEffect(misc_reg::M5Reg);
-
-    const Addr logAddrSize = (flags >> AddrSizeFlagShift) & AddrSizeFlagMask;
-    const int addrSize = 8 << logAddrSize;
-    const Addr addrMask = mask(addrSize);
-
-    // If protected mode has been enabled...
-    if (m5Reg.prot) {
-        DPRINTF(TLB, "In protected mode.\n");
-        // If we're not in 64-bit mode, do protection/limit checks
-        if (m5Reg.mode != LongMode) {
-            DPRINTF(TLB, "Not in long mode. Checking segment protection.\n");
-
-            // CPUs won't know to use CS when building fetch requests, so we
-            // need to override the value of "seg" here if this is a fetch.
-            if (mode == BaseMMU::Execute)
-                seg = segment_idx::Cs;
-
-            SegAttr attr = tc->readMiscRegNoEffect(misc_reg::segAttr(seg));
-            // Check for an unusable segment.
-            if (attr.unusable) {
-                DPRINTF(TLB, "Unusable segment.\n");
-                return std::make_shared<GeneralProtection>(0);
-            }
-            bool expandDown = false;
-            if (seg >= segment_idx::Es && seg <= segment_idx::Hs) {
-                if (!attr.writable && (mode == BaseMMU::Write || storeCheck)) {
-                    DPRINTF(TLB, "Tried to write to unwritable segment.\n");
-                    return std::make_shared<GeneralProtection>(0);
-                }
-                if (!attr.readable && mode == BaseMMU::Read) {
-                    DPRINTF(TLB, "Tried to read from unreadble segment.\n");
-                    return std::make_shared<GeneralProtection>(0);
-                }
-                expandDown = attr.expandDown;
-
-            }
-            Addr base = tc->readMiscRegNoEffect(misc_reg::segBase(seg));
-            Addr limit = tc->readMiscRegNoEffect(misc_reg::segLimit(seg));
-            Addr offset;
-            if (mode == BaseMMU::Execute)
-                offset = vaddr - base;
-            else
-                offset = (vaddr - base) & addrMask;
-            Addr endOffset = offset + req->getSize() - 1;
-            if (expandDown) {
-                DPRINTF(TLB, "Checking an expand down segment.\n");
-                warn_once("Expand down segments are untested.\n");
-                if (offset <= limit || endOffset <= limit)
-                    return std::make_shared<GeneralProtection>(0);
-            } else {
-                if (offset > limit || endOffset > limit) {
-                    DPRINTF(TLB, "Segment limit check failed, "
-                            "offset = %#x limit = %#x.\n", offset, limit);
-                    return std::make_shared<GeneralProtection>(0);
-                }
-            }
-        }
-        if (m5Reg.submode != SixtyFourBitMode && addrSize != 64)
-            vaddr &= mask(32);
-        // If paging is enabled, do the translation.
-        if (m5Reg.paging) {
-            DPRINTF(TLB, "Paging enabled.\n");
-            // The vaddr already has the segment base applied.
-
-            //Appending the pcid (last 12 bits of CR3) to the
-            //page aligned vaddr if pcide is set
-            CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
-            Addr pageAlignedVaddr = vaddr & (~mask(X86ISA::PageShift));
-            CR3 cr3 = tc->readMiscRegNoEffect(misc_reg::Cr3);
-            uint64_t pcid;
-
-            if (cr4.pcide)
-                pcid = cr3.pcid;
-            else
-                pcid = 0x000;
-
-            pageAlignedVaddr = concAddrPcid(pageAlignedVaddr, pcid);
-            TlbEntry *entry = lookup_l1(pageAlignedVaddr);
-
-            if (mode == BaseMMU::Read) {
-                stats.rdAccesses++;
-            } else {
-                stats.wrAccesses++;
-            }
-            if (!entry) {
-                DPRINTF(TLB, "Handling a TLB miss for "
-                        "address %#x at pc %#x.\n",
-                        vaddr, tc->pcState().instAddr());
-                if (mode == BaseMMU::Read) {
-                    stats.rdMisses++;
-                } else {
-                    stats.wrMisses++;
-                }
-                entry =  lookup_l2(pageAlignedVaddr);
-                stats.l2_tlb_Accesses++;
-                if (entry){
-                   DPRINTF(TLB,
-                        "TLB Hit in L2 %#x at pc %#x.\n",
-                        vaddr, tc->pcState().instAddr());
-                   // Put L2 latency
-                   Fault fault_l = NoFault;
-                   auto event = new DelayedL2HitEvent(this,tc,translation,req,mode,fault_l,pcid,vaddr,*entry);
-		   // Rashid L2 TLB Hit
-                   std::string cache_level_one_d = "system.ruby.l1_cntrl0.L1Dcache";
-                   std::string cache_level_two = "system.ruby.l2_cntrl0.L2cache";
-		   std::vector<SimObject *> simObjectList = SimObject::getSimObjectList();
-		   gem5::ruby::CacheMemory* cache_level_prediction;
-		   bool lookup_result_l1 = true;
-		   bool lookup_result_l2 = true;
-		   Addr paddr_to_check = entry->paddr | (vaddr & mask(entry->logBytes));
-		   Addr line_paddr = 0;
-		   line_paddr = paddr_to_check >> 6;
-		   line_paddr = line_paddr << 6;
-		   stats.L1TLB_l1_access++;
-		   stats.L1TLB_l2_access++;
-		   DPRINTF(TLB,"L2 TLB Hit. PA:%#x, CL:%#x.\n",paddr_to_check,line_paddr);
-		   bool inclusive = false;
-
-                   if (this->name() == "system.cpu.mmu.dtb"){
-		     for (SimObject* simObject : simObjectList) {
-			if (simObject->name() == cache_level_one_d){
-				cache_level_prediction = dynamic_cast<gem5::ruby::CacheMemory *>(simObject);
-				if (cache_level_prediction->lookup_rashid(line_paddr) == true){
-					stats.L1TLB_l1_hit++;
-					inclusive = true;
-				}else{
-					stats.L1TLB_l1_miss++;
-				}
-			}else if (simObject->name() == cache_level_two){
-				cache_level_prediction = dynamic_cast<gem5::ruby::CacheMemory *>(simObject);
-				if (cache_level_prediction->lookup_rashid(line_paddr) == true){
-					stats.L1TLB_l2_hit++;
-				}else{
-					stats.L1TLB_l2_miss++;
-					assert(inclusive && "How it possible???\n");
-				}
-			}
-		      }
-		   }
-		   //End Rashid L2 TLB Hit
-                   const Cycles L2Hit_late = Cycles(10);
-                   this->walker->schedule(event,this->walker->clockEdge(L2Hit_late));
-		   delayedResponse = true;
-		   return fault_l;
-                   // End L2 latency
-                   //insert_l1(vaddr,*entry,pcid);
-                }else{
-                   if (FullSystem) {
-                    stats.l2_tlb_Misses++;
-                    Fault fault = walker->start(tc, translation, req, mode);
-                    if (timing || fault != NoFault) {
-                        // This gets ignored in atomic mode.
-                        delayedResponse = true;
-                        return fault;
-                    }
-                    entry = lookup_l2(pageAlignedVaddr);
-                    //assert(entry);
-                  }else {
-                    Process *p = tc->getProcessPtr();
-                    const EmulationPageTable::Entry *pte =
-                        p->pTable->lookup(vaddr);
-                    if (!pte) {
-                        return std::make_shared<PageFault>(vaddr, true, mode,
-                                                           true, false);
-                    } else {
-                        Addr alignedVaddr = p->pTable->pageAlign(vaddr);
-                        DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,
-                                pte->paddr);
-			// It is incorrect
-			/*
-                        entry = insert_l2(alignedVaddr,pte->paddr,TlbEntry(
-                                p->pTable->pid(), alignedVaddr, pte->paddr,
-                                pte->flags & EmulationPageTable::Uncacheable,
-                                pte->flags & EmulationPageTable::ReadOnly),
-                                pcid);
-				*/
-                    }
-                    DPRINTF(TLB, "Miss was serviced.\n");
-                  }
-                }
-            }
-
-            DPRINTF(TLB, "Entry found with paddr %#x, "
-                    "doing protection checks.\n", entry->paddr);
-	    // UAC
-	    add_page_access(entry->paddr);
-	    // End UAC
-            // Do paging protection checks.
-            bool inUser = m5Reg.cpl == 3 && !(flags & CPL0FlagBit);
-            CR0 cr0 = tc->readMiscRegNoEffect(misc_reg::Cr0);
-            bool badWrite = (!entry->writable && (inUser || cr0.wp));
-            if ((inUser && !entry->user) ||
-                (mode == BaseMMU::Write && badWrite)) {
-                // The page must have been present to get into the TLB in
-                // the first place. We'll assume the reserved bits are
-                // fine even though we're not checking them.
-                return std::make_shared<PageFault>(vaddr, true, mode, inUser,
-                                                   false);
-            }
-            if (storeCheck && badWrite) {
-                // This would fault if this were a write, so return a page
-                // fault that reflects that happening.
-                return std::make_shared<PageFault>(
-                    vaddr, true, BaseMMU::Write, inUser, false);
-            }
-
-            Addr paddr = entry->paddr | (vaddr & mask(entry->logBytes));
-            DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, paddr);
-            req->setPaddr(paddr);
-            if (entry->uncacheable)
-                req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
-        } else {
-            //Use the address which already has segmentation applied.
-            DPRINTF(TLB, "Paging disabled.\n");
-            DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, vaddr);
-            req->setPaddr(vaddr);
-        }
+    }
+    Addr base = tc->readMiscRegNoEffect(misc_reg::segBase(seg));
+    Addr limit = tc->readMiscRegNoEffect(misc_reg::segLimit(seg));
+    Addr offset;
+    if (mode == BaseMMU::Execute)
+	offset = vaddr - base;
+    else
+	offset = (vaddr - base) & addrMask;
+    Addr endOffset = offset + req->getSize() - 1;
+    if (expandDown) {
+	DPRINTF(TLB, "Checking an expand down segment.\n");
+	warn_once("Expand down segments are untested.\n");
+	if (offset <= limit || endOffset <= limit)
+	    return std::make_shared<GeneralProtection>(0);
     } else {
-        // Real mode
-        DPRINTF(TLB, "In real mode.\n");
-        DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, vaddr);
-        req->setPaddr(vaddr);
+	if (offset > limit || endOffset > limit) {
+	    DPRINTF(TLB, "Segment limit check failed, "
+		    "offset = %#x limit = %#x.\n", offset, limit);
+	    return std::make_shared<GeneralProtection>(0);
+	}
+    }
+}
+if (m5Reg.submode != SixtyFourBitMode && addrSize != 64)
+    vaddr &= mask(32);
+// If paging is enabled, do the translation.
+if (m5Reg.paging) {
+    DPRINTF(TLB, "Paging enabled.\n");
+    // The vaddr already has the segment base applied.
+
+    //Appending the pcid (last 12 bits of CR3) to the
+    //page aligned vaddr if pcide is set
+    CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
+    Addr pageAlignedVaddr = vaddr & (~mask(X86ISA::PageShift));
+    CR3 cr3 = tc->readMiscRegNoEffect(misc_reg::Cr3);
+    uint64_t pcid;
+
+    if (cr4.pcide)
+	pcid = cr3.pcid;
+    else
+	pcid = 0x000;
+
+    pageAlignedVaddr = concAddrPcid(pageAlignedVaddr, pcid);
+    TlbEntry *entry = lookup_l1(pageAlignedVaddr);
+
+    if (mode == BaseMMU::Read) {
+	stats.rdAccesses++;
+    } else {
+	stats.wrAccesses++;
+    }
+    if (!entry) {
+	DPRINTF(TLB, "Handling a TLB miss for "
+		"address %#x at pc %#x.\n",
+		vaddr, tc->pcState().instAddr());
+	if (mode == BaseMMU::Read) {
+	    stats.rdMisses++;
+	} else {
+	    stats.wrMisses++;
+	}
+	entry =  lookup_l2(pageAlignedVaddr);
+	stats.l2_tlb_Accesses++;
+	if (entry){
+	   DPRINTF(TLB,
+		"TLB Hit in L2 %#x at pc %#x.\n",
+		vaddr, tc->pcState().instAddr());
+	   // Put L2 latency
+	   Fault fault_l = NoFault;
+	   //auto event = new DelayedL2HitEvent(this,tc,translation,req,mode,fault_l,pcid,vaddr,*entry);
+	   //const Cycles L2Hit_late = Cycles(10);
+	   //this->walker->schedule(event,this->walker->clockEdge(L2Hit_late));
+	   delayedResponse = true;
+	   return fault_l;
+	   // End L2 latency
+	   //insert_l1(vaddr,*entry,pcid);
+	}else{
+	   if (FullSystem) {
+	    stats.l2_tlb_Misses++;
+	    Fault fault = walker->start(tc, translation, req, mode);
+	    if (timing || fault != NoFault) {
+		// This gets ignored in atomic mode.
+		delayedResponse = true;
+		return fault;
+	    }
+	    entry = lookup_l2(pageAlignedVaddr);
+	    assert(entry);
+	  }else {
+	    Process *p = tc->getProcessPtr();
+	    const EmulationPageTable::Entry *pte =
+		p->pTable->lookup(vaddr);
+	    if (!pte) {
+		return std::make_shared<PageFault>(vaddr, true, mode,
+						   true, false);
+	    } else {
+		Addr alignedVaddr = p->pTable->pageAlign(vaddr);
+		DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,
+			pte->paddr);
+		// It is incorrect
+		
+		entry = insert_l2(alignedVaddr,TlbEntry(
+			p->pTable->pid(), alignedVaddr, pte->paddr,
+			pte->flags & EmulationPageTable::Uncacheable,
+			pte->flags & EmulationPageTable::ReadOnly),
+			pcid);
+			
+	    }
+	    DPRINTF(TLB, "Miss was serviced.\n");
+	  }
+	}
     }
 
-    return finalizePhysical(req, tc, mode);
+    DPRINTF(TLB, "Entry found with paddr %#x, "
+	    "doing protection checks.\n", entry->paddr);
+    // Do paging protection checks.
+    bool inUser = m5Reg.cpl == 3 && !(flags & CPL0FlagBit);
+    CR0 cr0 = tc->readMiscRegNoEffect(misc_reg::Cr0);
+    bool badWrite = (!entry->writable && (inUser || cr0.wp));
+    if ((inUser && !entry->user) ||
+	(mode == BaseMMU::Write && badWrite)) {
+	// The page must have been present to get into the TLB in
+	// the first place. We'll assume the reserved bits are
+	// fine even though we're not checking them.
+	return std::make_shared<PageFault>(vaddr, true, mode, inUser,
+					   false);
+    }
+    if (storeCheck && badWrite) {
+	// This would fault if this were a write, so return a page
+	// fault that reflects that happening.
+	return std::make_shared<PageFault>(
+	    vaddr, true, BaseMMU::Write, inUser, false);
+    }
+
+    Addr paddr = entry->paddr | (vaddr & mask(entry->logBytes));
+    DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, paddr);
+    req->setPaddr(paddr);
+    if (entry->uncacheable)
+	req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
+} else {
+    //Use the address which already has segmentation applied.
+    DPRINTF(TLB, "Paging disabled.\n");
+    DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, vaddr);
+    req->setPaddr(vaddr);
+}
+} else {
+// Real mode
+DPRINTF(TLB, "In real mode.\n");
+DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, vaddr);
+req->setPaddr(vaddr);
+}
+
+return finalizePhysical(req, tc, mode);
 }
 
 // UAC
 /*
 void
 TLB::print_eviction(){
-	if (this->walker->curCycle() > last_cycle + 50000000){
+if (this->walker->curCycle() > last_cycle + 50000000){
 		last_cycle = this->walker->curCycle();
 		std::string delimeter = "=";
                 std::string csv_path_string(csv_path);

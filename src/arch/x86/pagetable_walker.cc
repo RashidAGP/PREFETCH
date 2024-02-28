@@ -75,22 +75,33 @@ Walker::start(ThreadContext * _tc, BaseMMU::Translation *_translation,
     // TODO: in timing mode, instead of blocking when there are other
     // outstanding requests, see if this request can be coalesced with
     // another one (i.e. either coalesce or start walk)
+    /*
     WalkerState * newState = new WalkerState(this, _translation, _req);
     newState->initState(_tc, _mode, sys->isTimingMode());
+    printf("Number of X:%d\n",currStates.size());
     if (currStates.size()) {
         assert(newState->isTiming());
         DPRINTF(PageTableWalker, "Walks in progress: %d\n", currStates.size());
         currStates.push_back(newState);
+	printf("push \n");
         return NoFault;
     } else {
         currStates.push_back(newState);
         Fault fault = newState->startWalk();
         if (!newState->isTiming()) {
+	    printf("pop \n");
             currStates.pop_front();
             delete newState;
         }
         return fault;
     }
+    */
+    WalkerState * newState = new WalkerState(this, _translation, _req);
+    newState->initState(_tc, _mode, sys->isTimingMode());
+    printf("Number of X:%d\n",currStates.size());
+        Fault fault = newState->startWalk();
+        delete newState;
+        return fault;
 }
 
 Fault
@@ -120,6 +131,7 @@ Walker::recvTimingResp(PacketPtr pkt)
         for (iter = currStates.begin(); iter != currStates.end(); iter++) {
             WalkerState * walkerState = *(iter);
             if (walkerState == senderWalk) {
+		printf("erase\n");
                 iter = currStates.erase(iter);
                 break;
             }
@@ -198,6 +210,8 @@ Walker::startWalkWrapper()
     while ((num_squashed < numSquashable) && currState &&
         currState->translation->squashed()) {
         currStates.pop_front();
+	
+	printf("pop front \n");
         num_squashed++;
 
         DPRINTF(PageTableWalker, "Squashing table walk for address %#x\n",
@@ -218,10 +232,12 @@ Walker::startWalkWrapper()
         }
 
         // check the next translation request, if it exists
-        if (currStates.size())
+        if (currStates.size()){
             currState = currStates.front();
-        else
+	    printf("pop front 2 \n");
+	}else{
             currState = NULL;
+	}
     }
     if (currState && !currState->wasStarted())
         currState->startWalk();
@@ -516,6 +532,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
 		    uint64_t delay_PW = static_cast<uint64_t>(stop - start_time);
 		    //printf("Delay is :%ld.\n",delay_PW);
 		    walker->tlb->incr_pw_latency(delay_PW);
+		    DPRINTF(PageTableWalker,"Insert Atomically\n");
 		    // It is not
 		    /*
                     walker->tlb->insert_l1(entry.vaddr, entry, cr3.pcid);
@@ -527,14 +544,16 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
 		    timing = true;
 		    if(timing == true){
         		    DPRINTF(PageTableWalker,"Insert in the TLB was postponed.Address:%#x.\n",entry.vaddr);
-        		    auto event = new DelayedInsertEvent(walker->tlb,entry,tc,translation,req,mode,start_time);
-        		    std::random_device rd;
-        		    std::mt19937 gen(rd());
-        		    std::uniform_int_distribution<int> distribution(100, 800);
-        		    int random_number = distribution(gen);
+        		    //auto event = new DelayedInsertEvent(walker->tlb,entry,tc,translation,req,mode,start_time);
+        		    //std::random_device rd;
+        		    //std::mt19937 gen(rd());
+        		    //std::uniform_int_distribution<int> distribution(100, 800);
+        		    //int random_number = distribution(gen);
         		    //const Cycles insert_delay = Cycles(random_number);
-        		    const Cycles insert_delay = Cycles(0);
-        		    walker->schedule(event,walker->clockEdge(insert_delay));
+        		    //const Cycles insert_delay = Cycles(0);
+        		    //walker->schedule(event,walker->clockEdge(insert_delay));
+                            walker->tlb->insert_l1(entry.vaddr, entry, 0x000);
+                            walker->tlb->insert_l2(entry.vaddr, entry, 0x000);
 		    }else{
 			    //req->set_miss_l2();
 			    //req->reset_hit_l2();
@@ -779,60 +798,6 @@ Walker::WalkerState::pageFault(bool present)
     return std::make_shared<PageFault>(entry.vaddr, present, mode,
                                        m5reg.cpl == 3, false);
 }
-
-Walker::DelayedInsertEvent::DelayedInsertEvent(
-    TLB *_tlb, TlbEntry _TlbEntry,ThreadContext* _tc,BaseMMU::Translation* _translation, const RequestPtr _req,BaseMMU::Mode _mode,Cycles _start)
-    : tlb_p(_tlb), entry_p(_TlbEntry),tc_p(_tc),translation_p(_translation),req_p(_req),mode_p(_mode),start_p(_start),n("DelayedInsertEvent"){
-    //this->setFlags(EventBase::AutoDelete);
-}
-
-void Walker::DelayedInsertEvent:: process(){
-
-    // Delay the TLB Entry to the next 100 cyles
-	/*
-    if(this->translation_p->squashed()){
-       this->translation_p->finish(
-              std::make_shared<UnimpFault>("Squashed Inst"),
-              ,tc_p, this->mode);
-        return;
-    }
-    	*/
-
-   //bool delayedResponse;
-   //bool timing = true;
-   //bool updateStats = false;
-   //Fault fault = tlb->translate_stats(
-   //→  req,tc,NULL,mode,delayedResponse,
-   //     timing);
-   //assert(fault == NoFault && "Error in delayed Translation");
-   /*
-   if(!this->isLastLevel){
-→       assert(!delayedResponse);
-   }
-→       */
-   //Fault fault = NoFault;
-   DPRINTF(PageTableWalker,"PageWalker is writing in the TLB.entry_p.vaddr:%#x.vaddr :%#x \n",entry_p.vaddr ,entry_p.paddr | req_p->getVaddr() & mask(entry_p.logBytes));
-   //assert(req->hasPaddr() && "Req has no paddr.\n");
-   tlb_p->insert_l1(entry_p.vaddr, entry_p, 0x000);
-   tlb_p->insert_l2(entry_p.vaddr, entry_p.paddr | req_p->getVaddr() & mask(entry_p.logBytes), 
-		   		   entry_p.vaddr | req_p->getVaddr() & mask(entry_p.logBytes), entry_p, 0x000);
-   if (tlb_p->name() == "system.cpu.mmu.dtb"){
-       //req_p->set_miss_l2();
-       //req_p->reset_hit_l2();
-       tlb_p->incr_ByPass_L2();
-   }
-   //this->translation->finish(fault,req,tc,mode);
-   bool delayedResponse;
-   Fault fault = tlb_p->translate(req_p, tc_p, NULL, mode_p,
-                                        delayedResponse, true);
-   Cycles stop = tc_p->getCpuPtr()->curCycle();
-   uint64_t delay_PW = static_cast<uint64_t>(stop - start_p);
-   DPRINTF(PageTableWalker,"PW Latency is : %ld.\n",delay_PW);
-   tlb_p->incr_pw_latency(delay_PW);
-   assert(!delayedResponse);
-   // Let the CPU continue.
-   translation_p->finish(fault, req_p, tc_p, mode_p);
- }
 
 } // namespace X86ISA
 } // namespace gem5

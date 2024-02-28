@@ -47,6 +47,12 @@
 #include "mem/request.hh"
 #include "params/X86TLB.hh"
 #include "sim/stats.hh"
+#include "string"
+#include "mem/ruby/structures/CacheMemory.hh"
+
+
+extern char* csv_path;
+
 
 namespace gem5
 {
@@ -88,8 +94,51 @@ namespace X86ISA
         EntryList::iterator lookupIt(Addr va, bool update_lru = true);
 
         Walker * walker;
+	// UAC
+	// PA
+	std::unordered_map<Addr, uint64_t> page_access = {};
+	std::unordered_map<Addr, uint64_t> CL_access = {};
+	/*
+	std::unordered_map<Addr, uint64_t> page_eviction_l1_4kb = {};
+	std::unordered_map<Addr, uint64_t> page_eviction_l1_2mb = {};
+	std::unordered_map<Addr, uint64_t> page_eviction_l2_4kb = {};
+	std::unordered_map<Addr, uint64_t> page_eviction_l2_2mb = {};
+	*/
+	std::unordered_map<Addr, uint64_t> page_eviction_l1_time = {};
+	// VA
+	std::unordered_map<Addr, uint64_t> page_access_VA = {};
+	std::unordered_map<Addr, uint64_t> page_eviction_l1_4kb_VA = {};
+	std::unordered_map<Addr, uint64_t> page_eviction_l1_2mb_VA = {};
+	std::unordered_map<Addr, uint64_t> page_eviction_l2_4kb_VA = {};
+	std::unordered_map<Addr, uint64_t> page_eviction_l2_2mb_VA = {};
+	std::unordered_map<Addr, uint64_t> page_eviction_l1_time_VA = {};
+	// New
+	std::unordered_map<Addr, std::unordered_map<Addr, uint64_t>> page_eviction_l1_4kb ;
+	std::unordered_map<Addr, std::unordered_map<Addr, uint64_t>> page_eviction_l1_2mb ;
+	std::unordered_map<Addr, std::unordered_map<Addr, uint64_t>> page_eviction_l2_4kb ;
+	std::unordered_map<Addr, std::unordered_map<Addr, uint64_t>> page_eviction_l2_2mb ;
+	//
+	Cycles last_cycle = Cycles(0);
+	// UAC End
 
       public:
+	// UAC
+	// PA
+	void add_CL_access(Addr CL) {CL_access[CL]++;}
+	void add_page_access(Addr address_t){ page_access[address_t]++;}
+	void add_page_eviction_l1_4kb(Addr, Addr);
+	void add_page_eviction_l1_2mb(Addr, Addr);
+	void add_page_eviction_l2_4kb(Addr address_v, Addr address_p){page_eviction_l2_4kb[address_v][address_p] = page_eviction_l2_4kb[address_v][address_p] + 1 ;}
+	void add_page_eviction_l2_2mb(Addr address_v, Addr address_p){page_eviction_l2_2mb[address_v][address_p] = page_eviction_l2_2mb[address_v][address_p] + 1 ;}
+	// VA
+	void add_page_access_VA(Addr address_t){ page_access[address_t]++;}
+	void add_page_eviction_l1_4kb_VA(Addr address_t);
+	void add_page_eviction_l1_2mb_VA(Addr address_t);
+	void add_page_eviction_l2_4kb_VA(Addr address_t){page_eviction_l2_4kb_VA[address_t] = page_eviction_l2_4kb_VA[address_t] + 1 ;}
+	void add_page_eviction_l2_2mb_VA(Addr address_t){page_eviction_l2_2mb_VA[address_t] = page_eviction_l2_2mb_VA[address_t] + 1 ;}
+
+	//void print_eviction();
+	// End UAC
         Walker *getWalker();
 
         void flushAll() override;
@@ -100,14 +149,10 @@ namespace X86ISA
 
       protected:
         uint32_t size;
-        bool is_l2_tlb = false;
-        uint32_t l2_tlb_size = 0;
+        uint32_t l2_tlb_size ;
         uint32_t l2_tlb_assoc;
-        std::vector<TlbEntry> l2_tlb;
-        uint32_t l2size;
-        uint32_t l1_way;
-        uint32_t l2_way;
 
+        uint32_t l1_way;
         std::vector<TlbEntry> tlb;
         std::vector<TlbEntry> l2tlb;
 
@@ -117,6 +162,7 @@ namespace X86ISA
         TlbEntryTrie trie;
         TlbEntryTrie triel2;
         uint64_t lruSeq;
+        uint64_t lruSeq_l2;
 
         AddrRange m5opRange;
 
@@ -131,6 +177,29 @@ namespace X86ISA
 
             statistics::Scalar l2_tlb_Accesses;
             statistics::Scalar l2_tlb_Misses;
+            //
+	    statistics::Scalar PW_latency;
+	    statistics::Scalar PW_number;
+	    statistics::Formula PW_average_latency;
+	    // Cache Look up
+	    statistics::Scalar L2TLB_l1_miss;
+	    statistics::Scalar L2TLB_l1_hit;
+	    statistics::Scalar L2TLB_l1_access;
+
+	    statistics::Scalar L2TLB_l2_miss;
+	    statistics::Scalar L2TLB_l2_hit;
+	    statistics::Scalar L2TLB_l2_access;
+
+	    statistics::Scalar L1TLB_l1_miss;
+	    statistics::Scalar L1TLB_l1_hit;
+	    statistics::Scalar L1TLB_l1_access;
+
+	    statistics::Scalar L1TLB_l2_miss;
+	    statistics::Scalar L1TLB_l2_hit;
+	    statistics::Scalar L1TLB_l2_access;
+
+	    statistics::Scalar ByPass_L1;
+	    statistics::Scalar ByPass_L2;
         } stats;
 
         Fault translateInt(bool read, RequestPtr req, ThreadContext *tc);
@@ -140,6 +209,13 @@ namespace X86ISA
                 bool &delayedResponse, bool timing);
 
       public:
+	void incr_ByPass_L1() { stats.ByPass_L1++;}
+	void incr_ByPass_L2() { stats.ByPass_L2++;}
+	uint64_t added_cycles = 0;
+	void incr_pw_latency(uint64_t delay_pw) {
+		added_cycles += delay_pw;
+		stats.PW_latency = added_cycles;}
+	void incr_pw_number() { stats.PW_number++;}
 
         void evictLRU_l1();
         void evictLRU_l2();
@@ -152,6 +228,11 @@ namespace X86ISA
             return ++lruSeq;
         }
 
+        uint64_t
+        nextSeq_l2()
+        {
+            return ++lruSeq_l2;
+        }
         Fault translateAtomic(
             const RequestPtr &req, ThreadContext *tc,
             BaseMMU::Mode mode) override;
@@ -196,6 +277,26 @@ namespace X86ISA
          * @return A pointer to the walker port
          */
         Port *getTableWalkerPort() override;
+        struct DelayedL2HitEvent : public Event {
+ 	public:
+	TLB *tlb;
+	ThreadContext *tc;
+	BaseMMU::Translation *translation;
+	RequestPtr req;
+	BaseMMU::Mode mode;
+	Fault fault;
+	uint64_t pcid_l;
+	Addr vaddr_l;
+	const TlbEntry entry_l;
+	std::string n;
+	DelayedL2HitEvent(
+		TLB *_tlb,ThreadContext *_tc,
+		BaseMMU::Translation *_translation, const RequestPtr &_req,
+		BaseMMU::Mode _mode, Fault _fault,uint64_t _pcid,Addr _addr,TlbEntry _entry);
+	void process() override;
+	const char *description() const {return "DelayedL2HitEvent";}
+	const std::string name() const { return this->n;}
+	};
     };
 
 } // namespace X86ISA

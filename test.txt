@@ -1,0 +1,473 @@
+Global frequency set at 1000000000000 ticks per second
+      0: system.cpu0.mmu.dtb: L2 TLB Initialization: size-2048 assoc-16
+      0: system.cpu0.mmu.itb: L2 TLB Initialization: size-2048 assoc-16
+      0: system.cpu1.mmu.dtb: L2 TLB Initialization: size-2048 assoc-16
+      0: system.cpu1.mmu.itb: L2 TLB Initialization: size-2048 assoc-16
+      0: system.cpu2.mmu.dtb: L2 TLB Initialization: size-2048 assoc-16
+      0: system.cpu2.mmu.itb: L2 TLB Initialization: size-2048 assoc-16
+      0: system.cpu3.mmu.dtb: L2 TLB Initialization: size-2048 assoc-16
+      0: system.cpu3.mmu.itb: L2 TLB Initialization: size-2048 assoc-16
+      0: system.pc.south_bridge.cmos.rtc: Real-time clock set to Sun Jan  1 00:00:00 2012
+      0: system.cpu0.mmu.itb: Invalidating all non global entries.
+      0: system.cpu0.mmu.dtb: Invalidating all non global entries.
+      0: system.cpu1.mmu.itb: Invalidating all non global entries.
+      0: system.cpu1.mmu.dtb: Invalidating all non global entries.
+      0: system.cpu2.mmu.itb: Invalidating all non global entries.
+      0: system.cpu2.mmu.dtb: Invalidating all non global entries.
+      0: system.cpu3.mmu.itb: Invalidating all non global entries.
+      0: system.cpu3.mmu.dtb: Invalidating all non global entries.
+      0: system.cpu0.mmu.itb: Invalidating all entries.
+      0: system.cpu0.mmu.dtb: Invalidating all entries.
+      0: system.cpu0.mmu.itb: Invalidating all non global entries.
+      0: system.cpu0.mmu.dtb: Invalidating all non global entries.
+      0: system.cpu0.mmu.itb: Invalidating all entries.
+      0: system.cpu0.mmu.dtb: Invalidating all entries.
+gem5 Simulator System.  https://www.gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 version 23.0.1.0
+gem5 compiled Feb 28 2024 15:12:06
+gem5 started Feb 28 2024 15:13:27
+gem5 executing on rashid-laptop, pid 63150
+command line: ./build/X86/gem5.debug --debug-flags=TLB,PageTableWalker --outdir=/home/rashid/checkpoints/4cores/pr ./configs/deprecated/example/fs.py --script=/home/rashid/all_scripts/gapbs/pr.rcS --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 --disk-image=/home/rashid/fs_img/gapbs_kron.img --cpu-type=AtomicSimpleCPU --mem-size=16GB --ruby --network=garnet -n 4 --caches --l1d_size=64kB --l1i_size=64kB --l1d_assoc=8 --l1i_assoc=8 --num-l2caches=4 --num-dirs=4 --l2_size=2MB --topology=Mesh_XY --mesh-rows=2 --l2_assoc=16 --cpu-clock=2GHz --cacheline_size=64
+
+**** REAL SIMULATION ****
+      0: system.cpu0.mmu.itb: Translating vaddr 0x1000000.
+      0: system.cpu0.mmu.itb: In protected mode.
+      0: system.cpu0.mmu.itb: Paging enabled.
+      0: system.cpu0.mmu.itb: Handling a TLB miss for address 0x1000000 at pc 0x1000000.
+Number of X:0
+      0: system.cpu0.mmu.itb.walker: Got long mode PML4 entry 0x00000000071007.
+      0: system.cpu0.mmu.itb.walker: Got long mode PDP entry 0x00000000072007.
+      0: system.cpu0.mmu.itb.walker: Got long mode PD entry 0x00000001000087.
+      0: system.cpu0.mmu.itb.walker: Insert in the TLB was postponed.Address:0x1000000.
+      0: system.cpu0.mmu.itb: Insert in L1.VA:0x1000000
+      0: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+      0: system.cpu0.mmu.itb: Translated 0x1000000 -> 0x1000000.
+   1000: system.cpu0.mmu.itb: Translating vaddr 0x1000000.
+   1000: system.cpu0.mmu.itb: In protected mode.
+   1000: system.cpu0.mmu.itb: Paging enabled.
+   1000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+   1000: system.cpu0.mmu.itb: Translated 0x1000000 -> 0x1000000.
+   1500: system.cpu0.mmu.itb: Translating vaddr 0x1000008.
+   1500: system.cpu0.mmu.itb: In protected mode.
+   1500: system.cpu0.mmu.itb: Paging enabled.
+   1500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+   1500: system.cpu0.mmu.itb: Translated 0x1000008 -> 0x1000008.
+   2500: system.cpu0.mmu.dtb: Translating vaddr 0x1e03f50.
+   2500: system.cpu0.mmu.dtb: In protected mode.
+   2500: system.cpu0.mmu.dtb: Paging enabled.
+   2500: system.cpu0.mmu.dtb: Handling a TLB miss for address 0x1e03f50 at pc 0x1000007.
+Number of X:0
+   2500: system.cpu0.mmu.dtb.walker: Got long mode PML4 entry 0x00000000071027.
+   2500: system.cpu0.mmu.dtb.walker: Got long mode PDP entry 0x00000000072027.
+   2500: system.cpu0.mmu.dtb.walker: Got long mode PD entry 0x00000001e00087.
+   2500: system.cpu0.mmu.dtb.walker: Insert in the TLB was postponed.Address:0x1e00000.
+   2500: system.cpu0.mmu.dtb: Insert in L1.VA:0x1e00000
+   2500: system.cpu0.mmu.dtb: Entry found with paddr 0x1e00000, doing protection checks.
+   2500: system.cpu0.mmu.dtb: Translated 0x1e03f50 -> 0x1e03f50.
+   4000: system.cpu0.mmu.itb: Translating vaddr 0x10000e0.
+   4000: system.cpu0.mmu.itb: In protected mode.
+   4000: system.cpu0.mmu.itb: Paging enabled.
+   4000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+   4000: system.cpu0.mmu.itb: Translated 0x10000e0 -> 0x10000e0.
+   4500: system.cpu0.mmu.dtb: Translating vaddr 0x1e03f48.
+   4500: system.cpu0.mmu.dtb: In protected mode.
+   4500: system.cpu0.mmu.dtb: Paging enabled.
+   4500: system.cpu0.mmu.dtb: Entry found with paddr 0x1e00000, doing protection checks.
+   4500: system.cpu0.mmu.dtb: Translated 0x1e03f48 -> 0x1e03f48.
+   5500: system.cpu0.mmu.itb: Translating vaddr 0x10000e0.
+   5500: system.cpu0.mmu.itb: In protected mode.
+   5500: system.cpu0.mmu.itb: Paging enabled.
+   5500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+   5500: system.cpu0.mmu.itb: Translated 0x10000e0 -> 0x10000e0.
+   6000: system.cpu0.mmu.dtb: Translating vaddr 0x1e03f40.
+   6000: system.cpu0.mmu.dtb: In protected mode.
+   6000: system.cpu0.mmu.dtb: Paging enabled.
+   6000: system.cpu0.mmu.dtb: Entry found with paddr 0x1e00000, doing protection checks.
+   6000: system.cpu0.mmu.dtb: Translated 0x1e03f40 -> 0x1e03f40.
+   7000: system.cpu0.mmu.itb: Translating vaddr 0x10000e0.
+   7000: system.cpu0.mmu.itb: In protected mode.
+   7000: system.cpu0.mmu.itb: Paging enabled.
+   7000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+   7000: system.cpu0.mmu.itb: Translated 0x10000e0 -> 0x10000e0.
+   7000: system.cpu0.mmu.dtb: Translating vaddr 0x1e03f40.
+   7000: system.cpu0.mmu.dtb: In protected mode.
+   7000: system.cpu0.mmu.dtb: Paging enabled.
+   7000: system.cpu0.mmu.dtb: Entry found with paddr 0x1e00000, doing protection checks.
+   7000: system.cpu0.mmu.dtb: Translated 0x1e03f40 -> 0x1e03f40.
+   8500: system.cpu0.mmu.itb: Translating vaddr 0x10000e0.
+   8500: system.cpu0.mmu.itb: In protected mode.
+   8500: system.cpu0.mmu.itb: Paging enabled.
+   8500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+   8500: system.cpu0.mmu.itb: Translated 0x10000e0 -> 0x10000e0.
+   9000: system.cpu0.mmu.itb: Translating vaddr 0x10000e8.
+   9000: system.cpu0.mmu.itb: In protected mode.
+   9000: system.cpu0.mmu.itb: Paging enabled.
+   9000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+   9000: system.cpu0.mmu.itb: Translated 0x10000e8 -> 0x10000e8.
+   9500: system.cpu0.mmu.itb: Translating vaddr 0x10000e8.
+   9500: system.cpu0.mmu.itb: In protected mode.
+   9500: system.cpu0.mmu.itb: Paging enabled.
+   9500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+   9500: system.cpu0.mmu.itb: Translated 0x10000e8 -> 0x10000e8.
+  10000: system.cpu0.mmu.itb: Translating vaddr 0x10000e8.
+  10000: system.cpu0.mmu.itb: In protected mode.
+  10000: system.cpu0.mmu.itb: Paging enabled.
+  10000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  10000: system.cpu0.mmu.itb: Translated 0x10000e8 -> 0x10000e8.
+  11000: system.cpu0.mmu.itb: Translating vaddr 0x10000e8.
+  11000: system.cpu0.mmu.itb: In protected mode.
+  11000: system.cpu0.mmu.itb: Paging enabled.
+  11000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  11000: system.cpu0.mmu.itb: Translated 0x10000e8 -> 0x10000e8.
+  11500: system.cpu0.mmu.itb: Translating vaddr 0x10000f0.
+  11500: system.cpu0.mmu.itb: In protected mode.
+  11500: system.cpu0.mmu.itb: Paging enabled.
+  11500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  11500: system.cpu0.mmu.itb: Translated 0x10000f0 -> 0x10000f0.
+  13000: system.cpu0.mmu.itb: Translating vaddr 0x10000f0.
+  13000: system.cpu0.mmu.itb: In protected mode.
+  13000: system.cpu0.mmu.itb: Paging enabled.
+  13000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  13000: system.cpu0.mmu.itb: Translated 0x10000f0 -> 0x10000f0.
+  13500: system.cpu0.mmu.itb: Translating vaddr 0x10000f0.
+  13500: system.cpu0.mmu.itb: In protected mode.
+  13500: system.cpu0.mmu.itb: Paging enabled.
+  13500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  13500: system.cpu0.mmu.itb: Translated 0x10000f0 -> 0x10000f0.
+  14000: system.cpu0.mmu.itb: Translating vaddr 0x10000f8.
+  14000: system.cpu0.mmu.itb: In protected mode.
+  14000: system.cpu0.mmu.itb: Paging enabled.
+  14000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  14000: system.cpu0.mmu.itb: Translated 0x10000f8 -> 0x10000f8.
+  15000: system.cpu0.mmu.itb: Translating vaddr 0x10000f8.
+  15000: system.cpu0.mmu.itb: In protected mode.
+  15000: system.cpu0.mmu.itb: Paging enabled.
+  15000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  15000: system.cpu0.mmu.itb: Translated 0x10000f8 -> 0x10000f8.
+  16500: system.cpu0.mmu.itb: Translating vaddr 0x1000110.
+  16500: system.cpu0.mmu.itb: In protected mode.
+  16500: system.cpu0.mmu.itb: Paging enabled.
+  16500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  16500: system.cpu0.mmu.itb: Translated 0x1000110 -> 0x1000110.
+  17000: system.cpu0.mmu.itb: Translating vaddr 0x1000118.
+  17000: system.cpu0.mmu.itb: In protected mode.
+  17000: system.cpu0.mmu.itb: Paging enabled.
+  17000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  17000: system.cpu0.mmu.itb: Translated 0x1000118 -> 0x1000118.
+  18000: system.cpu0.mmu.itb: Translating vaddr 0x1000118.
+  18000: system.cpu0.mmu.itb: In protected mode.
+  18000: system.cpu0.mmu.itb: Paging enabled.
+  18000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  18000: system.cpu0.mmu.itb: Translated 0x1000118 -> 0x1000118.
+  19500: system.cpu0.mmu.itb: Translating vaddr 0x1000160.
+  19500: system.cpu0.mmu.itb: In protected mode.
+  19500: system.cpu0.mmu.itb: Paging enabled.
+  19500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  19500: system.cpu0.mmu.itb: Translated 0x1000160 -> 0x1000160.
+  20000: system.cpu0.mmu.itb: Translating vaddr 0x1000160.
+  20000: system.cpu0.mmu.itb: In protected mode.
+  20000: system.cpu0.mmu.itb: Paging enabled.
+  20000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  20000: system.cpu0.mmu.itb: Translated 0x1000160 -> 0x1000160.
+  20500: system.cpu0.mmu.itb: Translating vaddr 0x1000168.
+  20500: system.cpu0.mmu.itb: In protected mode.
+  20500: system.cpu0.mmu.itb: Paging enabled.
+  20500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  20500: system.cpu0.mmu.itb: Translated 0x1000168 -> 0x1000168.
+  21000: system.cpu0.mmu.itb: Translating vaddr 0x1000168.
+  21000: system.cpu0.mmu.itb: In protected mode.
+  21000: system.cpu0.mmu.itb: Paging enabled.
+  21000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  21000: system.cpu0.mmu.itb: Translated 0x1000168 -> 0x1000168.
+  22000: system.cpu0.mmu.itb: Translating vaddr 0x1000168.
+  22000: system.cpu0.mmu.itb: In protected mode.
+  22000: system.cpu0.mmu.itb: Paging enabled.
+  22000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  22000: system.cpu0.mmu.itb: Translated 0x1000168 -> 0x1000168.
+  22500: system.cpu0.mmu.itb: Translating vaddr 0x1000170.
+  22500: system.cpu0.mmu.itb: In protected mode.
+  22500: system.cpu0.mmu.itb: Paging enabled.
+  22500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  22500: system.cpu0.mmu.itb: Translated 0x1000170 -> 0x1000170.
+  23500: system.cpu0.mmu.itb: Translating vaddr 0x1000170.
+  23500: system.cpu0.mmu.itb: In protected mode.
+  23500: system.cpu0.mmu.itb: Paging enabled.
+  23500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  23500: system.cpu0.mmu.itb: Translated 0x1000170 -> 0x1000170.
+  25000: system.cpu0.mmu.itb: Translating vaddr 0x1000170.
+  25000: system.cpu0.mmu.itb: In protected mode.
+  25000: system.cpu0.mmu.itb: Paging enabled.
+  25000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  25000: system.cpu0.mmu.itb: Translated 0x1000170 -> 0x1000170.
+  25500: system.cpu0.mmu.itb: Translating vaddr 0x1000178.
+  25500: system.cpu0.mmu.itb: In protected mode.
+  25500: system.cpu0.mmu.itb: Paging enabled.
+  25500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  25500: system.cpu0.mmu.itb: Translated 0x1000178 -> 0x1000178.
+  26000: system.cpu0.mmu.itb: Translating vaddr 0x1000178.
+  26000: system.cpu0.mmu.itb: In protected mode.
+  26000: system.cpu0.mmu.itb: Paging enabled.
+  26000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  26000: system.cpu0.mmu.itb: Translated 0x1000178 -> 0x1000178.
+  26500: system.cpu0.mmu.itb: Translating vaddr 0x1000178.
+  26500: system.cpu0.mmu.itb: In protected mode.
+  26500: system.cpu0.mmu.itb: Paging enabled.
+  26500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  26500: system.cpu0.mmu.itb: Translated 0x1000178 -> 0x1000178.
+  27000: system.cpu0.mmu.itb: Translating vaddr 0x1000180.
+  27000: system.cpu0.mmu.itb: In protected mode.
+  27000: system.cpu0.mmu.itb: Paging enabled.
+  27000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  27000: system.cpu0.mmu.itb: Translated 0x1000180 -> 0x1000180.
+  28000: system.cpu0.mmu.itb: Translating vaddr 0x1000180.
+  28000: system.cpu0.mmu.itb: In protected mode.
+  28000: system.cpu0.mmu.itb: Paging enabled.
+  28000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  28000: system.cpu0.mmu.itb: Translated 0x1000180 -> 0x1000180.
+  29500: system.cpu0.mmu.itb: Translating vaddr 0x1000180.
+  29500: system.cpu0.mmu.itb: In protected mode.
+  29500: system.cpu0.mmu.itb: Paging enabled.
+  29500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  29500: system.cpu0.mmu.itb: Translated 0x1000180 -> 0x1000180.
+  30000: system.cpu0.mmu.itb: Translating vaddr 0x1000188.
+  30000: system.cpu0.mmu.itb: In protected mode.
+  30000: system.cpu0.mmu.itb: Paging enabled.
+  30000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  30000: system.cpu0.mmu.itb: Translated 0x1000188 -> 0x1000188.
+  30500: system.cpu0.mmu.itb: Translating vaddr 0x1000188.
+  30500: system.cpu0.mmu.itb: In protected mode.
+  30500: system.cpu0.mmu.itb: Paging enabled.
+  30500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  30500: system.cpu0.mmu.itb: Translated 0x1000188 -> 0x1000188.
+  31000: system.cpu0.mmu.itb: Translating vaddr 0x1000188.
+  31000: system.cpu0.mmu.itb: In protected mode.
+  31000: system.cpu0.mmu.itb: Paging enabled.
+  31000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  31000: system.cpu0.mmu.itb: Translated 0x1000188 -> 0x1000188.
+  31500: system.cpu0.mmu.itb: Translating vaddr 0x1000190.
+  31500: system.cpu0.mmu.itb: In protected mode.
+  31500: system.cpu0.mmu.itb: Paging enabled.
+  31500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  31500: system.cpu0.mmu.itb: Translated 0x1000190 -> 0x1000190.
+  32500: system.cpu0.mmu.itb: Translating vaddr 0x1000190.
+  32500: system.cpu0.mmu.itb: In protected mode.
+  32500: system.cpu0.mmu.itb: Paging enabled.
+  32500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  32500: system.cpu0.mmu.itb: Translated 0x1000190 -> 0x1000190.
+  33500: system.cpu0.mmu.itb: Translating vaddr 0x1000198.
+  33500: system.cpu0.mmu.itb: In protected mode.
+  33500: system.cpu0.mmu.itb: Paging enabled.
+  33500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  33500: system.cpu0.mmu.itb: Translated 0x1000198 -> 0x1000198.
+  35000: system.cpu0.mmu.itb: Translating vaddr 0x1000198.
+  35000: system.cpu0.mmu.itb: In protected mode.
+  35000: system.cpu0.mmu.itb: Paging enabled.
+  35000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  35000: system.cpu0.mmu.itb: Translated 0x1000198 -> 0x1000198.
+  35500: system.cpu0.mmu.itb: Translating vaddr 0x1000198.
+  35500: system.cpu0.mmu.itb: In protected mode.
+  35500: system.cpu0.mmu.itb: Paging enabled.
+  35500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  35500: system.cpu0.mmu.itb: Translated 0x1000198 -> 0x1000198.
+  36000: system.cpu0.mmu.itb: Translating vaddr 0x10001a0.
+  36000: system.cpu0.mmu.itb: In protected mode.
+  36000: system.cpu0.mmu.itb: Paging enabled.
+  36000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  36000: system.cpu0.mmu.itb: Translated 0x10001a0 -> 0x10001a0.
+  36500: system.cpu0.mmu.itb: Translating vaddr 0x10001a0.
+  36500: system.cpu0.mmu.itb: In protected mode.
+  36500: system.cpu0.mmu.itb: Paging enabled.
+  36500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  36500: system.cpu0.mmu.itb: Translated 0x10001a0 -> 0x10001a0.
+  37500: system.cpu0.mmu.itb: Translating vaddr 0x10001a0.
+  37500: system.cpu0.mmu.itb: In protected mode.
+  37500: system.cpu0.mmu.itb: Paging enabled.
+  37500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  37500: system.cpu0.mmu.itb: Translated 0x10001a0 -> 0x10001a0.
+  38000: system.cpu0.mmu.itb: Translating vaddr 0x10001a8.
+  38000: system.cpu0.mmu.itb: In protected mode.
+  38000: system.cpu0.mmu.itb: Paging enabled.
+  38000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  38000: system.cpu0.mmu.itb: Translated 0x10001a8 -> 0x10001a8.
+  39000: system.cpu0.mmu.itb: Translating vaddr 0x10001a8.
+  39000: system.cpu0.mmu.itb: In protected mode.
+  39000: system.cpu0.mmu.itb: Paging enabled.
+  39000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  39000: system.cpu0.mmu.itb: Translated 0x10001a8 -> 0x10001a8.
+  40500: system.cpu0.mmu.itb: Translating vaddr 0x10001c8.
+  40500: system.cpu0.mmu.itb: In protected mode.
+  40500: system.cpu0.mmu.itb: Paging enabled.
+  40500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  40500: system.cpu0.mmu.itb: Translated 0x10001c8 -> 0x10001c8.
+  40500: system.cpu0.mmu.dtb: Translating vaddr 0x1e03f48.
+  40500: system.cpu0.mmu.dtb: In protected mode.
+  40500: system.cpu0.mmu.dtb: Paging enabled.
+  40500: system.cpu0.mmu.dtb: Entry found with paddr 0x1e00000, doing protection checks.
+  40500: system.cpu0.mmu.dtb: Translated 0x1e03f48 -> 0x1e03f48.
+  42000: system.cpu0.mmu.itb: Translating vaddr 0x10001c8.
+  42000: system.cpu0.mmu.itb: In protected mode.
+  42000: system.cpu0.mmu.itb: Paging enabled.
+  42000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  42000: system.cpu0.mmu.itb: Translated 0x10001c8 -> 0x10001c8.
+  42500: system.cpu0.mmu.itb: Translating vaddr 0x10001d0.
+  42500: system.cpu0.mmu.itb: In protected mode.
+  42500: system.cpu0.mmu.itb: Paging enabled.
+  42500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  42500: system.cpu0.mmu.itb: Translated 0x10001d0 -> 0x10001d0.
+  42500: system.cpu0.mmu.dtb: Translating vaddr 0x1e03f50.
+  42500: system.cpu0.mmu.dtb: In protected mode.
+  42500: system.cpu0.mmu.dtb: Paging enabled.
+  42500: system.cpu0.mmu.dtb: Entry found with paddr 0x1e00000, doing protection checks.
+  42500: system.cpu0.mmu.dtb: Translated 0x1e03f50 -> 0x1e03f50.
+  44000: system.cpu0.mmu.itb: Translating vaddr 0x1000008.
+  44000: system.cpu0.mmu.itb: In protected mode.
+  44000: system.cpu0.mmu.itb: Paging enabled.
+  44000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  44000: system.cpu0.mmu.itb: Translated 0x1000008 -> 0x1000008.
+  44500: system.cpu0.mmu.itb: Translating vaddr 0x1000010.
+  44500: system.cpu0.mmu.itb: In protected mode.
+  44500: system.cpu0.mmu.itb: Paging enabled.
+  44500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  44500: system.cpu0.mmu.itb: Translated 0x1000010 -> 0x1000010.
+  45500: system.cpu0.mmu.itb: Translating vaddr 0x1000010.
+  45500: system.cpu0.mmu.itb: In protected mode.
+  45500: system.cpu0.mmu.itb: Paging enabled.
+  45500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  45500: system.cpu0.mmu.itb: Translated 0x1000010 -> 0x1000010.
+  45500: system.cpu0.mmu.dtb: Translating vaddr 0x1e03f50.
+  45500: system.cpu0.mmu.dtb: In protected mode.
+  45500: system.cpu0.mmu.dtb: Paging enabled.
+  45500: system.cpu0.mmu.dtb: Entry found with paddr 0x1e00000, doing protection checks.
+  45500: system.cpu0.mmu.dtb: Translated 0x1e03f50 -> 0x1e03f50.
+  46500: system.cpu0.mmu.itb: Translating vaddr 0x1000010.
+  46500: system.cpu0.mmu.itb: In protected mode.
+  46500: system.cpu0.mmu.itb: Paging enabled.
+  46500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  46500: system.cpu0.mmu.itb: Translated 0x1000010 -> 0x1000010.
+  47000: system.cpu0.mmu.itb: Translating vaddr 0x1000018.
+  47000: system.cpu0.mmu.itb: In protected mode.
+  47000: system.cpu0.mmu.itb: Paging enabled.
+  47000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  47000: system.cpu0.mmu.itb: Translated 0x1000018 -> 0x1000018.
+  48000: system.cpu0.mmu.dtb: Translating vaddr 0x1e03f48.
+  48000: system.cpu0.mmu.dtb: In protected mode.
+  48000: system.cpu0.mmu.dtb: Paging enabled.
+  48000: system.cpu0.mmu.dtb: Entry found with paddr 0x1e00000, doing protection checks.
+  48000: system.cpu0.mmu.dtb: Translated 0x1e03f48 -> 0x1e03f48.
+  49500: system.cpu0.mmu.itb: Translating vaddr 0x10001e8.
+  49500: system.cpu0.mmu.itb: In protected mode.
+  49500: system.cpu0.mmu.itb: Paging enabled.
+  49500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  49500: system.cpu0.mmu.itb: Translated 0x10001e8 -> 0x10001e8.
+  50000: system.cpu0.mmu.itb: Translating vaddr 0x10001e8.
+  50000: system.cpu0.mmu.itb: In protected mode.
+  50000: system.cpu0.mmu.itb: Paging enabled.
+  50000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  50000: system.cpu0.mmu.itb: Translated 0x10001e8 -> 0x10001e8.
+  50500: system.cpu0.mmu.itb: Translating vaddr 0x10001f0.
+  50500: system.cpu0.mmu.itb: In protected mode.
+  50500: system.cpu0.mmu.itb: Paging enabled.
+  50500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  50500: system.cpu0.mmu.itb: Translated 0x10001f0 -> 0x10001f0.
+  51000: system.cpu0.mmu.itb: Translating vaddr 0x10001f0.
+  51000: system.cpu0.mmu.itb: In protected mode.
+  51000: system.cpu0.mmu.itb: Paging enabled.
+  51000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  51000: system.cpu0.mmu.itb: Translated 0x10001f0 -> 0x10001f0.
+  52500: system.cpu0.mmu.itb: Translating vaddr 0x10001f0.
+  52500: system.cpu0.mmu.itb: In protected mode.
+  52500: system.cpu0.mmu.itb: Paging enabled.
+  52500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  52500: system.cpu0.mmu.itb: Translated 0x10001f0 -> 0x10001f0.
+  53000: system.cpu0.mmu.itb: Translating vaddr 0x10001f8.
+  53000: system.cpu0.mmu.itb: In protected mode.
+  53000: system.cpu0.mmu.itb: Paging enabled.
+  53000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  53000: system.cpu0.mmu.itb: Translated 0x10001f8 -> 0x10001f8.
+  53500: system.cpu0.mmu.itb: Translating vaddr 0x1000200.
+  53500: system.cpu0.mmu.itb: In protected mode.
+  53500: system.cpu0.mmu.itb: Paging enabled.
+  53500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  53500: system.cpu0.mmu.itb: Translated 0x1000200 -> 0x1000200.
+  54000: system.cpu0.mmu.itb: Translating vaddr 0x1000200.
+  54000: system.cpu0.mmu.itb: In protected mode.
+  54000: system.cpu0.mmu.itb: Paging enabled.
+  54000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  54000: system.cpu0.mmu.itb: Translated 0x1000200 -> 0x1000200.
+  54500: system.cpu0.mmu.itb: Translating vaddr 0x1000200.
+  54500: system.cpu0.mmu.itb: In protected mode.
+  54500: system.cpu0.mmu.itb: Paging enabled.
+  54500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  54500: system.cpu0.mmu.itb: Translated 0x1000200 -> 0x1000200.
+  55000: system.cpu0.mmu.itb: Translating vaddr 0x1000200.
+  55000: system.cpu0.mmu.itb: In protected mode.
+  55000: system.cpu0.mmu.itb: Paging enabled.
+  55000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  55000: system.cpu0.mmu.itb: Translated 0x1000200 -> 0x1000200.
+  55500: system.cpu0.mmu.itb: Translating vaddr 0x1000208.
+  55500: system.cpu0.mmu.itb: In protected mode.
+  55500: system.cpu0.mmu.itb: Paging enabled.
+  55500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  55500: system.cpu0.mmu.itb: Translated 0x1000208 -> 0x1000208.
+  56500: system.cpu0.mmu.itb: Translating vaddr 0x1000208.
+  56500: system.cpu0.mmu.itb: In protected mode.
+  56500: system.cpu0.mmu.itb: Paging enabled.
+  56500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  56500: system.cpu0.mmu.itb: Translated 0x1000208 -> 0x1000208.
+  58000: system.cpu0.mmu.itb: Translating vaddr 0x1000210.
+  58000: system.cpu0.mmu.itb: In protected mode.
+  58000: system.cpu0.mmu.itb: Paging enabled.
+  58000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  58000: system.cpu0.mmu.itb: Translated 0x1000210 -> 0x1000210.
+  58500: system.cpu0.mmu.itb: Translating vaddr 0x1000218.
+  58500: system.cpu0.mmu.itb: In protected mode.
+  58500: system.cpu0.mmu.itb: Paging enabled.
+  58500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  58500: system.cpu0.mmu.itb: Translated 0x1000218 -> 0x1000218.
+  59000: system.cpu0.mmu.itb: Translating vaddr 0x1000218.
+  59000: system.cpu0.mmu.itb: In protected mode.
+  59000: system.cpu0.mmu.itb: Paging enabled.
+  59000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  59000: system.cpu0.mmu.itb: Translated 0x1000218 -> 0x1000218.
+  59500: system.cpu0.mmu.itb: Translating vaddr 0x1000220.
+  59500: system.cpu0.mmu.itb: In protected mode.
+  59500: system.cpu0.mmu.itb: Paging enabled.
+  59500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  59500: system.cpu0.mmu.itb: Translated 0x1000220 -> 0x1000220.
+  60000: system.cpu0.mmu.itb: Translating vaddr 0x1000220.
+  60000: system.cpu0.mmu.itb: In protected mode.
+  60000: system.cpu0.mmu.itb: Paging enabled.
+  60000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  60000: system.cpu0.mmu.itb: Translated 0x1000220 -> 0x1000220.
+  60500: system.cpu0.mmu.itb: Translating vaddr 0x1000228.
+  60500: system.cpu0.mmu.itb: In protected mode.
+  60500: system.cpu0.mmu.itb: Paging enabled.
+  60500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  60500: system.cpu0.mmu.itb: Translated 0x1000228 -> 0x1000228.
+  61000: system.cpu0.mmu.itb: Translating vaddr 0x1000228.
+  61000: system.cpu0.mmu.itb: In protected mode.
+  61000: system.cpu0.mmu.itb: Paging enabled.
+  61000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  61000: system.cpu0.mmu.itb: Translated 0x1000228 -> 0x1000228.
+  61000: system.cpu0.mmu.dtb: Translating vaddr 0x1e03f40.
+  61000: system.cpu0.mmu.dtb: In protected mode.
+  61000: system.cpu0.mmu.dtb: Paging enabled.
+  61000: system.cpu0.mmu.dtb: Entry found with paddr 0x1e00000, doing protection checks.
+  61000: system.cpu0.mmu.dtb: Translated 0x1e03f40 -> 0x1e03f40.
+  62000: system.cpu0.mmu.itb: Translating vaddr 0x1000228.
+  62000: system.cpu0.mmu.itb: In protected mode.
+  62000: system.cpu0.mmu.itb: Paging enabled.
+  62000: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  62000: system.cpu0.mmu.itb: Translated 0x1000228 -> 0x1000228.
+  62500: system.cpu0.mmu.itb: Translating vaddr 0x1000230.
+  62500: system.cpu0.mmu.itb: In protected mode.
+  62500: system.cpu0.mmu.itb: Paging enabled.
+  62500: system.cpu0.mmu.itb: Entry found with paddr 0x1000000, doing protection checks.
+  62500: system.cpu0.mmu.itb: Translated 0x1000230 -> 0x1000230.
+  62500: system.cpu0.mmu.dtb: Translating vaddr 0x2176ff8.
+  62500: system.cpu0.mmu.dtb: In protected mode.
+  62500: system.cpu0.mmu.dtb: Paging enabled.
+  62500: system.cpu0.mmu.dtb: Handling a TLB miss for address 0x2176ff8 at pc 0x100022d.
+Number of X:1

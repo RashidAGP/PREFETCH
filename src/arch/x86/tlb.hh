@@ -260,7 +260,7 @@ namespace X86ISA
                                BaseMMU::Mode mode) const override;
 
         TlbEntry *insert_l1(Addr vpn, const TlbEntry &entry, uint64_t pcid);
-        TlbEntry *insert_l2(Addr vpn, Addr pa, Addr va, const TlbEntry &entry, uint64_t pcid);
+        TlbEntry *insert_l2(Addr vpn, const TlbEntry &entry, uint64_t pcid);
 
         // Checkpointing
         void serialize(CheckpointOut &cp) const override;

@@ -211,22 +211,6 @@ namespace X86ISA
             startWalkWrapperEvent([this]{ startWalkWrapper(); }, name())
         {
         }
-        struct DelayedInsertEvent : public Event {
- 	   public:
-	   TLB *tlb_p;
-	   ThreadContext *tc_p;
-	   const RequestPtr req_p;
-	   Cycles start_p;
-	   BaseMMU::Mode mode_p;
-	   BaseMMU::Translation *translation_p;
-	   TlbEntry entry_p;
-	   std::string n;
-	   DelayedInsertEvent(
-		TLB *_tlb, TlbEntry entry, ThreadContext*,BaseMMU::Translation*,const RequestPtr req_p,BaseMMU::Mode,Cycles);
-	   void process() override;
-	   const char *description() const {return "DelayedInsertEvent";}
-	   const std::string name() const { return this->n;}
-	};
     };
 
 } // namespace X86ISA

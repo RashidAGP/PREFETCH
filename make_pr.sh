@@ -1,6 +1,5 @@
 #sudo sh -c 'echo 1 >/proc/sys/kernel/perf_event_paranoid'
-./build/X86/gem5.fast --outdir=/home/rashid/checkpoints/4cores/pr ./configs/deprecated/example/fs.py \
-    --checkpoint-at-end \
+./build/X86/gem5.fast --outdir=/home/rashid/checkpoints/4cores/pr --redirect-stdout --redirect-stderr ./configs/deprecated/example/fs.py \
     --script=/home/rashid/all_scripts/gapbs/pr.rcS \
     --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
     --disk-image=/home/rashid/fs_img/gapbs_kron.img \
