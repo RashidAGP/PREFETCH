@@ -97,6 +97,7 @@ namespace X86ISA
 	// UAC
 	// PA
 	std::unordered_map<Addr, uint64_t> page_access = {};
+	std::unordered_map<Addr, uint64_t> CL_TLB_access = {};
 	/*
 	std::unordered_map<Addr, uint64_t> page_eviction_l1_4kb = {};
 	std::unordered_map<Addr, uint64_t> page_eviction_l1_2mb = {};
@@ -124,6 +125,7 @@ namespace X86ISA
 	// UAC
 	// PA
 	void add_page_access(Addr address_t){ page_access[address_t]++;}
+	void add_CL_TLB_access(Addr address_t){ CL_TLB_access[address_t]++;}
 	void add_page_eviction_l1_4kb(Addr, Addr);
 	void add_page_eviction_l1_2mb(Addr, Addr);
 	void add_page_eviction_l2_4kb(Addr address_v, Addr address_p){page_eviction_l2_4kb[address_v][address_p] = page_eviction_l2_4kb[address_v][address_p] + 1 ;}

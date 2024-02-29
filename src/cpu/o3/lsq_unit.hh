@@ -92,6 +92,7 @@ class LSQUnit
     static constexpr auto MaxDataBytes = MaxVecRegLenInBytes;
     // PREFETCH
     std::unordered_map<Addr, uint64_t> load_access;
+    std::unordered_map<Addr, uint64_t> load_access_va;
     std::unordered_map<Addr, uint64_t> store_access;
     // PC
     std::unordered_map<Addr,std::unordered_map<Addr,uint64_t>> PC_cache;
@@ -101,36 +102,50 @@ class LSQUnit
     Tick last_time_tick = 0;
     // Add functions
     void add_load_access(Addr address_t){ load_access[address_t]++;}
+    void add_load_access_va(Addr address_t){ load_access_va[address_t]++;}
     void add_store_access(Addr address_t){ store_access[address_t]++;}
     // Print Functions
     void print_access(Tick current){
 	    
-     if (current > last_time_tick + 1000000000){
+     if (current > last_time_tick + 5000000000){
 	last_time_tick = current;
     	std::ofstream file_load;
+    	std::ofstream file_load_va;
     	std::ofstream file_store;
 	std::string delimeter = "=";
 	std::string csv_path_string(csv_path);
 	size_t pos = csv_path_string.find(delimeter);
 	std::string csv_path_string_after= csv_path_string.substr(pos+delimeter.length());
 	std::string file_csv_file_load = csv_path_string_after + "/cache_load.csv";
+	std::string file_csv_file_load_va = csv_path_string_after + "/cache_load_va.csv";
 	std::string file_csv_file_store = csv_path_string_after + "/cache_store.csv";
 	file_load.open(file_csv_file_load);
+	file_load_va.open(file_csv_file_load_va);
 	file_store.open(file_csv_file_store);
 	std::vector<std::pair<Addr, uint64_t>> map_vector_load;
+	std::vector<std::pair<Addr, uint64_t>> map_vector_load_va;
 	std::vector<std::pair<Addr, uint64_t>> map_vector_store;
+	for (const auto& x:load_access_va){
+		map_vector_load_va.push_back(x);
+	}
 	for (const auto& x:load_access){
 		map_vector_load.push_back(x);
 	}
 	for (const auto& x:store_access){
 		map_vector_store.push_back(x);
 	}
+	std::sort(map_vector_load_va.begin(), map_vector_load_va.end(), [](const auto& a, const auto& b) {
+               return a.second > b.second;
+        });
 	std::sort(map_vector_load.begin(), map_vector_load.end(), [](const auto& a, const auto& b) {
                return a.second > b.second;
         });
 	std::sort(map_vector_store.begin(), map_vector_store.end(), [](const auto& a, const auto& b) {
                return a.second > b.second;
         });
+	for (auto x : map_vector_load_va){
+		file_load_va << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
+	}
 	for (auto x : map_vector_load){
 		file_load << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
 	}

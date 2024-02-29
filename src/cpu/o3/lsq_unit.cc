@@ -1643,6 +1643,10 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
 	Addr AD = load_inst->physEffAddr >> 6;
 	AD = AD << 6;
 	add_load_access(AD);
+	Addr AD_va = load_inst->effAddr >> 6;
+	AD_va = AD_va << 6;
+	add_load_access_va(AD_va);
+
 	add_PC_cache(AD,load_inst->pcState().instAddr());
 	print_access(curTick());
 	// END PREFETCH

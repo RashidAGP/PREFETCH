@@ -547,7 +547,9 @@ TLB::translate(const RequestPtr &req,
 
     Addr vaddr = req->getVaddr();
     DPRINTF(TLB, "Translating vaddr %#x.\n", vaddr);
-
+    Addr CL_add = vaddr >> 6;
+    CL_add = CL_add << 6;
+    add_CL_TLB_access(CL_add);
     HandyM5Reg m5Reg = tc->readMiscRegNoEffect(misc_reg::M5Reg);
 
     const Addr logAddrSize = (flags >> AddrSizeFlagShift) & AddrSizeFlagMask;
@@ -779,7 +781,7 @@ TLB::translate(const RequestPtr &req,
 // UAC
 void
 TLB::print_eviction(){
-	if (this->walker->curCycle() > last_cycle + 50000000){
+	if (this->walker->curCycle() > last_cycle + 500000000){
 		last_cycle = this->walker->curCycle();
 		std::string delimeter = "=";
                 std::string csv_path_string(csv_path);
@@ -921,6 +923,17 @@ TLB::print_eviction(){
                         }
         		file_page_access.flush();
         		file_page_access.close();
+		}
+                std::string file_csv_CL_TLB_access = csv_path_string_after + "/CL_TLB_access.csv";
+		if(!CL_TLB_access.empty()){
+			std::ofstream file_CL_TLB_access(file_csv_CL_TLB_access);
+			if (file_CL_TLB_access.is_open()){
+        		    for (auto x : CL_TLB_access){
+                                file_CL_TLB_access << "0x" << std::hex << x.first << "," <<std::dec << x.second << std::endl;
+			    }
+                        }
+        		file_CL_TLB_access.flush();
+        		file_CL_TLB_access.close();
 		}
 	}
 
