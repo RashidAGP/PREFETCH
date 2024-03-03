@@ -1,16 +1,15 @@
-./build/X86/gem5.fast \
+gdb --args ./build/X86/gem5.debug \
+    --debug-flags=DRAMsim3,DRAMPower \
     --outdir=/home/rashid/UAC/4cores/st_raw_timing \
-    --redirect-stdout \
-    --redirect-stderr \
     ./configs/deprecated/example/fs.py \
-    --checkpoint-dir=/home/rashid/testt/ -r 1\
+    --checkpoint-dir=/home/rashid/checkpoints/tc_raw -r 1\
     -r 1\
     --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
     --disk-image=/home/rashid/fs_img/linux-x86.img \
     --cpu-type=DerivO3CPU \
-    --restore-with-cpu=DerivO3CPU \
+    --restore-with-cpu=TimingSimpleCPU \
+    --standard-switch 1 \
     --mem-size=16GB \
-    --mem-type=DRAMsim3\
     --network=garnet\
     --ruby \
     --caches \

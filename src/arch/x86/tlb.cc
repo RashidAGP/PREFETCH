@@ -1081,7 +1081,7 @@ TLB::unserialize(CheckpointIn &cp)
     }
 
     UNSERIALIZE_SCALAR(lruSeq);
-    UNSERIALIZE_SCALAR(lruSeq_l2);
+    //UNSERIALIZE_SCALAR(lruSeq_l2);
 
     for (uint32_t x = 0; x < _size; x++) {
         TlbEntry *newEntry = freeList.front();
@@ -1091,7 +1091,7 @@ TLB::unserialize(CheckpointIn &cp)
         newEntry->trieHandle = trie.insert(newEntry->vaddr,
             TlbEntryTrie::MaxBits - newEntry->logBytes, newEntry);
     }
-    /*
+   /* 
     for (uint32_t x = 0; x < l2_tlb_size; x++) {
         TlbEntry *newEntry = freeList_l2.front();
         freeList_l2.pop_front();

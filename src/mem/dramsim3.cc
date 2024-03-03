@@ -141,6 +141,7 @@ void
 DRAMsim3::tick()
 {
     // Only tick when it's timing mode
+    DPRINTF(DRAMsim3, "DRAMSIM\n" );
     if (system()->isTimingMode()) {
         wrapper.tick();
 
