@@ -1,9 +1,9 @@
 ./build/X86/gem5.fast \
-    --outdir=/home/rashid/UAC/bfs_raw \
+    --outdir=/home/rashid/UAC/4cores/bfs_raw \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
-    --checkpoint-dir=/home/rashid/checkpoints/gapbs_checkpoints/bfs -r 1\
+    --checkpoint-dir=/home/rashid/rashid_rackham/MC_checkpoints/4cores_wR/bfs_raw -r 1\
     -r 1\
     --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
     --disk-image=/home/rashid/fs_img/gapbs_kron.img \
@@ -13,15 +13,16 @@
     --mem-type=DRAMsim3\
     --network=garnet\
     --ruby \
+    -n 4\
     --caches \
     --l1d_size=64kB \
     --l1i_size=64kB \
     --l1d_assoc=8 \
     --l1i_assoc=8 \
-    --num-l2caches=1 \
-    --num-dirs=1 \
+    --num-l2caches=4 \
+    --num-dirs=4 \
     --topology=Mesh_XY \
-    --mesh-rows=1 \
+    --mesh-rows=2 \
     --l2_size=2MB \
     --l2_assoc=16 \
     --cpu-clock=2GHz \

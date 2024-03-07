@@ -136,16 +136,6 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     PF_Load,    desc="load request from prefetcher";
     PF_Ifetch,  desc="instruction fetch request from prefetcher";
     PF_Store,   desc="exclusive load request from prefetcher";
-    // PREFETCH - SEND
-    BP_L1,      desc="Bypass L1. Go to the L2";
-    BP_L2,      desc="Bypass L1,L2. Go to the Dir";
-    // PREFETCH - RECV
-    BP_L1_RECV, desc="Recv Data form L2";
-    BP_DIR_RECV, desc="Recv Data form DIR";
-    BP_L2_RECV, desc="Recv Data form L2";
-    BP_L2_RECV_M, desc="Recv Data form L2 Modified";
-    Fwd_GETS_FROM_L2,   desc="GETS from L2 Cache. Bad prediction";
-    // END PREFETCH
   }
 
   // TYPES
@@ -158,10 +148,6 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     bool isPrefetch, desc="Set if this block was prefetched and not yet accessed";
   }
 
-  // BPEntry
-  structure(BPEntry, desc="..." ) {
-    DataBlock DataBlk,       desc="data for the block";
-  }
   // TBE fields
   structure(TBE, desc="...") {
     Addr addr,              desc="Physical address for this TBE";
@@ -291,10 +277,6 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
       return Event:Ifetch;
     } else if ((type == RubyRequestType:ST) || (type == RubyRequestType:ATOMIC)) {
       return Event:Store;
-    } else if ((type == RubyRequestType:BPL1)){
-      return Event:BP_L1;
-    } else if ((type == RubyRequestType:BPL2)){
-      return Event:BP_L2;
     } else {
       error("Invalid RubyRequestType");
     }
@@ -364,12 +346,6 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
                       trigger(Event:PF_L1_Replacement,
                               victim, getL1ICacheEntry(victim), TBEs[victim]);
                   }
-	      } else if (in_msg.Type == RubyRequestType:BPL1){
-                      Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
-		      trigger(Event:BP_L1,in_msg.LineAddress,L1Dcache_entry,TBEs[in_msg.LineAddress]);
-	      }else if (in_msg.Type == RubyRequestType:BPL2){
-                      Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
-		      trigger(Event:BP_L2,in_msg.LineAddress,L1Dcache_entry,TBEs[in_msg.LineAddress]);
               } else {
                   // Data prefetch
                   Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
@@ -441,14 +417,6 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
           }
         } else if (in_msg.Type == CoherenceResponseType:WB_ACK) {
           trigger(Event:WB_Ack, in_msg.addr, cache_entry, tbe);
-        // PREFETCH
-        } else if (in_msg.Type == CoherenceResponseType:MEMORY_DATA_BP) {
-          trigger(Event:BP_DIR_RECV, in_msg.addr,cache_entry, tbe);
-        } else if (in_msg.Type == CoherenceResponseType:L2_DATA_BP) {
-          trigger(Event:BP_L2_RECV, in_msg.addr,cache_entry, tbe);
-        } else if (in_msg.Type == CoherenceResponseType:L2_DATA_BP_M) {
-          trigger(Event:BP_L2_RECV_M, in_msg.addr,cache_entry, tbe);
-        // END PREFETCH
         } else {
           error("Invalid L1 response type");
         }
@@ -473,8 +441,6 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
           trigger(Event:Fwd_GETX, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
           trigger(Event:Fwd_GETS, in_msg.addr, cache_entry, tbe);
-        } else if (in_msg.Type == CoherenceRequestType:GETS_FROM_L2) {
-          trigger(Event:Fwd_GETS_FROM_L2, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:GET_INSTR) {
           trigger(Event:Fwd_GET_INSTR, in_msg.addr, cache_entry, tbe);
         } else {
@@ -700,22 +666,6 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
       }
     }
   }
-  action(c_issueDOWNGRADE, "c_down", desc="Issue DOWNGRADE") {
-    peek(mandatoryQueue_in, RubyRequest) {
-      enqueue(requestL1Network_out, RequestMsg,  l1_request_latency) {
-        out_msg.addr := address;
-        out_msg.Type := CoherenceRequestType:DOWNGRADE;
-        out_msg.Requestor := machineID;
-        out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
-                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
-        DPRINTF(RubySlicc, "address: %#x, destination: %s\n",
-                address, out_msg.Destination);
-        out_msg.MessageSize := MessageSizeType:Control;
-        out_msg.Prefetch := in_msg.Prefetch;
-        out_msg.AccessMode := in_msg.AccessMode;
-      }
-    }
-  }
 
   action(d_sendDataToRequestor, "d", desc="send data to requestor") {
     peek(requestL1Network_in, RequestMsg) {
@@ -852,39 +802,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
       }
     }
   }
-   // PREFETCH
 
-  action(bp_l1_sendToL2, "bp_l1", desc="send data to the L2 cache (BP)") {
-    enqueue(requestL1Network_out, RequestMsg, 0) {
-      out_msg.addr := address;
-      out_msg.Type := CoherenceRequestType:GETS_L2;
-      out_msg.Requestor:= machineID;
-      out_msg.MessageSize := MessageSizeType:Control;
-      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
-                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
-    }
-  }
-  action(bp_l2_sendToDir, "bp_l2", desc="send data to the DIR (BP)") {
-    enqueue(requestL1Network_out, RequestMsg, l1_response_latency) {
-      out_msg.addr := address;
-      out_msg.Type := CoherenceRequestType:GETS_DIR;
-      out_msg.Requestor:= machineID;
-      out_msg.MessageSize := MessageSizeType:Control;
-      out_msg.Destination.add(mapAddressToRange(address, MachineType:Directory,
-                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
-    }
-  }
-  action(return_fwd, "rt_fw", desc="return forwared message from L2 (BP)"){
-    enqueue(requestL1Network_out, RequestMsg, 0) {
-      out_msg.addr := address;
-      out_msg.Type := CoherenceRequestType:GETS_L2;
-      out_msg.Requestor:= machineID;
-      out_msg.MessageSize := MessageSizeType:Control;
-      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
-                          l2_select_low_bit, l2_select_num_bits, intToID(0)));
-    }
-  }
-   // END PREFETCH
   action(j_sendUnblock, "j", desc="send unblock to the L2 cache") {
     enqueue(unblockNetwork_out, ResponseMsg, to_l2_latency) {
       out_msg.addr := address;
@@ -911,22 +829,13 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(h_load_hit, "hd",
-         desc="notify sequencer the load completed.")
+         desc="Notify sequencer the load completed.")
   {
     assert(is_valid(cache_entry));
-    //dprintf(rubyslicc, "%s\n", cache_entry.DataBlk);
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     L1Dcache.setMRU(cache_entry);
     sequencer.readCallback(address, cache_entry.DataBlk);
   }
-  action(h_w_load_hit, "h_w",
-         desc="notify sequencer the load completed.")
-  {
-    peek(responseL1Network_in, ResponseMsg) {
-       sequencer.readCallback_hxx_2(address,in_msg.DataBlk);
-    }
-  }
-  // END PREFETCH
-
 
   action(h_ifetch_hit, "hi", desc="Notify sequencer the instruction fetch completed.")
   {
@@ -948,6 +857,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   action(hh_store_hit, "\h", desc="Notify sequencer that store completed.")
   {
     assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
     L1Dcache.setMRU(cache_entry);
     sequencer.writeCallback(address, cache_entry.DataBlk);
     cache_entry.Dirty := true;
@@ -1098,57 +1008,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   //*****************************************************
   // TRANSITIONS
   //*****************************************************
-  // PREFETCH
-  ////////  SENDING ///////////////
-  transition({NP,I},BP_L1,IS){
-    oo_allocateL1DCacheBlock;
-    i_allocateTBE;
-    a_issueGETS;
-    uu_profileDataMiss;
-    po_observeMiss
-    k_popMandatoryQueue;
-  }
-  transition({NP,I},BP_L2,IS){
-    oo_allocateL1DCacheBlock;
-    i_allocateTBE;
-    bp_l2_sendToDir;
-    uu_profileDataMiss;
-    po_observeMiss
-    k_popMandatoryQueue;
-  }
-  transition({E,S,M}, BP_L1){
-	bp_l1_sendToL2;
-        k_popMandatoryQueue;
-  }
-  transition({E,S,M}, BP_L2){
-	bp_l2_sendToDir;
-        k_popMandatoryQueue;
-  }
-  // IT MUST BE BP_L1_RECV TODO
-  transition(S, BP_L2_RECV){
-    h_load_hit;
-    o_popIncomingResponseQueue;
-  }
-  /////////// RECV //////////////
 
-  transition({E,M},Fwd_GETS_FROM_L2){
-    h_load_hit;
-    l_popRequestQueue;
-  }
-  transition(M_I,BP_L2_RECV_M){
-	return_fwd;
-         o_popIncomingResponseQueue;
-  }
-  transition(M_I,Fwd_GETS_FROM_L2){
-	return_fwd;
-        l_popRequestQueue;
-  }
-  transition({E,M}, BP_L2_RECV_M){
-    h_load_hit;
-    o_popIncomingResponseQueue;
-  }
-
-  // END PREFETCH
   // Transitions for Load/Store/Replacement/WriteBack from transient states
   transition({IS, IM, IS_I, M_I, SM, SINK_WB_ACK}, {Load, Ifetch, Store, L1_Replacement}) {
     z_stallAndWaitMandatoryQueue;
@@ -1181,7 +1041,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     i_allocateTBE;
     a_issueGETS;
     uu_profileDataMiss;
-    po_observeMiss
+    po_observeMiss;
     k_popMandatoryQueue;
   }
 
@@ -1288,13 +1148,11 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     uu_profileDataMiss;
     k_popMandatoryQueue;
   }
-  // PREFETCH --> we should send invalidation to the L2 cache
+
   transition(S, {L1_Replacement, PF_L1_Replacement}, I) {
-    c_issueDOWNGRADE;
     forward_eviction_to_cpu;
     ff_deallocateL1CacheBlock;
   }
-  // END PREFETCH
 
   transition(S, Inv, I) {
     forward_eviction_to_cpu;

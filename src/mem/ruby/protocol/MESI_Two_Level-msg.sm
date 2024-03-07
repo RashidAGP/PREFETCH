@@ -31,19 +31,12 @@
 // CoherenceRequestType
 enumeration(CoherenceRequestType, desc="...") {
   GETX,      desc="Get eXclusive";
-  // PREFETCH
-  DOWNGRADE,   desc="Downgrade to NP";
-  // END PREFETCH
   UPGRADE,   desc="UPGRADE to exclusive";
   GETS,      desc="Get Shared";
   GET_INSTR, desc="Get Instruction";
   INV,       desc="INValidate";
   PUTX,      desc="Replacement message";
-  // PREFETCH
-  GETS_L2,   desc="Get data from L2";
-  GETS_DIR,   desc="Get data from DIR";
-  GETS_FROM_L2, desc="Get data from L1. Because of bad prediction. It must forward to L1 cache";
-  // END PREFETCH
+
   WB_ACK,    desc="Writeback ack";
 
   DMA_READ, desc="DMA Read";
@@ -56,13 +49,6 @@ enumeration(CoherenceResponseType, desc="...") {
   DATA, desc="Data block for L1 cache in S state";
   DATA_EXCLUSIVE, desc="Data block for L1 cache in M/E state";
   MEMORY_DATA, desc="Data block from / to main memory";
-  // PREFETCH
-  MEMORY_DATA_BP, desc="Data block from main memory to CPU (BP)";
-  MEMORY_DATA_L2, desc="Data block from main memory to L2 (BP)";
-  FWD_DIR_BP, desc="Data block from dir to Cache (BP)- bad prediction";
-  L2_DATA_BP, desc="Data block from L2 cache to L1 cache (BP)";
-  L2_DATA_BP_M, desc="Data block from L2 cache to L1 cache (BP)";
-  // END PREFECH
   ACK, desc="Generic invalidate ack";
   WB_ACK, desc="writeback ack";
   UNBLOCK, desc="unblock";
