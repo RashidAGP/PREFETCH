@@ -864,7 +864,7 @@ TLB::unserialize(CheckpointIn &cp)
     }
 
     UNSERIALIZE_SCALAR(lruSeq);
-    UNSERIALIZE_SCALAR(lruSeq_l2);
+    //UNSERIALIZE_SCALAR(lruSeq_l2);
 
     for (uint32_t x = 0; x < _size; x++) {
         TlbEntry *newEntry = freeList.front();

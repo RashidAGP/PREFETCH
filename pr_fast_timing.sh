@@ -1,9 +1,9 @@
 ./build/X86/gem5.fast \
-    --outdir=/home/rashid/UAC/4cores/bc_UAC_timing \
+    --outdir=/home/rashid/UAC/4cores/pr_UAC_timing \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
-    --checkpoint-dir=/home/rashid/rashid_rackham/MC_checkpoints/4cores_wR/bc_raw/ -r 1\
+    --checkpoint-dir=/home/rashid/rashid_rackham/MC_checkpoints/4cores_wR/pr_raw/ -r 1\
     -r 1\
     --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
     --disk-image=/home/rashid/fs_img/gapbs_kron.img \

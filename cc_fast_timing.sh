@@ -1,15 +1,15 @@
 ./build/X86/gem5.fast \
-    --outdir=/home/rashid/UAC/4cores/st_UAC_timing \
+    --outdir=/home/rashid/UAC/4cores/cc_UAC_timing \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
-    --checkpoint-dir=/home/rashid/uppmaxfs/rashid_files/4cores/st_optik -r 1\
+    --checkpoint-dir=/home/rashid/rashid_rackham/MC_checkpoints/4cores_wR/cc_raw/ -r 1\
     -r 1\
     --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
     --disk-image=/home/rashid/fs_img/gapbs_kron.img \
     --cpu-type=TimingSimpleCPU \
     --restore-with-cpu=TimingSimpleCPU \
-    --mem-size=8GB \
+    --mem-size=16GB \
     --mem-type=DRAMsim3\
     --network=garnet\
     --ruby \
