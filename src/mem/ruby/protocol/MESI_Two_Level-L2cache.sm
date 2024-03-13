@@ -1130,7 +1130,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     kd_wakeUpDependents;
   }
   // MC
-  transition(SS,L1_DOWNGRADE) {
+  transition({SS,SS_MB},L1_DOWNGRADE) {
     //ll_clearSharers;
     kk_removeRequestSharer;
     jj_popL1RequestQueue;
@@ -1304,6 +1304,9 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     //f_sendInvToSharers;
     rr_deallocateL2CacheBlock;
     c_exclusiveCleanReplacement;
+  }
+  transition({MT_IIB,MT_IB,MT_SB},L1_DOWNGRADE){
+    zz_stallAndWaitL1RequestQueue;
   }
   // End MC
   transition(SS, {L2_Replacement, MEM_Inv}, S_I) {
@@ -1483,7 +1486,6 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   transition({MT_MB,SS_MB}, {L1_PUTX, L1_PUTX_old}) {
     zz_stallAndWaitL1RequestQueue;
   }
-
   transition(S_I, Ack) {
     q_updateAck;
     o_popIncomingResponseQueue;

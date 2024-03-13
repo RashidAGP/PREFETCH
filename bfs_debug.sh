@@ -1,5 +1,6 @@
-./build/X86/gem5.fast \
-    --outdir=/home/rashid/UAC/bfs_UAC \
+./build/X86/gem5.debug \
+    --debug-flags=RubySlicc,RubyCache,RubyGenerated,RubySequencer \
+    --outdir=/home/rashid/UAC/4cores/bfs_UAC \
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \

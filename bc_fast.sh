@@ -3,7 +3,7 @@
     --redirect-stdout \
     --redirect-stderr \
     ./configs/deprecated/example/fs.py \
-    --checkpoint-dir=/home/rashid/checkpoints/gapbs_checkpoints/bc -r 1\
+    --checkpoint-dir=/home/rashid/new_benchmarks/1cores/bc -r 1\
     -r 1\
     --kernel=/home/rashid/vmlinux/vmlinux-5.4.49 \
     --disk-image=/home/rashid/fs_img/gapbs_kron.img \
