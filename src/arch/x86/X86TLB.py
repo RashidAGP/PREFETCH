@@ -61,8 +61,8 @@ class X86TLB(BaseTLB):
     l1_lat = Param.Unsigned(16, "L1 TLB hit latency, SE mode only")
     l1_way = Param.Unsigned(4, "L1 TLB assoc")
     # YY. L2-TLB
-    l2_tlb_size = Param.Int(512, "2nd-level TLB size")
-    l2_tlb_assoc = Param.Int(16, "2nd-level TLB associativity")
+    l2_tlb_size = Param.Int(1024, "2nd-level TLB size")
+    l2_tlb_assoc = Param.Int(4, "2nd-level TLB associativity")
     # Vanilla gem5
     system = Param.System(Parent.any, "system object")
     walker = Param.X86PagetableWalker(
